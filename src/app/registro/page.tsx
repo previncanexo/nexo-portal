@@ -408,25 +408,6 @@ export default function RegistroPage() {
               </div>
             </div>
 
-            {/* Data summary */}
-            <div className="rounded-xl p-4 mb-5" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>Tus datos</p>
-              <div className="flex flex-col gap-1.5">
-                {([
-                  { label: 'Nombre', value: `${form.nombre} ${form.apellido}` },
-                  { label: 'DNI', value: form.dni },
-                  { label: 'Email', value: form.email },
-                  ...(form.whatsapp ? [{ label: 'WhatsApp', value: form.whatsapp }] : []),
-                  ...(form.ciudad ? [{ label: 'Ciudad', value: form.ciudad }] : []),
-                ] as { label: string; value: string }[]).map(({ label, value }) => (
-                  <div key={label} className="flex justify-between items-center">
-                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</span>
-                    <span className="text-xs font-semibold text-white truncate ml-4 max-w-[160px] text-right">{value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             <PrimaryButton onClick={() => setStep(3)}>
               Ir a pagar
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
