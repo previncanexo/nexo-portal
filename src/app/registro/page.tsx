@@ -112,7 +112,7 @@ function Logo() {
 }
 
 function Stepper({ step }: { step: number }) {
-  const steps = ['Datos', 'Plan', 'Pagar']
+  const steps = ['Datos', 'Pagar']
   return (
     <div className="flex items-center mb-7">
       {steps.map((label, i) => {
@@ -368,7 +368,7 @@ export default function RegistroPage() {
           </div>
         )}
 
-        {/* ── STEP 2: PLAN ───────────────────────────────────────────────────── */}
+        {/* ── STEP 2: PLAN + PAGAR ───────────────────────────────────────────── */}
         {step === 2 && (
           <div className="rounded-3xl p-8" style={CARD_STYLE}>
             <Stepper step={2} />
@@ -380,7 +380,7 @@ export default function RegistroPage() {
             </p>
 
             {/* Plan card */}
-            <div className="rounded-2xl p-5 mb-4" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
+            <div className="rounded-2xl p-5 mb-5" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Plan Base</p>
@@ -406,47 +406,6 @@ export default function RegistroPage() {
                   </div>
                 ))}
               </div>
-            </div>
-
-            <PrimaryButton onClick={() => setStep(3)}>
-              Ir a pagar
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-              </svg>
-            </PrimaryButton>
-            <BackButton onClick={() => setStep(1)} />
-          </div>
-        )}
-
-        {/* ── STEP 3: PAGAR ──────────────────────────────────────────────────── */}
-        {step === 3 && (
-          <div className="rounded-3xl p-8" style={CARD_STYLE}>
-            <Stepper step={3} />
-            <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-              Pagar
-            </h2>
-            <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-              Confirmá tu suscripción mensual
-            </p>
-
-            {/* Total box */}
-            <div className="rounded-2xl p-5 mb-5 text-center" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                Total mensual
-              </p>
-              <p
-                className="text-4xl font-bold mb-1"
-                style={{
-                  background: 'linear-gradient(135deg, #c4b5fd 0%, var(--pink) 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  fontFamily: 'var(--font-dm-sans)',
-                }}
-              >
-                $19.500
-              </p>
-              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>Plan Base Nexo · Cancelás cuando quieras</p>
             </div>
 
             {/* Mercado Pago button */}
@@ -489,7 +448,7 @@ export default function RegistroPage() {
               </div>
             )}
 
-            <BackButton onClick={() => setStep(2)} />
+            <BackButton onClick={() => setStep(1)} />
           </div>
         )}
 
