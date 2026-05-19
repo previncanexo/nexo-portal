@@ -4,6 +4,13 @@ import { useState } from 'react'
 import Image from 'next/image'
 import type { CreateAffiliateResponse } from '@/lib/types'
 
+const CARD_STYLE = {
+  background: 'rgba(10,4,28,0.82)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  backdropFilter: 'blur(32px)',
+  WebkitBackdropFilter: 'blur(32px)',
+} as const
+
 interface FormData {
   nombre: string
   apellido: string
@@ -45,8 +52,8 @@ function InputField({
     <div>
       <label
         htmlFor={id}
-        className="block text-sm font-medium mb-1.5"
-        style={{ color: 'rgba(255,255,255,0.75)' }}
+        className="block text-xs font-semibold mb-1.5 uppercase tracking-wide"
+        style={{ color: 'rgba(255,255,255,0.5)' }}
       >
         {label}
         {required && <span style={{ color: 'var(--pink)', marginLeft: 2 }}>*</span>}
@@ -58,21 +65,22 @@ function InputField({
         onChange={(e) => onChange(e.target.value)}
         required={required}
         placeholder={placeholder}
-        className="w-full px-4 py-3 rounded-xl text-white placeholder-white/25 outline-none transition-all"
+        className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all"
         style={{
-          background: 'rgba(255,255,255,0.08)',
-          border: '1px solid rgba(255,255,255,0.18)',
+          background: 'rgba(255,255,255,0.07)',
+          border: '1px solid rgba(255,255,255,0.12)',
           fontFamily: 'var(--font-dm-sans)',
           fontSize: '0.9rem',
           colorScheme: 'dark',
+          color: 'white',
         }}
         onFocus={(e) => {
-          e.target.style.border = '1px solid rgba(134,96,239,0.8)'
-          e.target.style.background = 'rgba(255,255,255,0.12)'
+          e.target.style.border = '1px solid rgba(134,96,239,0.7)'
+          e.target.style.background = 'rgba(255,255,255,0.1)'
         }}
         onBlur={(e) => {
-          e.target.style.border = '1px solid rgba(255,255,255,0.18)'
-          e.target.style.background = 'rgba(255,255,255,0.08)'
+          e.target.style.border = '1px solid rgba(255,255,255,0.12)'
+          e.target.style.background = 'rgba(255,255,255,0.07)'
         }}
       />
     </div>
@@ -127,12 +135,10 @@ export default function RegistroPage() {
       })
 
       const data = await res.json()
-
       if (!res.ok) {
         setError(data.error ?? 'Error al registrar. Intentá de nuevo.')
         return
       }
-
       setResult(data as CreateAffiliateResponse)
     } catch {
       setError('Error de conexión. Verificá tu internet e intentá de nuevo.')
@@ -146,39 +152,27 @@ export default function RegistroPage() {
       <div className="min-h-screen flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm relative z-10">
           <Logo />
-
-          <div
-            className="rounded-3xl p-8 text-center"
-            style={{
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.18)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-            }}
-          >
+          <div className="rounded-3xl p-8 text-center" style={CARD_STYLE}>
             <div
-              className="w-16 h-16 rounded-full mx-auto mb-5 flex items-center justify-center"
+              className="w-14 h-14 rounded-full mx-auto mb-5 flex items-center justify-center"
               style={{ background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)' }}
             >
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
 
-            <h2 className="text-2xl font-normal text-white mb-2" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+            <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'var(--font-dm-sans)' }}>
               ¡Registro exitoso!
             </h2>
-            <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              Tu cuenta fue creada. Guardá estos datos para ingresar al portal.
+            <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              Tu cuenta fue creada. Guardá estos datos.
             </p>
 
-            <div
-              className="rounded-xl p-4 mb-3 text-left"
-              style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.1)' }}
-            >
-              <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.45)' }}>Número de afiliado</p>
+            <div className="rounded-xl p-4 mb-3 text-left" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <p className="text-xs mb-1 uppercase tracking-wide font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>N° de afiliado</p>
               <p
-                className="text-xl font-bold tracking-widest"
+                className="text-2xl font-bold tracking-widest"
                 style={{
                   fontFamily: 'monospace',
                   background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
@@ -191,18 +185,15 @@ export default function RegistroPage() {
               </p>
             </div>
 
-            <div
-              className="rounded-xl p-4 mb-4 text-left"
-              style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.1)' }}
-            >
-              <p className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.45)' }}>Credenciales de acceso</p>
+            <div className="rounded-xl p-4 mb-4 text-left" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <p className="text-xs mb-3 uppercase tracking-wide font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>Credenciales de acceso</p>
               <div className="flex flex-col gap-2">
                 <div>
-                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>Email: </span>
-                  <span className="text-sm text-white">{result.email}</span>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Email: </span>
+                  <span className="text-sm text-white font-medium">{result.email}</span>
                 </div>
                 <div>
-                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>Contraseña temporal: </span>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Contraseña temporal: </span>
                   <span className="text-sm font-bold tracking-wider text-white" style={{ fontFamily: 'monospace' }}>
                     {result.temp_password}
                   </span>
@@ -212,11 +203,7 @@ export default function RegistroPage() {
 
             <div
               className="text-xs px-4 py-3 rounded-xl mb-6"
-              style={{
-                background: 'rgba(250,204,21,0.1)',
-                border: '1px solid rgba(250,204,21,0.25)',
-                color: 'rgba(250,204,21,0.9)',
-              }}
+              style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.2)', color: 'rgba(250,204,21,0.85)' }}
             >
               Guardá esta contraseña. Te recomendamos cambiarla al ingresar por primera vez.
             </div>
@@ -224,10 +211,7 @@ export default function RegistroPage() {
             <a
               href="/login"
               className="block w-full py-3 rounded-full text-white font-bold text-sm text-center transition-opacity hover:opacity-90"
-              style={{
-                background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
-                fontFamily: 'var(--font-dm-sans)',
-              }}
+              style={{ background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)', fontFamily: 'var(--font-dm-sans)' }}
             >
               Ingresar al portal
             </a>
@@ -242,19 +226,11 @@ export default function RegistroPage() {
       <div className="w-full max-w-sm relative z-10">
         <Logo />
 
-        <div
-          className="rounded-3xl p-8"
-          style={{
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid rgba(255,255,255,0.18)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-          }}
-        >
-          <h2 className="text-xl font-semibold text-white mb-1" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+        <div className="rounded-3xl p-8" style={CARD_STYLE}>
+          <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'var(--font-dm-sans)' }}>
             Crear cuenta
           </h2>
-          <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.45)' }}>
             Completá tus datos para afiliarte
           </p>
 
@@ -270,10 +246,7 @@ export default function RegistroPage() {
             <InputField id="fecha_nacimiento" label="Fecha de nacimiento" type="date" value={form.fecha_nacimiento} onChange={setField('fecha_nacimiento')} />
 
             {error && (
-              <div
-                className="text-sm px-4 py-3 rounded-xl"
-                style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5' }}
-              >
+              <div className="text-sm px-4 py-3 rounded-xl" style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5' }}>
                 {error}
               </div>
             )}
@@ -283,9 +256,7 @@ export default function RegistroPage() {
               disabled={loading}
               className="w-full py-3 rounded-full text-white font-bold text-sm transition-opacity mt-1"
               style={{
-                background: loading
-                  ? 'rgba(134,96,239,0.5)'
-                  : 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
+                background: loading ? 'rgba(134,96,239,0.4)' : 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 fontFamily: 'var(--font-dm-sans)',
               }}
@@ -295,9 +266,9 @@ export default function RegistroPage() {
           </form>
         </div>
 
-        <p className="text-center text-xs mt-5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+        <p className="text-center text-xs mt-5" style={{ color: 'rgba(255,255,255,0.35)' }}>
           ¿Ya tenés cuenta?{' '}
-          <a href="/login" className="underline hover:opacity-80 transition-opacity" style={{ color: 'rgba(255,255,255,0.65)' }}>
+          <a href="/login" className="underline hover:opacity-80 transition-opacity" style={{ color: 'rgba(255,255,255,0.6)' }}>
             Ingresar
           </a>
         </p>
