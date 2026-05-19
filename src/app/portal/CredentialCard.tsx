@@ -62,8 +62,8 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
           <div className="flex-1 min-w-0">
             {/* Name */}
             <h2
-              className="text-2xl font-normal leading-snug mb-3 truncate"
-              style={{ fontFamily: 'var(--font-dm-serif)', color: 'var(--gray-900)' }}
+              className="text-2xl font-semibold leading-snug mb-3 truncate"
+              style={{ fontFamily: 'var(--font-dm-sans)', color: 'var(--gray-900)' }}
             >
               {affiliate ? `${affiliate.nombre} ${affiliate.apellido}` : 'Sin datos'}
             </h2>

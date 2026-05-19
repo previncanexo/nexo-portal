@@ -4,6 +4,14 @@ import type { Affiliate } from '@/lib/types'
 import CredentialCard from './CredentialCard'
 import ServiceCards from './ServiceCards'
 
+function getGreeting(): string {
+  // Argentina is UTC-3
+  const hour = new Date(Date.now() - 3 * 60 * 60 * 1000).getUTCHours()
+  if (hour >= 6 && hour < 13) return 'Buenos días'
+  if (hour >= 13 && hour < 20) return 'Buenas tardes'
+  return 'Buenas noches'
+}
+
 export default async function PortalPage() {
   const supabase = await createClient()
 
@@ -21,8 +29,24 @@ export default async function PortalPage() {
     .eq('user_id', user.id)
     .single()
 
+  const firstName = affiliate?.nombre ?? 'Afiliado'
+  const greeting = getGreeting()
+
   return (
-    <div className="flex flex-col gap-6 pb-8">
+    <div className="flex flex-col gap-5 pb-8">
+      {/* Welcome */}
+      <div className="pt-1 pb-2">
+        <p
+          className="text-2xl font-semibold text-white"
+          style={{ fontFamily: 'var(--font-dm-sans)' }}
+        >
+          {greeting}, {firstName}
+        </p>
+        <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          Aquí están todos tus beneficios de salud.
+        </p>
+      </div>
+
       <CredentialCard affiliate={affiliate as Affiliate | null} />
       <ServiceCards affiliate={affiliate as Affiliate | null} />
 
