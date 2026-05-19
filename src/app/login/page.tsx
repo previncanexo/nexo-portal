@@ -203,11 +203,10 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-opacity mt-2"
+              className="w-full py-3 rounded-full font-semibold text-sm transition-opacity mt-2"
               style={{
-                background: loading
-                  ? 'rgba(134,96,239,0.5)'
-                  : 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
+                background: loading ? 'rgba(255,255,255,0.5)' : 'white',
+                color: loading ? 'rgba(134,96,239,0.6)' : 'var(--purple)',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 fontFamily: 'var(--font-dm-sans)',
               }}

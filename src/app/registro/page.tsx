@@ -210,8 +210,8 @@ export default function RegistroPage() {
 
             <a
               href="/login"
-              className="block w-full py-3 rounded-full text-white font-bold text-sm text-center transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)', fontFamily: 'var(--font-dm-sans)' }}
+              className="block w-full py-3 rounded-full font-bold text-sm text-center transition-opacity hover:opacity-90"
+              style={{ background: 'white', color: 'var(--purple)', fontFamily: 'var(--font-dm-sans)' }}
             >
               Ingresar al portal
             </a>
@@ -254,9 +254,10 @@ export default function RegistroPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-full text-white font-bold text-sm transition-opacity mt-1"
+              className="w-full py-3 rounded-full font-bold text-sm transition-opacity mt-1"
               style={{
-                background: loading ? 'rgba(134,96,239,0.4)' : 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
+                background: loading ? 'rgba(255,255,255,0.5)' : 'white',
+                color: loading ? 'rgba(134,96,239,0.6)' : 'var(--purple)',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 fontFamily: 'var(--font-dm-sans)',
               }}
