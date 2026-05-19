@@ -21,6 +21,9 @@ function formatDate(dateStr: string | null): string {
 
 export default function CredentialCard({ affiliate }: CredentialCardProps) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'
+  const qrValue = affiliate?.affiliate_number
+    ? `${appUrl}/verificar/${affiliate.affiliate_number}`
+    : `${appUrl}/verificar`
   const status = affiliate?.status ?? 'pending'
   const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending
 
@@ -65,7 +68,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
           {/* QR — solo en pantallas medianas+ */}
           <div className="hidden sm:flex shrink-0 flex-col items-center gap-1.5">
             <div className="p-1.5 rounded-xl" style={{ background: 'white' }}>
-              <QRCode value={`${appUrl}/portal`} size={68} style={{ display: 'block' }} />
+              <QRCode value={qrValue} size={68} style={{ display: 'block' }} />
             </div>
             <p className="text-center" style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.6rem' }}>
               Escaneá para verificar
