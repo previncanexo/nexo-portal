@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-10">
           <h1
-            className="text-5xl font-normal mb-1"
+            className="text-7xl font-normal mb-1"
             style={{
               fontFamily: 'var(--font-dm-serif)',
               background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',

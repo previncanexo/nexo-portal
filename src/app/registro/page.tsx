@@ -96,7 +96,7 @@ function Logo() {
           alt="Nexo by Previnca"
           width={120}
           height={48}
-          style={{ objectFit: 'contain', height: '40px', width: 'auto' }}
+          style={{ objectFit: 'contain', height: '72px', width: 'auto' }}
           priority
         />
       </a>
