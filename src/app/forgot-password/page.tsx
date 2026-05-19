@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 
 export default function ForgotPasswordPage() {
@@ -41,21 +42,14 @@ export default function ForgotPasswordPage() {
 
       <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-10">
-          <h1
-            className="text-7xl font-normal mb-1"
-            style={{
-              fontFamily: 'var(--font-dm-serif)',
-              background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            nexo
-          </h1>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>
-            by Previnca
-          </p>
+          <Image
+            src="/logo.png"
+            alt="Nexo by Previnca"
+            width={220}
+            height={88}
+            style={{ objectFit: 'contain', height: '88px', width: 'auto', margin: '0 auto' }}
+            priority
+          />
         </div>
 
         <div className="rounded-3xl p-8" style={{ background: 'rgba(134,96,239,0.55)', border: '1px solid rgba(255,255,255,0.18)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)' }}>

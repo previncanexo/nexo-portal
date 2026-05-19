@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 
 function IconVideoCamera() {
@@ -91,21 +92,14 @@ export default function LoginPage() {
       <div className="w-full max-w-sm relative z-10">
         {/* Logo */}
         <div className="text-center mb-10">
-          <h1
-            className="text-7xl font-normal mb-1"
-            style={{
-              fontFamily: 'var(--font-dm-serif)',
-              background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            nexo
-          </h1>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>
-            by Previnca
-          </p>
+          <Image
+            src="/logo.png"
+            alt="Nexo by Previnca"
+            width={220}
+            height={88}
+            style={{ objectFit: 'contain', height: '88px', width: 'auto', margin: '0 auto' }}
+            priority
+          />
         </div>
 
         {/* Card */}
