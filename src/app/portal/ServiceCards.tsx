@@ -7,19 +7,19 @@ interface ServiceCardsProps {
   affiliate: Affiliate | null
 }
 
-function IconDOC24({ color }: { color: string }) {
+function IconDOC24() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2"/>
       <line x1="8" y1="21" x2="16" y2="21"/>
       <line x1="12" y1="17" x2="12" y2="21"/>
     </svg>
   )
 }
 
-function IconUrgencias({ color }: { color: string }) {
+function IconUrgencias() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M7.5 4.27l-4.12 2.6A2 2 0 0 0 2.5 8.6v6.8a2 2 0 0 0 .88 1.66l7.5 5a2 2 0 0 0 2.24 0l7.5-5a2 2 0 0 0 .88-1.66V8.6a2 2 0 0 0-.88-1.73L16.5 4.27a2 2 0 0 0-2.24 0z"/>
       <line x1="12" y1="8" x2="12" y2="16"/>
       <line x1="8" y1="12" x2="16" y2="12"/>
@@ -27,9 +27,9 @@ function IconUrgencias({ color }: { color: string }) {
   )
 }
 
-function IconFarmacias({ color }: { color: string }) {
+function IconFarmacias() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M10.5 1h3a1.5 1.5 0 0 1 1.5 1.5V5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V2.5A1.5 1.5 0 0 1 10.5 1z"/>
       <line x1="9" y1="12" x2="15" y2="12"/>
       <line x1="9" y1="16" x2="13" y2="16"/>
@@ -38,18 +38,10 @@ function IconFarmacias({ color }: { color: string }) {
   )
 }
 
-function IconOdontologia({ color }: { color: string }) {
+function IconOdontologia() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 2c-1.7 0-3 1.5-3 3.5 0 1.2.5 2.3 1.2 3C9 9.3 7 11 7 13.5 7 17 9 22 12 22s5-5 5-8.5c0-2.5-2-4.2-3.2-5 .7-.7 1.2-1.8 1.2-3C15 3.5 13.7 2 12 2z"/>
-    </svg>
-  )
-}
-
-function IconChevron() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 18l6-6-6-6"/>
     </svg>
   )
 }
@@ -70,15 +62,16 @@ function FarmaciaModal({ affiliateNumber, onClose }: { affiliateNumber: string; 
       style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)' }}
       onClick={onClose}
     >
-      <div
-        className="glass-card p-8 text-center w-full max-w-xs"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="glass-card p-8 text-center w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
         <div
-          className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-          style={{ background: 'rgba(134,96,239,0.1)' }}
+          className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+          style={{ background: 'rgba(34,197,94,0.12)' }}
         >
-          <IconFarmacias color="var(--purple)" />
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.5 1h3a1.5 1.5 0 0 1 1.5 1.5V5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V2.5A1.5 1.5 0 0 1 10.5 1z"/>
+            <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+            <path d="M10.5 1v4M13.5 1v4"/>
+          </svg>
         </div>
         <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--gray-400)' }}>
           N° de afiliado
@@ -96,7 +89,7 @@ function FarmaciaModal({ affiliateNumber, onClose }: { affiliateNumber: string; 
           {affiliateNumber}
         </div>
         <p className="text-xs mb-6" style={{ color: 'var(--gray-500)' }}>
-          Mostrá este número en la farmacia para acceder al 50% de descuento.
+          Mostrá este número en la farmacia para el 50% de descuento.
         </p>
         <button
           onClick={onClose}
@@ -122,9 +115,9 @@ interface ServiceItem {
   buttonLabel: string
   buttonAction: 'link' | 'tel' | 'modal'
   buttonHref?: string
-  iconBg: string
-  iconColor: string
-  Icon: React.ComponentType<{ color: string }>
+  colorFrom: string
+  colorTo: string
+  Icon: React.ComponentType
 }
 
 export default function ServiceCards({ affiliate }: ServiceCardsProps) {
@@ -140,8 +133,8 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       buttonLabel: 'Acceder',
       buttonAction: 'link',
       buttonHref: '#',
-      iconBg: 'rgba(134,96,239,0.1)',
-      iconColor: 'var(--purple)',
+      colorFrom: 'var(--purple)',
+      colorTo: 'var(--pink)',
       Icon: IconDOC24,
     },
     {
@@ -153,21 +146,21 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       buttonLabel: 'Llamar',
       buttonAction: 'tel',
       buttonHref: 'tel:+541100000000',
-      iconBg: 'rgba(239,68,68,0.1)',
-      iconColor: '#ef4444',
+      colorFrom: '#EF4444',
+      colorTo: '#F97316',
       Icon: IconUrgencias,
     },
     {
       id: 'farmacias',
       title: 'Farmacias',
-      subtitle: 'Descuentos en toda la red',
+      subtitle: 'Red de descuentos',
       badge: '50% off',
       badgeColor: '#16a34a',
       badgeBg: 'rgba(22,163,74,0.1)',
       buttonLabel: 'Ver credencial',
       buttonAction: 'modal',
-      iconBg: 'rgba(34,197,94,0.1)',
-      iconColor: '#16a34a',
+      colorFrom: '#22C55E',
+      colorTo: '#16A34A',
       Icon: IconFarmacias,
     },
     {
@@ -177,11 +170,11 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       badge: 'Urgencias',
       badgeColor: '#0f766e',
       badgeBg: 'rgba(15,118,110,0.1)',
-      buttonLabel: 'Info',
+      buttonLabel: 'Más info',
       buttonAction: 'link',
       buttonHref: '#',
-      iconBg: 'rgba(20,184,166,0.1)',
-      iconColor: '#14b8a6',
+      colorFrom: '#14B8A6',
+      colorTo: 'var(--purple)',
       Icon: IconOdontologia,
     },
   ]
@@ -198,64 +191,56 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
 
   return (
     <>
-      <div className="glass-card overflow-hidden">
-        {/* Header */}
-        <div className="px-5 pt-4 pb-3" style={{ borderBottom: '1px solid var(--gray-100)' }}>
-          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--gray-400)' }}>
-            Tus servicios
-          </p>
-        </div>
+      <div className="grid grid-cols-2 gap-3">
+        {services.map((service) => (
+          <div key={service.id} className="glass-card overflow-hidden flex flex-col">
 
-        {/* Rows */}
-        {services.map((service, i) => (
-          <div key={service.id}>
-            <div className="px-5 py-4 flex items-center gap-4">
-              {/* Icon */}
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: service.iconBg }}
-              >
-                <service.Icon color={service.iconColor} />
+            {/* Gradient header */}
+            <div
+              className="flex flex-col items-center justify-center gap-2 py-7 text-white"
+              style={{ background: `linear-gradient(135deg, ${service.colorFrom} 0%, ${service.colorTo} 100%)` }}
+            >
+              <service.Icon />
+              <p className="text-sm font-bold tracking-tight">{service.title}</p>
+            </div>
+
+            {/* Content */}
+            <div className="flex flex-col gap-3 p-4 flex-1">
+              {/* Status */}
+              <div className="flex items-center gap-1.5">
+                {service.liveLabel ? (
+                  <>
+                    <PingDot color={service.liveColor!} />
+                    <span className="text-xs font-medium" style={{ color: service.liveColor }}>{service.liveLabel}</span>
+                  </>
+                ) : (
+                  <span
+                    className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                    style={{ background: service.badgeBg, color: service.badgeColor }}
+                  >
+                    {service.badge}
+                  </span>
+                )}
               </div>
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-semibold leading-tight" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
-                    {service.title}
-                  </p>
-                  {service.liveLabel && (
-                    <div className="flex items-center gap-1">
-                      <PingDot color={service.liveColor!} />
-                      <span className="text-xs font-medium" style={{ color: service.liveColor }}>{service.liveLabel}</span>
-                    </div>
-                  )}
-                  {service.badge && (
-                    <span
-                      className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                      style={{ background: service.badgeBg, color: service.badgeColor }}
-                    >
-                      {service.badge}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)' }}>{service.subtitle}</p>
-              </div>
+              <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--gray-500)' }}>
+                {service.subtitle}
+              </p>
 
-              {/* Action */}
+              {/* CTA */}
               <button
                 onClick={() => handleAction(service)}
-                className="shrink-0 flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-70 active:scale-95"
-                style={{ color: service.iconColor, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+                className="w-full py-2 rounded-full text-xs font-bold text-white text-center active:scale-95 transition-transform"
+                style={{
+                  background: `linear-gradient(135deg, ${service.colorFrom} 0%, ${service.colorTo} 100%)`,
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-dm-sans)',
+                }}
               >
-                <span>{service.buttonLabel}</span>
-                <IconChevron />
+                {service.buttonLabel}
               </button>
             </div>
 
-            {i < services.length - 1 && (
-              <div className="mx-5" style={{ height: '1px', background: 'var(--gray-100)' }} />
-            )}
           </div>
         ))}
       </div>

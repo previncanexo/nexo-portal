@@ -8,10 +8,10 @@ interface CredentialCardProps {
 }
 
 const STATUS_CONFIG = {
-  active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.1)',   border: 'rgba(22,163,74,0.2)'   },
-  pending:   { label: 'Pendiente',  color: '#ca8a04', bg: 'rgba(202,138,4,0.1)',  border: 'rgba(202,138,4,0.2)'  },
-  suspended: { label: 'Suspendido', color: '#ea580c', bg: 'rgba(234,88,12,0.1)',  border: 'rgba(234,88,12,0.2)'  },
-  cancelled: { label: 'Cancelado',  color: '#dc2626', bg: 'rgba(220,38,38,0.1)',  border: 'rgba(220,38,38,0.2)'  },
+  active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.1)',  border: 'rgba(22,163,74,0.2)'  },
+  pending:   { label: 'Pendiente',  color: '#ca8a04', bg: 'rgba(202,138,4,0.1)', border: 'rgba(202,138,4,0.2)' },
+  suspended: { label: 'Suspendido', color: '#ea580c', bg: 'rgba(234,88,12,0.1)', border: 'rgba(234,88,12,0.2)' },
+  cancelled: { label: 'Cancelado',  color: '#dc2626', bg: 'rgba(220,38,38,0.1)', border: 'rgba(220,38,38,0.2)' },
 }
 
 function formatDate(dateStr: string | null): string {
@@ -26,101 +26,79 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
 
   return (
     <div className="glass-card overflow-hidden">
-      {/* Gradient accent bar */}
+      {/* Gradient header */}
       <div
-        className="h-1.5 w-full"
-        style={{ background: 'linear-gradient(90deg, var(--purple) 0%, var(--pink) 100%)' }}
-      />
+        className="px-5 pt-5 pb-6 relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)' }}
+      >
+        {/* Dot pattern */}
+        <div
+          className="absolute inset-0 opacity-10 pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px)',
+            backgroundSize: '18px 18px',
+          }}
+        />
 
-      <div className="p-5">
-        {/* Top row: plan badge + status */}
-        <div className="flex items-center justify-between mb-4">
-          <span
-            className="text-xs font-semibold uppercase tracking-widest"
-            style={{ color: 'var(--gray-400)' }}
-          >
-            Plan Base Nexo
-          </span>
-          <div
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
-            style={{ background: statusCfg.bg, border: `1px solid ${statusCfg.border}`, color: statusCfg.color }}
-          >
-            {status === 'active' ? (
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ background: statusCfg.color }} />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: statusCfg.color }} />
-              </span>
-            ) : (
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusCfg.color }} />
-            )}
-            {statusCfg.label}
-          </div>
-        </div>
-
-        {/* Main content */}
-        <div className="flex items-start justify-between gap-4">
+        <div className="relative flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            {/* Name */}
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.65)' }}>
+              Plan Base Nexo · Afiliado
+            </p>
             <h2
-              className="text-2xl font-semibold leading-snug mb-3 truncate"
-              style={{ fontFamily: 'var(--font-dm-sans)', color: 'var(--gray-900)' }}
+              className="text-xl font-bold leading-tight mb-4 truncate"
+              style={{ color: 'white', fontFamily: 'var(--font-dm-sans)' }}
             >
               {affiliate ? `${affiliate.nombre} ${affiliate.apellido}` : 'Sin datos'}
             </h2>
-
-            {/* Affiliate number */}
-            <div className="mb-4">
-              <p className="text-xs mb-1" style={{ color: 'var(--gray-400)' }}>N° de afiliado</p>
+            <div>
+              <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.6)' }}>N° de afiliado</p>
               <p
-                className="text-xl font-bold tracking-widest"
-                style={{
-                  fontFamily: 'monospace',
-                  background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
+                className="text-2xl font-bold tracking-widest"
+                style={{ fontFamily: 'monospace', color: 'white' }}
               >
                 {affiliate?.affiliate_number ?? '—'}
               </p>
             </div>
-
-            {/* Dates */}
-            {(affiliate?.cobertura_desde || affiliate?.cobertura_hasta) && (
-              <div className="flex flex-col gap-1">
-                {affiliate?.cobertura_desde && (
-                  <p className="text-xs" style={{ color: 'var(--gray-500)' }}>
-                    Desde{' '}
-                    <span className="font-semibold" style={{ color: 'var(--gray-700)' }}>
-                      {formatDate(affiliate.cobertura_desde)}
-                    </span>
-                  </p>
-                )}
-                {affiliate?.cobertura_hasta && (
-                  <p className="text-xs" style={{ color: 'var(--gray-500)' }}>
-                    Hasta{' '}
-                    <span className="font-semibold" style={{ color: 'var(--gray-700)' }}>
-                      {formatDate(affiliate.cobertura_hasta)}
-                    </span>
-                  </p>
-                )}
-              </div>
-            )}
           </div>
 
-          {/* QR */}
-          <div className="shrink-0 flex flex-col items-center gap-1.5">
-            <div
-              className="p-2 rounded-xl"
-              style={{ background: 'var(--gray-50)', border: '1px solid var(--gray-100)' }}
-            >
-              <QRCode value={`${appUrl}/portal`} size={72} style={{ display: 'block' }} />
+          {/* QR — solo en pantallas medianas+ */}
+          <div className="hidden sm:flex shrink-0 flex-col items-center gap-1.5">
+            <div className="p-1.5 rounded-xl" style={{ background: 'white' }}>
+              <QRCode value={`${appUrl}/portal`} size={68} style={{ display: 'block' }} />
             </div>
-            <p className="text-center text-xs" style={{ color: 'var(--gray-400)', fontSize: '0.6rem' }}>
+            <p className="text-center" style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.6rem' }}>
               Escaneá para verificar
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Status + dates */}
+      <div className="px-5 py-4 flex items-center justify-between gap-3 flex-wrap">
+        <div
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
+          style={{ background: statusCfg.bg, border: `1px solid ${statusCfg.border}`, color: statusCfg.color }}
+        >
+          {status === 'active' ? (
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ background: statusCfg.color }} />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: statusCfg.color }} />
+            </span>
+          ) : (
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusCfg.color }} />
+          )}
+          {statusCfg.label}
+        </div>
+
+        {affiliate?.cobertura_hasta && (
+          <p className="text-xs" style={{ color: 'var(--gray-500)' }}>
+            Hasta{' '}
+            <span className="font-semibold" style={{ color: 'var(--gray-700)' }}>
+              {formatDate(affiliate.cobertura_hasta)}
+            </span>
+          </p>
+        )}
       </div>
     </div>
   )
