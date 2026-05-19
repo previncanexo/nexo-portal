@@ -31,12 +31,35 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isPortalRoute = request.nextUrl.pathname.startsWith('/portal')
+  const pathname = request.nextUrl.pathname
+  const isPortalRoute = pathname.startsWith('/portal')
+  const isAdminRoute = pathname.startsWith('/admin')
 
   if (isPortalRoute && !user) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
     return NextResponse.redirect(loginUrl)
+  }
+
+  if (isAdminRoute) {
+    if (!user) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/login'
+      return NextResponse.redirect(loginUrl)
+    }
+
+    const adminEmails = (process.env.ADMIN_EMAILS ?? '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean)
+
+    const userEmail = user.email?.toLowerCase() ?? ''
+
+    if (!adminEmails.includes(userEmail)) {
+      const portalUrl = request.nextUrl.clone()
+      portalUrl.pathname = '/portal'
+      return NextResponse.redirect(portalUrl)
+    }
   }
 
   return supabaseResponse
