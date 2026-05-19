@@ -27,15 +27,12 @@ export default async function PortalPage() {
       <ServiceCards affiliate={affiliate as Affiliate | null} />
 
       {/* Próximamente */}
-      <div
-        className="glass-card p-6 text-center"
-        style={{ border: '1px solid rgba(255,255,255,0.1)' }}
-      >
+      <div className="glass-card p-6 text-center">
         <div
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-3"
           style={{
-            background: 'rgba(134,96,239,0.2)',
-            border: '1px solid rgba(134,96,239,0.4)',
+            background: 'rgba(134,96,239,0.1)',
+            border: '1px solid rgba(134,96,239,0.3)',
             color: 'var(--purple)',
           }}
         >
@@ -46,12 +43,12 @@ export default async function PortalPage() {
           Próximamente
         </div>
         <h3
-          className="text-lg font-semibold text-white mb-1"
-          style={{ fontFamily: 'var(--font-dm-serif)' }}
+          className="text-lg font-semibold mb-1"
+          style={{ fontFamily: 'var(--font-dm-serif)', color: 'var(--gray-900)' }}
         >
           A la Carta
         </h3>
-        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+        <p className="text-sm" style={{ color: 'var(--gray-500)' }}>
           Muy pronto vas a poder sumar servicios adicionales según tus necesidades.
         </p>
       </div>

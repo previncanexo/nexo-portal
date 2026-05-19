@@ -78,12 +78,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 py-12 relative"
-      style={{
-        background: 'linear-gradient(135deg, #1a0533 0%, #2d0a4e 40%, #1a0533 100%)',
-      }}
-    >
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative">
       {/* Subtle dot pattern */}
       <div
         className="fixed inset-0 pointer-events-none"
@@ -91,16 +86,6 @@ export default function LoginPage() {
           backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)',
           backgroundSize: '28px 28px',
         }}
-      />
-
-      {/* Decorative orbs */}
-      <div
-        className="fixed top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full opacity-20 blur-3xl pointer-events-none"
-        style={{ background: 'var(--purple)' }}
-      />
-      <div
-        className="fixed bottom-[-20%] left-[-10%] w-[400px] h-[400px] rounded-full opacity-20 blur-3xl pointer-events-none"
-        style={{ background: 'var(--pink)' }}
       />
 
       <div className="w-full max-w-sm relative z-10">
@@ -124,7 +109,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="glass-card p-8">
+        <div className="glass-card p-8" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)' }}>
           <h2
             className="text-xl font-semibold text-white mb-1"
             style={{ fontFamily: 'var(--font-dm-sans)' }}
@@ -243,9 +228,7 @@ export default function LoginPage() {
         </div>
 
         {/* Services strip */}
-        <div
-          className="mt-5 flex items-center justify-center gap-4 flex-wrap px-2"
-        >
+        <div className="mt-5 flex items-center justify-center gap-4 flex-wrap px-2">
           {LOGIN_SERVICES.map((s) => (
             <div
               key={s.label}

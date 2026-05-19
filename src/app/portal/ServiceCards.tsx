@@ -7,41 +7,41 @@ interface ServiceCardsProps {
   affiliate: Affiliate | null
 }
 
-function IconVideoCamera() {
+function IconDOC24() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M15 10l4.553-2.276A1 1 0 0 1 21 8.723v6.554a1 1 0 0 1-1.447.894L15 14" />
-      <rect x="2" y="7" width="13" height="10" rx="2" />
-      <circle cx="7" cy="12" r="1.5" fill="currentColor" stroke="none" />
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+      <line x1="8" y1="21" x2="16" y2="21"/>
+      <line x1="12" y1="17" x2="12" y2="21"/>
     </svg>
   )
 }
 
-function IconAmbulance() {
+function IconUrgencias() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10 17H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h10l4 4v7a1 1 0 0 1-1 1h-2" />
-      <circle cx="7.5" cy="17.5" r="2.5" />
-      <circle cx="17.5" cy="17.5" r="2.5" />
-      <path d="M8 10h4M10 8v4" />
-      <path d="M10 17h5" />
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7.5 4.27l-4.12 2.6A2 2 0 0 0 2.5 8.6v6.8a2 2 0 0 0 .88 1.66l7.5 5a2 2 0 0 0 2.24 0l7.5-5a2 2 0 0 0 .88-1.66V8.6a2 2 0 0 0-.88-1.73L16.5 4.27a2 2 0 0 0-2.24 0z"/>
+      <line x1="12" y1="8" x2="12" y2="16"/>
+      <line x1="8" y1="12" x2="16" y2="12"/>
     </svg>
   )
 }
 
-function IconPill() {
+function IconFarmacias() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
-      <line x1="8.5" y1="8.5" x2="15.5" y2="15.5" />
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.5 1h3a1.5 1.5 0 0 1 1.5 1.5V5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V2.5A1.5 1.5 0 0 1 10.5 1z"/>
+      <line x1="9" y1="12" x2="15" y2="12"/>
+      <line x1="9" y1="16" x2="13" y2="16"/>
+      <path d="M10.5 1v4M13.5 1v4"/>
     </svg>
   )
 }
 
-function IconTooth() {
+function IconOdontologia() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 5.5c-1.5-2-4-2.5-5.5-1S4 8 4.5 10c.3 1 .5 2 .5 3 0 2 .5 4 1.5 5.5.5.8 1 1.5 1.5 1.5s1-1 1.5-2.5c.3-1 .5-2 .5-3 0 1 .2 2 .5 3 .5 1.5 1 2.5 1.5 2.5s1-.7 1.5-1.5C18.5 17 19 15 19 13c0-1 .2-2 .5-3 .5-2-.5-4.5-2-6S13.5 3.5 12 5.5Z" />
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2c-1.7 0-3 1.5-3 3.5 0 1.2.5 2.3 1.2 3C9 9.3 7 11 7 13.5 7 17 9 22 12 22s5-5 5-8.5c0-2.5-2-4.2-3.2-5 .7-.7 1.2-1.8 1.2-3C15 3.5 13.7 2 12 2z"/>
     </svg>
   )
 }
@@ -54,7 +54,7 @@ function StatusBadge({ serviceId }: { serviceId: string }) {
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#4ade80' }} />
           <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#4ade80' }} />
         </span>
-        <span className="text-xs font-semibold" style={{ color: '#4ade80' }}>Disponible 24hs</span>
+        <span className="text-xs font-semibold" style={{ color: '#16a34a' }}>Disponible 24hs</span>
       </div>
     )
   }
@@ -65,17 +65,17 @@ function StatusBadge({ serviceId }: { serviceId: string }) {
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#EF4444' }} />
           <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#EF4444' }} />
         </span>
-        <span className="text-xs font-semibold" style={{ color: '#EF4444' }}>Respuesta inmediata</span>
+        <span className="text-xs font-semibold" style={{ color: '#dc2626' }}>Respuesta inmediata</span>
       </div>
     )
   }
   if (serviceId === 'farmacias') {
     return (
-      <span className="text-xs font-semibold" style={{ color: '#22C55E' }}>50% de descuento</span>
+      <span className="text-xs font-semibold" style={{ color: '#16a34a' }}>50% de descuento</span>
     )
   }
   return (
-    <span className="text-xs font-semibold" style={{ color: '#14B8A6' }}>Urgencias disponibles</span>
+    <span className="text-xs font-semibold" style={{ color: '#0f766e' }}>Urgencias disponibles</span>
   )
 }
 
@@ -94,12 +94,11 @@ function FarmaciaModal({
     >
       <div
         className="glass-card p-8 text-center max-w-xs w-full"
-        style={{ border: '1px solid rgba(255,255,255,0.2)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <p
           className="text-xs font-semibold uppercase tracking-widest mb-2"
-          style={{ color: 'rgba(255,255,255,0.45)' }}
+          style={{ color: 'var(--gray-500)' }}
         >
           Tu credencial de descuento
         </p>
@@ -115,12 +114,12 @@ function FarmaciaModal({
         >
           {affiliateNumber}
         </div>
-        <p className="text-xs mb-6" style={{ color: 'rgba(255,255,255,0.5)' }}>
+        <p className="text-xs mb-6" style={{ color: 'var(--gray-600)' }}>
           Mostrá este número en la farmacia para acceder al 50% de descuento.
         </p>
         <button
           onClick={onClose}
-          className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-80"
+          className="w-full py-2.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-80"
           style={{
             background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
             cursor: 'pointer',
@@ -133,13 +132,6 @@ function FarmaciaModal({
   )
 }
 
-const SERVICE_COLORS: Record<string, string> = {
-  teleconsultas: '#3B82F6',
-  urgencias: '#EF4444',
-  farmacias: '#22C55E',
-  odontologia: '#14B8A6',
-}
-
 interface ServiceCard {
   id: string
   title: string
@@ -148,6 +140,8 @@ interface ServiceCard {
   buttonAction: 'link' | 'tel' | 'modal'
   buttonHref?: string
   icon: React.ReactNode
+  colorFrom: string
+  colorTo: string
 }
 
 export default function ServiceCards({ affiliate }: ServiceCardsProps) {
@@ -161,7 +155,9 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       buttonLabel: 'Usar servicio',
       buttonAction: 'link',
       buttonHref: '#',
-      icon: <IconVideoCamera />,
+      icon: <IconDOC24 />,
+      colorFrom: 'var(--purple)',
+      colorTo: 'var(--pink)',
     },
     {
       id: 'urgencias',
@@ -170,7 +166,9 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       buttonLabel: 'Llamar ahora',
       buttonAction: 'tel',
       buttonHref: 'tel:+541100000000',
-      icon: <IconAmbulance />,
+      icon: <IconUrgencias />,
+      colorFrom: '#EF4444',
+      colorTo: '#F97316',
     },
     {
       id: 'farmacias',
@@ -178,7 +176,9 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       description: 'Accedé a descuentos exclusivos en farmacias adheridas de todo el país.',
       buttonLabel: 'Ver credencial',
       buttonAction: 'modal',
-      icon: <IconPill />,
+      icon: <IconFarmacias />,
+      colorFrom: '#22C55E',
+      colorTo: '#16A34A',
     },
     {
       id: 'odontologia',
@@ -187,7 +187,9 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       buttonLabel: 'Más información',
       buttonAction: 'link',
       buttonHref: '#',
-      icon: <IconTooth />,
+      icon: <IconOdontologia />,
+      colorFrom: '#14B8A6',
+      colorTo: 'var(--purple)',
     },
   ]
 
@@ -206,66 +208,51 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       <div>
         <h3
           className="text-sm font-semibold uppercase tracking-widest mb-4"
-          style={{ color: 'rgba(255,255,255,0.4)' }}
+          style={{ color: 'var(--gray-500)' }}
         >
           Tus servicios
         </h3>
         <div className="grid grid-cols-2 gap-3">
-          {services.map((service) => {
-            const accentColor = SERVICE_COLORS[service.id]
-            return (
+          {services.map((service) => (
+            <div
+              key={service.id}
+              className="glass-card p-5 flex flex-col gap-4"
+            >
+              {/* Ícono con gradiente */}
               <div
-                key={service.id}
-                className="glass-card flex flex-col overflow-hidden"
-                style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+                className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg"
+                style={{ background: `linear-gradient(135deg, ${service.colorFrom} 0%, ${service.colorTo} 100%)` }}
               >
-                {/* Top color stripe */}
-                <div className="h-1 w-full shrink-0" style={{ background: accentColor }} />
-
-                <div className="p-4 flex flex-col gap-3 flex-1">
-                  {/* Icon */}
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0"
-                    style={{ background: `${accentColor}26` }}
-                  >
-                    <span style={{ color: accentColor }}>{service.icon}</span>
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1">
-                    <div className="mb-1">
-                      <StatusBadge serviceId={service.id} />
-                    </div>
-                    <h4
-                      className="text-sm font-semibold text-white leading-tight mb-1"
-                      style={{ fontFamily: 'var(--font-dm-sans)' }}
-                    >
-                      {service.title}
-                    </h4>
-                    <p
-                      className="text-xs leading-relaxed"
-                      style={{ color: 'rgba(255,255,255,0.5)' }}
-                    >
-                      {service.description}
-                    </p>
-                  </div>
-
-                  {/* Button */}
-                  <button
-                    onClick={() => handleCardAction(service)}
-                    className="w-full py-2 px-3 rounded-xl text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 text-center"
-                    style={{
-                      background: accentColor,
-                      cursor: 'pointer',
-                      fontFamily: 'var(--font-dm-sans)',
-                    }}
-                  >
-                    {service.buttonLabel}
-                  </button>
-                </div>
+                {service.icon}
               </div>
-            )
-          })}
+
+              {/* Status badge */}
+              <StatusBadge serviceId={service.id} />
+
+              {/* Título y descripción */}
+              <div>
+                <h4 className="text-sm font-bold mb-1" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
+                  {service.title}
+                </h4>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--gray-600)' }}>
+                  {service.description}
+                </p>
+              </div>
+
+              {/* Botón */}
+              <button
+                onClick={() => handleCardAction(service)}
+                className="w-full py-2.5 px-3 rounded-full text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 text-center mt-auto"
+                style={{
+                  background: `linear-gradient(135deg, ${service.colorFrom} 0%, ${service.colorTo} 100%)`,
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-dm-sans)',
+                }}
+              >
+                {service.buttonLabel}
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 

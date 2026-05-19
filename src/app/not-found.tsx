@@ -2,26 +2,13 @@ import Link from 'next/link'
 
 export default function NotFound() {
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 py-12 relative"
-      style={{
-        background: 'linear-gradient(135deg, #1a0533 0%, #2d0a4e 40%, #1a0533 100%)',
-      }}
-    >
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative">
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
           backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)',
           backgroundSize: '28px 28px',
         }}
-      />
-      <div
-        className="fixed top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full opacity-15 blur-3xl pointer-events-none"
-        style={{ background: 'var(--purple)' }}
-      />
-      <div
-        className="fixed bottom-[-20%] left-[-10%] w-[400px] h-[400px] rounded-full opacity-15 blur-3xl pointer-events-none"
-        style={{ background: 'var(--pink)' }}
       />
 
       <div className="w-full max-w-sm relative z-10 text-center">

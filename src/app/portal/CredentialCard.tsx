@@ -10,27 +10,27 @@ interface CredentialCardProps {
 const STATUS_CONFIG = {
   active: {
     label: 'Activo',
-    color: '#4ade80',
-    bg: 'rgba(74,222,128,0.15)',
-    border: 'rgba(74,222,128,0.3)',
+    color: '#16a34a',
+    bg: 'rgba(22,163,74,0.1)',
+    border: 'rgba(22,163,74,0.3)',
   },
   pending: {
     label: 'Pendiente',
-    color: '#facc15',
-    bg: 'rgba(250,204,21,0.15)',
-    border: 'rgba(250,204,21,0.3)',
+    color: '#ca8a04',
+    bg: 'rgba(202,138,4,0.1)',
+    border: 'rgba(202,138,4,0.3)',
   },
   suspended: {
     label: 'Suspendido',
-    color: '#fb923c',
-    bg: 'rgba(251,146,60,0.15)',
-    border: 'rgba(251,146,60,0.3)',
+    color: '#ea580c',
+    bg: 'rgba(234,88,12,0.1)',
+    border: 'rgba(234,88,12,0.3)',
   },
   cancelled: {
     label: 'Cancelado',
-    color: '#f87171',
-    bg: 'rgba(248,113,113,0.15)',
-    border: 'rgba(248,113,113,0.3)',
+    color: '#dc2626',
+    bg: 'rgba(220,38,38,0.1)',
+    border: 'rgba(220,38,38,0.3)',
   },
 }
 
@@ -52,13 +52,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
   const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending
 
   return (
-    <div
-      className="glass-card overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, rgba(134,96,239,0.2) 0%, rgba(238,92,208,0.2) 100%)',
-        border: '1px solid rgba(255,255,255,0.15)',
-      }}
-    >
+    <div className="glass-card overflow-hidden">
       {/* Top gradient stripe */}
       <div
         className="h-1 w-full"
@@ -70,7 +64,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
         <div className="flex items-start justify-between mb-3">
           <p
             className="text-xs font-semibold uppercase tracking-widest"
-            style={{ color: 'rgba(255,255,255,0.45)' }}
+            style={{ color: 'var(--gray-500)' }}
           >
             Afiliado
           </p>
@@ -91,8 +85,8 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
           {/* Left: affiliate info */}
           <div className="flex-1 min-w-0">
             <h2
-              className="text-2xl font-normal text-white leading-tight mb-3 truncate"
-              style={{ fontFamily: 'var(--font-dm-serif)' }}
+              className="text-2xl font-normal leading-tight mb-3 truncate"
+              style={{ fontFamily: 'var(--font-dm-serif)', color: 'var(--gray-900)' }}
             >
               {affiliate
                 ? `${affiliate.nombre} ${affiliate.apellido}`
@@ -103,13 +97,13 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
             <div
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl mb-4"
               style={{
-                background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: 'var(--gray-100)',
+                border: '1px solid var(--gray-200)',
               }}
             >
               <span
                 className="text-xs font-medium"
-                style={{ color: 'rgba(255,255,255,0.5)' }}
+                style={{ color: 'var(--gray-500)' }}
               >
                 N° de afiliado
               </span>
@@ -117,10 +111,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
                 className="text-base font-bold tracking-widest"
                 style={{
                   fontFamily: 'monospace',
-                  background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
+                  color: 'var(--purple)',
                 }}
               >
                 {affiliate?.affiliate_number ?? '—'}
@@ -159,10 +150,10 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
 
               {affiliate?.cobertura_hasta && (
                 <div className="flex items-center gap-1">
-                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  <span className="text-xs" style={{ color: 'var(--gray-500)' }}>
                     Cobertura hasta
                   </span>
-                  <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--gray-700)' }}>
                     {formatDate(affiliate.cobertura_hasta)}
                   </span>
                 </div>
@@ -171,10 +162,10 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
 
             {affiliate?.cobertura_desde && (
               <div className="flex items-center gap-1 mt-2">
-                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                <span className="text-xs" style={{ color: 'var(--gray-500)' }}>
                   Cobertura activa desde:
                 </span>
-                <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                <span className="text-xs font-semibold" style={{ color: 'var(--gray-700)' }}>
                   {formatDate(affiliate.cobertura_desde)}
                 </span>
               </div>
@@ -185,7 +176,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
           <div className="shrink-0 flex flex-col items-center gap-1.5">
             <div
               className="p-2 rounded-xl"
-              style={{ background: 'white' }}
+              style={{ background: 'white', border: '1px solid var(--gray-200)' }}
             >
               <QRCode
                 value={qrValue}
@@ -195,7 +186,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
             </div>
             <span
               className="text-center"
-              style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.6rem', lineHeight: '1.2' }}
+              style={{ color: 'var(--gray-500)', fontSize: '0.6rem', lineHeight: '1.2' }}
             >
               Escaneá para verificar
             </span>
@@ -205,7 +196,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
         {/* Divider */}
         <div
           className="mt-5"
-          style={{ height: '1px', background: 'linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%)' }}
+          style={{ height: '1px', background: 'var(--gray-200)' }}
         />
       </div>
     </div>

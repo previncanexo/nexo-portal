@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Affiliate } from '@/lib/types'
@@ -27,65 +28,35 @@ export default function PortalHeader({ affiliate }: PortalHeaderProps) {
     router.refresh()
   }
 
-  const displayName = affiliate
-    ? `${affiliate.nombre} ${affiliate.apellido}`
-    : 'Mi cuenta'
+  const displayName = affiliate ? `${affiliate.nombre} ${affiliate.apellido}` : 'Mi cuenta'
 
   return (
     <header
-      className="relative z-10 px-4 py-4"
+      className="sticky top-0 z-50 px-4 py-3"
       style={{
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        background: 'rgba(0,0,0,0.2)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        background: 'linear-gradient(135deg, color-mix(in srgb, var(--purple) 85%, transparent) 0%, color-mix(in srgb, var(--pink) 85%, transparent) 100%)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(255,255,255,0.15)',
       }}
     >
       <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
-        {/* Logo */}
-        <div className="flex flex-col leading-none">
-          <span
-            className="text-2xl font-normal"
-            style={{
-              fontFamily: 'var(--font-dm-serif)',
-              background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            nexo
-          </span>
-          <span
-            className="text-xs font-medium"
-            style={{ color: 'rgba(255,255,255,0.35)', letterSpacing: '0.04em', marginTop: '-2px' }}
-          >
-            by Previnca
-          </span>
-        </div>
+        <Image src="/logo.png" alt="Nexo by Previnca" width={100} height={40} style={{ objectFit: 'contain', height: '36px', width: 'auto' }} priority />
 
-        {/* Right side */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1.5">
-            <span style={{ color: 'rgba(255,255,255,0.45)' }}>
-              <IconPerson />
-            </span>
-            <span
-              className="text-sm font-medium truncate max-w-[180px]"
-              style={{ color: 'rgba(255,255,255,0.75)' }}
-            >
-              {displayName}
-            </span>
+          <div className="hidden sm:flex items-center gap-1.5 text-white/80">
+            <IconPerson />
+            <span className="text-sm font-medium truncate max-w-[180px]">{displayName}</span>
           </div>
           <button
             onClick={handleLogout}
-            className="text-xs font-semibold px-4 py-2 rounded-xl transition-all hover:opacity-80"
+            className="text-xs font-semibold px-4 py-2 rounded-full transition-all hover:bg-white/20 active:scale-95"
             style={{
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              color: 'rgba(255,255,255,0.7)',
-              fontFamily: 'var(--font-dm-sans)',
+              background: 'rgba(255,255,255,0.12)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              color: 'white',
               cursor: 'pointer',
+              fontFamily: 'var(--font-dm-sans)',
             }}
           >
             Salir
