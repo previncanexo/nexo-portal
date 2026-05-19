@@ -73,7 +73,7 @@ function FarmaciaModal({ affiliateNumber, onClose }: { affiliateNumber: string; 
             <path d="M10.5 1v4M13.5 1v4"/>
           </svg>
         </div>
-        <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
+        <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--gray-400)' }}>
           N° de afiliado
         </p>
         <div
@@ -88,7 +88,7 @@ function FarmaciaModal({ affiliateNumber, onClose }: { affiliateNumber: string; 
         >
           {affiliateNumber}
         </div>
-        <p className="text-xs mb-6" style={{ color: 'rgba(255,255,255,0.55)' }}>
+        <p className="text-xs mb-6" style={{ color: 'var(--gray-500)' }}>
           Mostrá este número en la farmacia para el 50% de descuento.
         </p>
         <button
@@ -201,7 +201,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
               style={{ background: `linear-gradient(135deg, ${service.colorFrom} 0%, ${service.colorTo} 100%)` }}
             >
               <service.Icon />
-              <p className="text-sm font-bold tracking-tight text-white">{service.title}</p>
+              <p className="text-sm font-bold tracking-tight" style={{ color: 'var(--gray-900)' }}>{service.title}</p>
             </div>
 
             {/* Content */}
@@ -223,7 +223,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
                 )}
               </div>
 
-              <p className="text-xs leading-relaxed flex-1" style={{ color: 'rgba(255,255,255,0.55)' }}>
+              <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--gray-500)' }}>
                 {service.subtitle}
               </p>
 

@@ -92,9 +92,9 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
         </div>
 
         {affiliate?.cobertura_hasta && (
-          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          <p className="text-xs" style={{ color: 'var(--gray-500)' }}>
             Hasta{' '}
-            <span className="font-semibold text-white">
+            <span className="font-semibold" style={{ color: 'var(--gray-700)' }}>
               {formatDate(affiliate.cobertura_hasta)}
             </span>
           </p>
