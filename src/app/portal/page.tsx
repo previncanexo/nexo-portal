@@ -72,10 +72,10 @@ export default async function PortalPage() {
             </svg>
           </div>
           <div className="flex-1">
-            <p className="text-sm font-bold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
               A la Carta
             </p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)' }}>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
               Sumá servicios adicionales a tu plan.
             </p>
           </div>
