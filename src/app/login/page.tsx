@@ -233,7 +233,7 @@ export default function LoginPage() {
 
           <div className="mt-5 text-center">
             <a
-              href="#"
+              href="/forgot-password"
               className="text-sm transition-opacity hover:opacity-80"
               style={{ color: 'rgba(255,255,255,0.45)' }}
             >
