@@ -5,10 +5,10 @@ import Image from 'next/image'
 import type { CreateAffiliateResponse } from '@/lib/types'
 
 const CARD_STYLE = {
-  background: 'rgba(134,96,239,0.15)',
-  border: '1px solid rgba(134,96,239,0.3)',
-  backdropFilter: 'blur(40px)',
-  WebkitBackdropFilter: 'blur(40px)',
+  background: 'rgba(134,96,239,0.55)',
+  border: '1px solid rgba(255,255,255,0.18)',
+  backdropFilter: 'blur(32px)',
+  WebkitBackdropFilter: 'blur(32px)',
 } as const
 
 interface FormData {
