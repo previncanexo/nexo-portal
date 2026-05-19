@@ -109,7 +109,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="rounded-3xl p-8" style={{ background: 'rgba(10,4,28,0.82)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)' }}>
+        <div className="rounded-3xl p-8" style={{ background: 'rgba(134,96,239,0.15)', border: '1px solid rgba(134,96,239,0.3)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}>
           <h2
             className="text-xl font-semibold text-white mb-1"
             style={{ fontFamily: 'var(--font-dm-sans)' }}
