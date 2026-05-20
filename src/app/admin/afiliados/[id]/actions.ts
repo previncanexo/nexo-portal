@@ -116,15 +116,21 @@ export async function addPayment(affiliateId: string, formData: FormData) {
 
   const currency = (formData.get('currency') as string) || 'ARS'
   const payment_method = (formData.get('payment_method') as string) || 'transferencia'
-  const status = (formData.get('status') as string) || 'approved'
+  const paymentStatus = (formData.get('status') as string) || 'approved'
   const external_id = (formData.get('external_id') as string)?.trim() || null
+
+  const { data: affiliate } = await supabase
+    .from('affiliates')
+    .select('status, nombre, email, affiliate_number, plan:plans(name)')
+    .eq('id', affiliateId)
+    .single()
 
   const { error } = await supabase.from('payments').insert({
     affiliate_id: affiliateId,
     amount,
     currency,
     payment_method,
-    status,
+    status: paymentStatus,
     external_id,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -132,6 +138,27 @@ export async function addPayment(affiliateId: string, formData: FormData) {
 
   if (error) {
     return { success: false, message: error.message }
+  }
+
+  // Si el pago es aprobado y el afiliado está pendiente → activar automáticamente
+  if (paymentStatus === 'approved' && affiliate?.status === 'pending') {
+    await supabase
+      .from('affiliates')
+      .update({ status: 'active', updated_at: new Date().toISOString() })
+      .eq('id', affiliateId)
+
+    await sendActivationEmail({
+      nombre: affiliate.nombre,
+      email: affiliate.email,
+      affiliate_number: affiliate.affiliate_number,
+      plan: Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan,
+    })
+
+    revalidatePath('/admin')
+    revalidatePath('/admin/afiliados')
+    revalidatePath(`/admin/afiliados/${affiliateId}`)
+
+    return { success: true, message: 'Pago registrado. Afiliado activado automáticamente.' }
   }
 
   revalidatePath(`/admin/afiliados/${affiliateId}`)
