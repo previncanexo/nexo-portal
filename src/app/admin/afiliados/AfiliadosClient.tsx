@@ -5,10 +5,10 @@ import Link from 'next/link'
 import type { Affiliate, AffiliateStatus } from '@/lib/types'
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string }> = {
-  active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.1)',   border: 'rgba(22,163,74,0.2)' },
-  pending:   { label: 'Pendiente',  color: '#ca8a04', bg: 'rgba(202,138,4,0.1)',   border: 'rgba(202,138,4,0.2)' },
-  suspended: { label: 'Suspendido', color: '#ea580c', bg: 'rgba(234,88,12,0.1)',   border: 'rgba(234,88,12,0.2)' },
-  cancelled: { label: 'Cancelado',  color: '#dc2626', bg: 'rgba(220,38,38,0.1)',   border: 'rgba(220,38,38,0.2)' },
+  active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.12)',   border: 'rgba(22,163,74,0.25)' },
+  pending:   { label: 'Pendiente',  color: '#b45309', bg: 'rgba(180,83,9,0.1)',    border: 'rgba(180,83,9,0.22)' },
+  suspended: { label: 'Suspendido', color: '#c2410c', bg: 'rgba(194,65,12,0.1)',   border: 'rgba(194,65,12,0.22)' },
+  cancelled: { label: 'Cancelado',  color: '#b91c1c', bg: 'rgba(185,28,28,0.1)',   border: 'rgba(185,28,28,0.22)' },
 }
 
 type PeriodFilter = 'all' | 'week' | 'month' | 'year'
@@ -23,7 +23,6 @@ function getStartOf(period: PeriodFilter): Date | null {
   const now = new Date()
   if (period === 'year') return new Date(now.getFullYear(), 0, 1)
   if (period === 'month') return new Date(now.getFullYear(), now.getMonth(), 1)
-  // week: Monday
   const day = now.getDay()
   const diff = (day === 0 ? -6 : 1 - day)
   const monday = new Date(now)
@@ -82,10 +81,10 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
   }, [affiliates, period, statusFilter])
 
   const stats = [
-    { label: 'Total',      value: filtered.length,                                                       accent: 'var(--purple)' },
-    { label: 'Activos',    value: filtered.filter((a) => a.status === 'active').length,                   accent: '#16a34a' },
-    { label: 'Pendientes', value: filtered.filter((a) => a.status === 'pending').length,                  accent: '#ca8a04' },
-    { label: 'Inactivos',  value: filtered.filter((a) => a.status === 'suspended' || a.status === 'cancelled').length, accent: '#ea580c' },
+    { label: 'Total',      value: filtered.length,                                                                         accent: 'var(--purple)', accentBg: 'rgba(134,96,239,0.1)' },
+    { label: 'Activos',    value: filtered.filter((a) => a.status === 'active').length,                                     accent: '#16a34a',       accentBg: 'rgba(22,163,74,0.08)' },
+    { label: 'Pendientes', value: filtered.filter((a) => a.status === 'pending').length,                                    accent: '#b45309',       accentBg: 'rgba(180,83,9,0.08)' },
+    { label: 'Inactivos',  value: filtered.filter((a) => a.status === 'suspended' || a.status === 'cancelled').length,      accent: '#b91c1c',       accentBg: 'rgba(185,28,28,0.08)' },
   ]
 
   const PERIODS: { value: PeriodFilter; label: string }[] = [
@@ -109,23 +108,29 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          <p
+            className="text-sm font-semibold uppercase tracking-widest mb-1"
+            style={{ color: 'rgba(255,255,255,0.50)', fontFamily: 'var(--font-dm-sans)' }}
+          >
             Panel de administración
           </p>
-          <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+          <h1
+            className="text-3xl font-bold text-white"
+            style={{ fontFamily: 'var(--font-dm-sans)' }}
+          >
             Afiliados
           </h1>
         </div>
 
-        {/* Export button */}
         <button
           onClick={() => exportCSV(filtered)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
           style={{
-            background: 'rgba(255,255,255,0.12)',
+            background: 'rgba(255,255,255,0.1)',
             border: '1px solid rgba(255,255,255,0.2)',
-            color: 'white',
+            color: 'rgba(255,255,255,0.9)',
             fontFamily: 'var(--font-dm-sans)',
+            cursor: 'pointer',
           }}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -140,15 +145,18 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
         {/* Period filter */}
-        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <div
+          className="flex gap-1 p-1 rounded-xl"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+        >
           {PERIODS.map((p) => (
             <button
               key={p.value}
               onClick={() => setPeriod(p.value)}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
               style={{
                 background: period === p.value ? 'white' : 'transparent',
-                color: period === p.value ? 'var(--purple)' : 'rgba(255,255,255,0.55)',
+                color: period === p.value ? 'var(--purple)' : 'rgba(255,255,255,0.70)',
                 border: 'none',
                 cursor: 'pointer',
                 fontFamily: 'var(--font-dm-sans)',
@@ -163,17 +171,17 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as AffiliateStatus | 'all')}
-          className="px-3 py-2 rounded-xl text-xs font-semibold outline-none"
+          className="px-4 py-2.5 rounded-xl text-sm font-semibold outline-none"
           style={{
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            color: 'rgba(255,255,255,0.8)',
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            color: 'rgba(255,255,255,0.85)',
             fontFamily: 'var(--font-dm-sans)',
             cursor: 'pointer',
           }}
         >
           {STATUSES.map((s) => (
-            <option key={s.value} value={s.value} style={{ background: '#1a0a3c', color: 'white' }}>
+            <option key={s.value} value={s.value} style={{ background: '#0f1623', color: 'white' }}>
               {s.label}
             </option>
           ))}
@@ -183,11 +191,26 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s) => (
-          <div key={s.label} className="glass-card px-5 py-5">
-            <p className="text-xs font-medium mb-2" style={{ color: 'var(--gray-600)', fontFamily: 'var(--font-dm-sans)' }}>
-              {s.label}
-            </p>
-            <p className="text-3xl font-bold" style={{ color: s.accent, fontFamily: 'var(--font-dm-sans)' }}>
+          <div
+            key={s.label}
+            className="glass-card px-5 py-5"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <p
+                className="text-sm font-semibold"
+                style={{ color: 'var(--gray-700)', fontFamily: 'var(--font-dm-sans)' }}
+              >
+                {s.label}
+              </p>
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ background: s.accent }}
+              />
+            </div>
+            <p
+              className="text-4xl font-bold"
+              style={{ color: s.accent, fontFamily: 'var(--font-dm-sans)' }}
+            >
               {s.value}
             </p>
           </div>
@@ -196,11 +219,14 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
 
       {/* Table */}
       <div className="glass-card overflow-hidden">
-        <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-          <h2 className="text-base font-semibold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
+        <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
+          <h2
+            className="text-lg font-semibold"
+            style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}
+          >
             Listado de afiliados
             {period !== 'all' && (
-              <span className="ml-2 text-xs font-normal" style={{ color: 'var(--gray-500)' }}>
+              <span className="ml-2 text-sm font-normal" style={{ color: 'var(--gray-500)' }}>
                 · {PERIODS.find(p => p.value === period)?.label}
               </span>
             )}
@@ -208,14 +234,14 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-sm" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+          <table className="w-full" style={{ fontFamily: 'var(--font-dm-sans)' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', background: 'rgba(0,0,0,0.02)' }}>
+              <tr style={{ borderBottom: '2px solid rgba(0,0,0,0.08)', background: 'rgba(0,0,0,0.03)' }}>
                 {['N° afiliado', 'Nombre completo', 'Email', 'WhatsApp', 'Estado', 'Cobertura hasta', 'Registro', ''].map((col) => (
                   <th
                     key={col}
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap"
-                    style={{ color: 'var(--gray-500)' }}
+                    className="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap"
+                    style={{ color: 'var(--gray-700)' }}
                   >
                     {col}
                   </th>
@@ -225,32 +251,38 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
             <tbody>
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center" style={{ color: 'var(--gray-500)' }}>
+                  <td
+                    colSpan={8}
+                    className="px-5 py-12 text-center text-sm"
+                    style={{ color: 'var(--gray-500)' }}
+                  >
                     No hay afiliados para el período seleccionado.
                   </td>
                 </tr>
               )}
-              {filtered.map((a) => (
+              {filtered.map((a, i) => (
                 <tr
                   key={a.id}
-                  style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}
-                  className="hover:bg-black/[0.02] transition-colors"
+                  style={{
+                    borderBottom: i < filtered.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none',
+                  }}
+                  className="hover:bg-black/[0.025] transition-colors"
                 >
-                  <td className="px-4 py-3 whitespace-nowrap font-mono text-xs font-semibold" style={{ color: 'var(--purple)' }}>
+                  <td className="px-5 py-4 whitespace-nowrap font-mono text-sm font-bold" style={{ color: 'var(--purple)' }}>
                     {a.affiliate_number}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap font-medium" style={{ color: 'var(--gray-900)' }}>
+                  <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold" style={{ color: 'var(--gray-900)' }}>
                     {a.nombre} {a.apellido}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--gray-700)' }}>
+                  <td className="px-5 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--gray-700)' }}>
                     {a.email}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--gray-700)' }}>
+                  <td className="px-5 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--gray-700)' }}>
                     {a.whatsapp ?? '—'}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-5 py-4 whitespace-nowrap">
                     <span
-                      className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
+                      className="inline-block text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap"
                       style={{
                         color: STATUS_CONFIG[a.status]?.color,
                         background: STATUS_CONFIG[a.status]?.bg,
@@ -260,20 +292,20 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
                       {STATUS_CONFIG[a.status]?.label}
                     </span>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--gray-700)' }}>
+                  <td className="px-5 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--gray-700)' }}>
                     {formatDate(a.cobertura_hasta)}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--gray-500)' }}>
+                  <td className="px-5 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--gray-600)' }}>
                     {formatDate(a.created_at)}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-5 py-4 whitespace-nowrap">
                     <Link
                       href={`/admin/afiliados/${a.id}`}
-                      className="text-xs font-semibold px-3 py-1.5 rounded-full transition-all hover:opacity-80"
+                      className="text-sm font-semibold px-3.5 py-1.5 rounded-full transition-all hover:opacity-80"
                       style={{
                         background: 'rgba(134,96,239,0.1)',
                         color: 'var(--purple)',
-                        border: '1px solid rgba(134,96,239,0.2)',
+                        border: '1px solid rgba(134,96,239,0.25)',
                       }}
                     >
                       Ver
@@ -285,6 +317,7 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
           </table>
         </div>
       </div>
+
     </div>
   )
 }
