@@ -1,11 +1,18 @@
 'use client'
 
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+
+const NAV_LINKS = [
+  { href: '/admin', label: 'Dashboard' },
+  { href: '/admin/afiliados', label: 'Afiliados' },
+]
 
 export default function AdminNav() {
   const router = useRouter()
+  const pathname = usePathname()
 
   async function handleLogout() {
     const supabase = createClient()
@@ -46,6 +53,30 @@ export default function AdminNav() {
           >
             Admin
           </span>
+
+          <nav className="hidden sm:flex items-center gap-1" aria-label="Navegación admin">
+            {NAV_LINKS.map(({ href, label }) => {
+              const isActive =
+                href === '/admin' ? pathname === '/admin' : pathname.startsWith(href)
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className="text-sm font-medium px-3 py-1.5 rounded-lg transition-all"
+                  style={{
+                    fontFamily: 'var(--font-dm-sans)',
+                    color: isActive ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)',
+                    background: isActive ? 'rgba(255,255,255,0.09)' : 'transparent',
+                    border: isActive
+                      ? '1px solid rgba(255,255,255,0.12)'
+                      : '1px solid transparent',
+                  }}
+                >
+                  {label}
+                </Link>
+              )
+            })}
+          </nav>
         </div>
 
         <button

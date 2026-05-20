@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Affiliate, AffiliateStatus } from '@/lib/types'
+import CreateAfiliadoModal from './CreateAfiliadoModal'
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string }> = {
   active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.12)',   border: 'rgba(22,163,74,0.25)' },
@@ -68,17 +70,27 @@ function exportCSV(list: Affiliate[]) {
 }
 
 export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[] }) {
+  const router = useRouter()
   const [period, setPeriod] = useState<PeriodFilter>('all')
   const [statusFilter, setStatusFilter] = useState<AffiliateStatus | 'all'>('all')
+  const [search, setSearch] = useState('')
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   const filtered = useMemo(() => {
     const start = getStartOf(period)
+    const q = search.trim().toLowerCase()
     return affiliates.filter((a) => {
       if (statusFilter !== 'all' && a.status !== statusFilter) return false
       if (start && new Date(a.created_at) < start) return false
+      if (q) {
+        const haystack = [a.nombre, a.apellido, a.dni, a.email]
+          .join(' ')
+          .toLowerCase()
+        if (!haystack.includes(q)) return false
+      }
       return true
     })
-  }, [affiliates, period, statusFilter])
+  }, [affiliates, period, statusFilter, search])
 
   const stats = [
     { label: 'Total',      value: filtered.length,                                                                         accent: 'var(--purple)', accentBg: 'rgba(134,96,239,0.1)' },
@@ -122,25 +134,54 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
           </h1>
         </div>
 
-        <button
-          onClick={() => exportCSV(filtered)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
-          style={{
-            background: 'rgba(255,255,255,0.1)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            color: 'rgba(255,255,255,0.9)',
-            fontFamily: 'var(--font-dm-sans)',
-            cursor: 'pointer',
-          }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Exportar Excel ({filtered.length})
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 rounded-full text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+            style={{
+              background: 'white',
+              color: 'var(--purple)',
+              fontFamily: 'var(--font-dm-sans)',
+              cursor: 'pointer',
+            }}
+          >
+            Nuevo afiliado
+          </button>
+
+          <button
+            onClick={() => exportCSV(filtered)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              color: 'rgba(255,255,255,0.9)',
+              fontFamily: 'var(--font-dm-sans)',
+              cursor: 'pointer',
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Exportar Excel ({filtered.length})
+          </button>
+        </div>
       </div>
+
+      {/* Search */}
+      <input
+        type="search"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Buscar por nombre, apellido, DNI o email..."
+        className="w-full px-4 py-2.5 rounded-xl text-white text-sm outline-none"
+        style={{
+          background: 'rgba(255,255,255,0.07)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          fontFamily: 'var(--font-dm-sans)',
+        }}
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
@@ -317,6 +358,13 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
           </table>
         </div>
       </div>
+
+      {showCreateModal && (
+        <CreateAfiliadoModal
+          onClose={() => setShowCreateModal(false)}
+          onCreated={() => router.refresh()}
+        />
+      )}
 
     </div>
   )

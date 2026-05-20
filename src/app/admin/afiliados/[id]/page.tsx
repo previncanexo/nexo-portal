@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Affiliate, AffiliateStatus, Payment } from '@/lib/types'
 import StatusForm from './StatusForm'
+import PaymentForm from './PaymentForm'
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string }> = {
   active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.1)',  border: 'rgba(22,163,74,0.2)' },
@@ -173,13 +174,25 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
           )}
         </div>
 
-        {/* Right column: change status */}
+        {/* Right column: change status + register payment */}
         <div className="flex flex-col gap-6">
           <div className="glass-card px-6 py-6">
             <h2 className="text-sm font-bold uppercase tracking-wider mb-5" style={{ color: 'var(--gray-700)' }}>
               Cambiar estado
             </h2>
-            <StatusForm affiliateId={affiliate.id} currentStatus={affiliate.status} />
+            <StatusForm
+              affiliateId={affiliate.id}
+              currentStatus={affiliate.status}
+              coberturaDesde={affiliate.cobertura_desde}
+              coberturaHasta={affiliate.cobertura_hasta}
+            />
+          </div>
+
+          <div className="glass-card px-6 py-6">
+            <h2 className="text-sm font-bold uppercase tracking-wider mb-5" style={{ color: 'var(--gray-700)' }}>
+              Registrar pago
+            </h2>
+            <PaymentForm affiliateId={affiliate.id} />
           </div>
         </div>
 

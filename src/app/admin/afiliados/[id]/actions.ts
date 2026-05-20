@@ -4,12 +4,30 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { AffiliateStatus } from '@/lib/types'
 
-export async function updateAffiliateStatus(affiliateId: string, status: AffiliateStatus) {
+export async function updateAffiliateStatus(
+  affiliateId: string,
+  status: AffiliateStatus,
+  coberturaDesde?: string,
+  coberturaHasta?: string,
+) {
   const supabase = createAdminClient()
+
+  const payload: Record<string, unknown> = {
+    status,
+    updated_at: new Date().toISOString(),
+  }
+
+  // Empty string means "clear the field"; undefined means "leave it unchanged"
+  if (coberturaDesde !== undefined) {
+    payload.cobertura_desde = coberturaDesde.trim() === '' ? null : coberturaDesde.trim()
+  }
+  if (coberturaHasta !== undefined) {
+    payload.cobertura_hasta = coberturaHasta.trim() === '' ? null : coberturaHasta.trim()
+  }
 
   const { error } = await supabase
     .from('affiliates')
-    .update({ status, updated_at: new Date().toISOString() })
+    .update(payload)
     .eq('id', affiliateId)
 
   if (error) {
@@ -20,4 +38,39 @@ export async function updateAffiliateStatus(affiliateId: string, status: Affilia
   revalidatePath('/admin/afiliados')
 
   return { success: true, message: 'Estado actualizado correctamente.' }
+}
+
+export async function addPayment(affiliateId: string, formData: FormData) {
+  const supabase = createAdminClient()
+
+  const rawAmount = formData.get('amount') as string
+  const amount = parseFloat(rawAmount)
+
+  if (!rawAmount || isNaN(amount) || amount <= 0) {
+    return { success: false, message: 'El monto debe ser un número mayor a 0.' }
+  }
+
+  const currency = (formData.get('currency') as string) || 'ARS'
+  const payment_method = (formData.get('payment_method') as string) || 'transferencia'
+  const status = (formData.get('status') as string) || 'approved'
+  const external_id = (formData.get('external_id') as string)?.trim() || null
+
+  const { error } = await supabase.from('payments').insert({
+    affiliate_id: affiliateId,
+    amount,
+    currency,
+    payment_method,
+    status,
+    external_id,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  })
+
+  if (error) {
+    return { success: false, message: error.message }
+  }
+
+  revalidatePath(`/admin/afiliados/${affiliateId}`)
+
+  return { success: true, message: 'Pago registrado correctamente.' }
 }
