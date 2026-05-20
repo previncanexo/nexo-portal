@@ -95,6 +95,12 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+    if (!/^\d{7,8}$/.test(dni)) {
+      return NextResponse.json(
+        { error: 'El DNI debe tener 7 u 8 dígitos numéricos' },
+        { status: 400 }
+      )
+    }
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

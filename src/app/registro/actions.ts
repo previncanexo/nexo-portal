@@ -78,6 +78,9 @@ export async function registerAffiliate(input: RegisterInput): Promise<RegisterR
   if (!nombre || !apellido || !dni || !email) {
     return { success: false, error: 'Faltan campos obligatorios: nombre, apellido, DNI y email' }
   }
+  if (!/^\d{7,8}$/.test(dni)) {
+    return { success: false, error: 'El DNI debe tener 7 u 8 dígitos numéricos (sin puntos ni espacios)' }
+  }
 
   const supabase = createAdminClient()
   const tempPassword = generateTempPassword()

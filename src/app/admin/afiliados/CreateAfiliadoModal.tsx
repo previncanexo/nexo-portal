@@ -84,6 +84,12 @@ export default function CreateAfiliadoModal({ plans, onClose, onCreated }: Props
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+
+    if (!/^\d{7,8}$/.test(form.dni)) {
+      setError('El DNI debe tener 7 u 8 dígitos numéricos (sin puntos ni espacios).')
+      return
+    }
+
     setLoading(true)
 
     const payload: CreateAffiliatePayload = {
