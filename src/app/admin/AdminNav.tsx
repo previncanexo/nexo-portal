@@ -9,6 +9,8 @@ import { createClient } from '@/lib/supabase/client'
 const NAV_LINKS = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/afiliados', label: 'Afiliados' },
+  { href: '/admin/pagos', label: 'Pagos' },
+  { href: '/admin/planes', label: 'Planes' },
 ]
 
 export default function AdminNav() {

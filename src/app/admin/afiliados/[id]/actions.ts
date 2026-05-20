@@ -74,6 +74,20 @@ export async function updateAffiliateData(affiliateId: string, formData: FormDat
   return { success: true, message: 'Datos actualizados correctamente.' }
 }
 
+export async function updateAffiliateNotes(affiliateId: string, notes: string) {
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('affiliates')
+    .update({ notes: notes.trim() || null, updated_at: new Date().toISOString() })
+    .eq('id', affiliateId)
+
+  if (error) return { success: false, message: error.message }
+
+  revalidatePath(`/admin/afiliados/${affiliateId}`)
+  return { success: true, message: 'Notas guardadas.' }
+}
+
 export async function addPayment(affiliateId: string, formData: FormData) {
   const supabase = createAdminClient()
 

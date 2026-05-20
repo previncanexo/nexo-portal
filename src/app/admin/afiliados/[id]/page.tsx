@@ -5,6 +5,7 @@ import type { Affiliate, AffiliateStatus, Payment, Plan } from '@/lib/types'
 import StatusForm from './StatusForm'
 import PaymentForm from './PaymentForm'
 import EditAfiliadoForm from './EditAfiliadoForm'
+import NotesForm from './NotesForm'
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string }> = {
   active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.1)',  border: 'rgba(22,163,74,0.2)' },
@@ -207,6 +208,13 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
               Registrar pago
             </h2>
             <PaymentForm affiliateId={affiliate.id} />
+          </div>
+
+          <div className="glass-card px-6 py-6">
+            <h2 className="text-sm font-bold uppercase tracking-wider mb-5" style={{ color: 'var(--gray-700)' }}>
+              Notas internas
+            </h2>
+            <NotesForm affiliateId={affiliate.id} initialNotes={affiliate.notes} />
           </div>
         </div>
 

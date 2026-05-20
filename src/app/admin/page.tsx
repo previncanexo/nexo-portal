@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
+import PendingApprovalSection from './PendingApprovalSection'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -206,7 +207,12 @@ export default async function AdminDashboardPage() {
   ] = await Promise.all([
     supabase.from('affiliates').select('id', { count: 'exact', head: true }),
     supabase.from('affiliates').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-    supabase.from('affiliates').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase
+      .from('affiliates')
+      .select('id, nombre, apellido, email, created_at')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(5),
     supabase.from('payments').select('amount').eq('status', 'approved').gte('created_at', startOfMonth),
     supabase.from('affiliates').select('created_at').gte('created_at', sixMonthsAgo),
     supabase.from('payments').select('amount, created_at').eq('status', 'approved').gte('created_at', sixMonthsAgo),
@@ -228,7 +234,8 @@ export default async function AdminDashboardPage() {
   // ── Stat totals ──────────────────────────────────────────────────────────
   const totalCount = totalRes.count ?? 0
   const activeCount = activeRes.count ?? 0
-  const pendingCount = pendingRes.count ?? 0
+  const pendingAffiliates = (pendingRes.data ?? []) as Array<{ id: string; nombre: string; apellido: string; email: string; created_at: string }>
+  const pendingCount = pendingAffiliates.length
 
   const thisMonthRevenue = (revenueMonthRes.data ?? []).reduce(
     (sum, row) => sum + (row.amount ?? 0),
@@ -286,6 +293,8 @@ export default async function AdminDashboardPage() {
       className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10"
       style={{ fontFamily: 'var(--font-dm-sans)' }}
     >
+      <PendingApprovalSection affiliates={pendingAffiliates} totalCount={pendingCount} />
+
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
         <StatCard label="Total afiliados" value={totalCount} />
