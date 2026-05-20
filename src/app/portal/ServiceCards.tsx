@@ -9,49 +9,38 @@ interface ServiceCardsProps {
 
 function IconDOC24() {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="3" width="20" height="14" rx="2"/>
-      <line x1="8" y1="21" x2="16" y2="21"/>
-      <line x1="12" y1="17" x2="12" y2="21"/>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 10l4.553-2.276A1 1 0 0 1 21 8.723v6.554a1 1 0 0 1-1.447.894L15 14" />
+      <rect x="2" y="7" width="13" height="10" rx="2" />
     </svg>
   )
 }
 
 function IconUrgencias() {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M7.5 4.27l-4.12 2.6A2 2 0 0 0 2.5 8.6v6.8a2 2 0 0 0 .88 1.66l7.5 5a2 2 0 0 0 2.24 0l7.5-5a2 2 0 0 0 .88-1.66V8.6a2 2 0 0 0-.88-1.73L16.5 4.27a2 2 0 0 0-2.24 0z"/>
-      <line x1="12" y1="8" x2="12" y2="16"/>
-      <line x1="8" y1="12" x2="16" y2="12"/>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 17H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h10l4 4v7a1 1 0 0 1-1 1h-2" />
+      <circle cx="7.5" cy="17.5" r="2.5" />
+      <circle cx="17.5" cy="17.5" r="2.5" />
+      <path d="M8 10h4M10 8v4" />
     </svg>
   )
 }
 
 function IconFarmacias() {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10.5 1h3a1.5 1.5 0 0 1 1.5 1.5V5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V2.5A1.5 1.5 0 0 1 10.5 1z"/>
-      <line x1="9" y1="12" x2="15" y2="12"/>
-      <line x1="9" y1="16" x2="13" y2="16"/>
-      <path d="M10.5 1v4M13.5 1v4"/>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
+      <line x1="8.5" y1="8.5" x2="15.5" y2="15.5" />
     </svg>
   )
 }
 
 function IconOdontologia() {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2c-1.7 0-3 1.5-3 3.5 0 1.2.5 2.3 1.2 3C9 9.3 7 11 7 13.5 7 17 9 22 12 22s5-5 5-8.5c0-2.5-2-4.2-3.2-5 .7-.7 1.2-1.8 1.2-3C15 3.5 13.7 2 12 2z"/>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 5.5c-1.5-2-4-2.5-5.5-1S4 8 4.5 10c.3 1 .5 2 .5 3 0 2 .5 4 1.5 5.5.5.8 1 1.5 1.5 1.5s1-1 1.5-2.5c.3-1 .5-2 .5-3 0 1 .2 2 .5 3 .5 1.5 1 2.5 1.5 2.5s1-.7 1.5-1.5C18.5 17 19 15 19 13c0-1 .2-2 .5-3 .5-2-.5-4.5-2-6S13.5 3.5 12 5.5Z" />
     </svg>
-  )
-}
-
-function PingDot({ color }: { color: string }) {
-  return (
-    <span className="relative flex h-1.5 w-1.5 shrink-0">
-      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ background: color }} />
-      <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: color }} />
-    </span>
   )
 }
 
@@ -64,14 +53,10 @@ function FarmaciaModal({ affiliateNumber, onClose }: { affiliateNumber: string; 
     >
       <div className="glass-card p-8 text-center w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
         <div
-          className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-          style={{ background: 'rgba(34,197,94,0.12)' }}
+          className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+          style={{ background: 'rgba(134,96,239,0.1)', color: 'var(--purple)' }}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M10.5 1h3a1.5 1.5 0 0 1 1.5 1.5V5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V2.5A1.5 1.5 0 0 1 10.5 1z"/>
-            <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
-            <path d="M10.5 1v4M13.5 1v4"/>
-          </svg>
+          <IconFarmacias />
         </div>
         <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--gray-400)' }}>
           N° de afiliado
@@ -107,16 +92,16 @@ interface ServiceItem {
   id: string
   title: string
   subtitle: string
-  liveLabel?: string
-  liveColor?: string
-  badge?: string
-  badgeColor?: string
-  badgeBg?: string
+  badge: string
+  badgeColor: string
+  badgeBg: string
+  badgeDot?: boolean
   buttonLabel: string
   buttonAction: 'link' | 'tel' | 'modal'
   buttonHref?: string
-  colorFrom: string
-  colorTo: string
+  accentColor: string
+  accentBg: string
+  glowColor: string
   Icon: React.ComponentType
 }
 
@@ -127,54 +112,62 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     {
       id: 'teleconsultas',
       title: 'DOC24',
-      subtitle: 'Teleconsultas médicas',
-      liveLabel: '24hs disponible',
-      liveColor: '#16a34a',
-      buttonLabel: 'Acceder',
+      subtitle: 'Médico online las 24 horas',
+      badge: '24hs · En vivo',
+      badgeColor: '#16a34a',
+      badgeBg: 'rgba(22,163,74,0.08)',
+      badgeDot: true,
+      buttonLabel: 'Acceder ahora',
       buttonAction: 'link',
       buttonHref: '#',
-      colorFrom: 'var(--purple)',
-      colorTo: 'var(--pink)',
+      accentColor: 'var(--purple)',
+      accentBg: 'rgba(134,96,239,0.1)',
+      glowColor: 'rgba(134,96,239,0.15)',
       Icon: IconDOC24,
     },
     {
       id: 'urgencias',
       title: 'Urgencias',
-      subtitle: 'Asistencia 24/7',
-      liveLabel: 'Inmediato',
-      liveColor: '#dc2626',
-      buttonLabel: 'Llamar',
+      subtitle: 'Asistencia médica inmediata',
+      badge: 'Disponible 24/7',
+      badgeColor: '#dc2626',
+      badgeBg: 'rgba(220,38,38,0.08)',
+      badgeDot: true,
+      buttonLabel: 'Llamar ahora',
       buttonAction: 'tel',
       buttonHref: 'tel:+541100000000',
-      colorFrom: '#EF4444',
-      colorTo: '#F97316',
+      accentColor: '#ef4444',
+      accentBg: 'rgba(239,68,68,0.1)',
+      glowColor: 'rgba(239,68,68,0.12)',
       Icon: IconUrgencias,
     },
     {
       id: 'farmacias',
       title: 'Farmacias',
-      subtitle: 'Red de descuentos',
-      badge: '50% off',
-      badgeColor: '#16a34a',
-      badgeBg: 'rgba(22,163,74,0.1)',
+      subtitle: 'Red de farmacias adheridas',
+      badge: '50% descuento',
+      badgeColor: '#059669',
+      badgeBg: 'rgba(5,150,105,0.08)',
       buttonLabel: 'Ver credencial',
       buttonAction: 'modal',
-      colorFrom: '#22C55E',
-      colorTo: '#16A34A',
+      accentColor: '#10b981',
+      accentBg: 'rgba(16,185,129,0.1)',
+      glowColor: 'rgba(16,185,129,0.12)',
       Icon: IconFarmacias,
     },
     {
       id: 'odontologia',
       title: 'Odontología',
-      subtitle: 'Guardias de urgencia',
-      badge: 'Urgencias',
-      badgeColor: '#0f766e',
-      badgeBg: 'rgba(15,118,110,0.1)',
-      buttonLabel: 'Más info',
+      subtitle: 'Guardias y consultas urgentes',
+      badge: 'Urgencias dentales',
+      badgeColor: '#7c3aed',
+      badgeBg: 'rgba(124,58,237,0.08)',
+      buttonLabel: 'Más información',
       buttonAction: 'link',
       buttonHref: '#',
-      colorFrom: '#14B8A6',
-      colorTo: 'var(--purple)',
+      accentColor: '#8b5cf6',
+      accentBg: 'rgba(139,92,246,0.1)',
+      glowColor: 'rgba(139,92,246,0.12)',
       Icon: IconOdontologia,
     },
   ]
@@ -193,54 +186,74 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     <>
       <div className="grid grid-cols-2 gap-3">
         {services.map((service) => (
-          <div key={service.id} className="glass-card overflow-hidden flex flex-col">
-
-            {/* Gradient header */}
+          <div
+            key={service.id}
+            className="glass-card p-4 flex flex-col gap-3 relative overflow-hidden"
+          >
+            {/* Subtle glow blob top-right */}
             <div
-              className="flex flex-col items-center justify-center gap-2 py-7 text-white"
-              style={{ background: `linear-gradient(135deg, ${service.colorFrom} 0%, ${service.colorTo} 100%)` }}
+              className="absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl pointer-events-none"
+              style={{ background: service.glowColor }}
+            />
+
+            {/* Icon */}
+            <div
+              className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 relative z-10"
+              style={{ background: service.accentBg, color: service.accentColor }}
             >
               <service.Icon />
-              <p className="text-sm font-bold tracking-tight" style={{ color: 'var(--gray-900)' }}>{service.title}</p>
             </div>
 
-            {/* Content */}
-            <div className="flex flex-col gap-3 p-4 flex-1">
-              {/* Status */}
-              <div className="flex items-center gap-1.5">
-                {service.liveLabel ? (
-                  <>
-                    <PingDot color={service.liveColor!} />
-                    <span className="text-xs font-medium" style={{ color: service.liveColor }}>{service.liveLabel}</span>
-                  </>
-                ) : (
-                  <span
-                    className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                    style={{ background: service.badgeBg, color: service.badgeColor }}
-                  >
-                    {service.badge}
-                  </span>
-                )}
-              </div>
-
-              <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--gray-500)' }}>
+            {/* Title + subtitle */}
+            <div className="relative z-10">
+              <p
+                className="text-sm font-bold leading-tight"
+                style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}
+              >
+                {service.title}
+              </p>
+              <p className="text-xs leading-snug mt-0.5" style={{ color: 'var(--gray-500)' }}>
                 {service.subtitle}
               </p>
-
-              {/* CTA */}
-              <button
-                onClick={() => handleAction(service)}
-                className="w-full py-2.5 min-h-[44px] rounded-full text-xs font-bold text-white text-center active:scale-95 transition-transform"
-                style={{
-                  background: `linear-gradient(135deg, ${service.colorFrom} 0%, ${service.colorTo} 100%)`,
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-dm-sans)',
-                }}
-              >
-                {service.buttonLabel}
-              </button>
             </div>
 
+            {/* Badge */}
+            <div
+              className="self-start flex items-center gap-1.5 px-2 py-1 rounded-full relative z-10"
+              style={{ background: service.badgeBg }}
+            >
+              {service.badgeDot && (
+                <span className="relative flex h-1.5 w-1.5 shrink-0">
+                  <span
+                    className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60"
+                    style={{ background: service.badgeColor }}
+                  />
+                  <span
+                    className="relative inline-flex rounded-full h-1.5 w-1.5"
+                    style={{ background: service.badgeColor }}
+                  />
+                </span>
+              )}
+              <span className="text-[10px] font-semibold leading-none" style={{ color: service.badgeColor }}>
+                {service.badge}
+              </span>
+            </div>
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* CTA */}
+            <button
+              onClick={() => handleAction(service)}
+              className="w-full py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-white active:scale-95 transition-transform relative z-10"
+              style={{
+                background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-dm-sans)',
+              }}
+            >
+              {service.buttonLabel}
+            </button>
           </div>
         ))}
       </div>

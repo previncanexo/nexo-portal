@@ -8,10 +8,10 @@ interface CredentialCardProps {
 }
 
 const STATUS_CONFIG = {
-  active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.1)',  border: 'rgba(22,163,74,0.2)'  },
-  pending:   { label: 'Pendiente',  color: '#ca8a04', bg: 'rgba(202,138,4,0.1)', border: 'rgba(202,138,4,0.2)' },
-  suspended: { label: 'Suspendido', color: '#ea580c', bg: 'rgba(234,88,12,0.1)', border: 'rgba(234,88,12,0.2)' },
-  cancelled: { label: 'Cancelado',  color: '#dc2626', bg: 'rgba(220,38,38,0.1)', border: 'rgba(220,38,38,0.2)' },
+  active:    { label: 'Activo',     color: '#4ade80', bg: 'rgba(74,222,128,0.15)',  border: 'rgba(74,222,128,0.25)'  },
+  pending:   { label: 'Pendiente',  color: '#fbbf24', bg: 'rgba(251,191,36,0.15)', border: 'rgba(251,191,36,0.25)' },
+  suspended: { label: 'Suspendido', color: '#fb923c', bg: 'rgba(251,146,60,0.15)', border: 'rgba(251,146,60,0.25)' },
+  cancelled: { label: 'Cancelado',  color: '#f87171', bg: 'rgba(248,113,113,0.15)', border: 'rgba(248,113,113,0.25)' },
 }
 
 function formatDate(dateStr: string | null): string {
@@ -28,80 +28,115 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
   const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending
 
   return (
-    <div className="glass-card overflow-hidden">
-      {/* Gradient header */}
+    <div
+      className="rounded-3xl overflow-hidden relative"
+      style={{
+        background: 'linear-gradient(135deg, var(--purple) 0%, #5b3fb5 50%, var(--pink) 100%)',
+        boxShadow: '0 8px 32px rgba(134,96,239,0.35), 0 2px 8px rgba(0,0,0,0.2)',
+      }}
+    >
+      {/* Mesh gradient overlay */}
       <div
-        className="px-5 pt-5 pb-6 relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)' }}
-      >
-        {/* Dot pattern */}
-        <div
-          className="absolute inset-0 opacity-10 pointer-events-none"
-          style={{
-            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px)',
-            backgroundSize: '18px 18px',
-          }}
-        />
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            radial-gradient(ellipse at 20% 50%, rgba(255,255,255,0.06) 0%, transparent 60%),
+            radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.08) 0%, transparent 50%)
+          `,
+        }}
+      />
 
-        <div className="relative flex items-start justify-between gap-3">
+      {/* Noise texture */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")',
+          backgroundRepeat: 'repeat',
+          backgroundSize: '128px 128px',
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative px-5 pt-5 pb-5">
+        <div className="flex items-start justify-between gap-3">
+
+          {/* Left: info */}
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.65)' }}>
-              Plan Base Nexo · Afiliado
-            </p>
+            {/* Plan badge */}
+            <div className="inline-flex items-center gap-1.5 mb-4">
+              <span
+                className="text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full"
+                style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.2)' }}
+              >
+                Plan Base Nexo
+              </span>
+            </div>
+
+            {/* Name */}
             <h2
-              className="text-lg font-bold leading-tight mb-4 truncate"
+              className="text-xl font-bold leading-tight mb-4 truncate"
               style={{ color: 'white', fontFamily: 'var(--font-dm-sans)' }}
             >
               {affiliate ? `${affiliate.nombre} ${affiliate.apellido}` : 'Sin datos'}
             </h2>
+
+            {/* Affiliate number */}
             <div>
-              <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.6)' }}>N° de afiliado</p>
+              <p className="text-[10px] uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                N° de afiliado
+              </p>
               <p
-                className="text-xl font-bold tracking-wider break-all"
-                style={{ fontFamily: 'monospace', color: 'white' }}
+                className="text-2xl font-bold tracking-wider break-all"
+                style={{ fontFamily: 'monospace', color: 'white', letterSpacing: '0.1em' }}
               >
                 {affiliate?.affiliate_number ?? '—'}
               </p>
             </div>
           </div>
 
-          {/* QR — solo en pantallas medianas+ */}
-          <div className="hidden sm:flex shrink-0 flex-col items-center gap-1.5">
-            <div className="p-1.5 rounded-xl" style={{ background: 'white' }}>
-              <QRCode value={qrValue} size={68} style={{ display: 'block' }} />
+          {/* Right: QR */}
+          <div className="shrink-0 flex flex-col items-center gap-1.5">
+            <div className="p-2 rounded-2xl" style={{ background: 'rgba(255,255,255,0.95)' }}>
+              <QRCode value={qrValue} size={60} style={{ display: 'block' }} />
             </div>
-            <p className="text-center" style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.6rem' }}>
-              Escaneá para verificar
+            <p className="text-center" style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.6rem' }}>
+              Verificar
             </p>
           </div>
-        </div>
-      </div>
 
-      {/* Status + dates */}
-      <div className="px-5 py-4 flex items-center justify-between gap-3 flex-wrap">
-        <div
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
-          style={{ background: statusCfg.bg, border: `1px solid ${statusCfg.border}`, color: statusCfg.color }}
-        >
-          {status === 'active' ? (
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ background: statusCfg.color }} />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: statusCfg.color }} />
-            </span>
+        </div>
+
+        {/* Divider */}
+        <div className="mt-5 mb-4 h-px" style={{ background: 'rgba(255,255,255,0.12)' }} />
+
+        {/* Status + date */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
+            style={{ background: statusCfg.bg, border: `1px solid ${statusCfg.border}`, color: statusCfg.color }}
+          >
+            {status === 'active' ? (
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ background: statusCfg.color }} />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: statusCfg.color }} />
+              </span>
+            ) : (
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusCfg.color }} />
+            )}
+            {statusCfg.label}
+          </div>
+
+          {affiliate?.cobertura_hasta ? (
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              Hasta{' '}
+              <span className="font-semibold" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                {formatDate(affiliate.cobertura_hasta)}
+              </span>
+            </p>
           ) : (
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusCfg.color }} />
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Nexo by Previnca</p>
           )}
-          {statusCfg.label}
         </div>
-
-        {affiliate?.cobertura_hasta && (
-          <p className="text-xs" style={{ color: 'var(--gray-500)' }}>
-            Hasta{' '}
-            <span className="font-semibold" style={{ color: 'var(--gray-700)' }}>
-              {formatDate(affiliate.cobertura_hasta)}
-            </span>
-          </p>
-        )}
       </div>
     </div>
   )
