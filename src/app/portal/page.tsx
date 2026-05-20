@@ -33,7 +33,7 @@ export default async function PortalPage() {
       <div className="pt-1">
         <p
           className="text-xs font-medium mb-1"
-          style={{ color: 'rgba(255,255,255,0.4)', letterSpacing: '0.06em', textTransform: 'uppercase' }}
+          style={{ color: 'rgba(255,255,255,0.72)', letterSpacing: '0.06em', textTransform: 'uppercase' }}
         >
           {getGreeting()}
         </p>
@@ -43,7 +43,7 @@ export default async function PortalPage() {
         >
           {firstName} 👋
         </h1>
-        <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
+        <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>
           Todos tus beneficios en un solo lugar.
         </p>
       </div>
@@ -52,7 +52,7 @@ export default async function PortalPage() {
       <section>
         <p
           className="text-[10px] font-semibold uppercase tracking-widest mb-3"
-          style={{ color: 'rgba(255,255,255,0.35)' }}
+          style={{ color: 'rgba(255,255,255,0.70)' }}
         >
           Tu credencial
         </p>
@@ -63,7 +63,7 @@ export default async function PortalPage() {
       <section>
         <p
           className="text-[10px] font-semibold uppercase tracking-widest mb-3"
-          style={{ color: 'rgba(255,255,255,0.35)' }}
+          style={{ color: 'rgba(255,255,255,0.70)' }}
         >
           Tus servicios
         </p>
@@ -74,7 +74,7 @@ export default async function PortalPage() {
       <section>
         <p
           className="text-[10px] font-semibold uppercase tracking-widest mb-3"
-          style={{ color: 'rgba(255,255,255,0.35)' }}
+          style={{ color: 'rgba(255,255,255,0.70)' }}
         >
           Próximamente
         </p>

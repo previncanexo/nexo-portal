@@ -66,7 +66,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
             <div className="inline-flex items-center gap-1.5 mb-4">
               <span
                 className="text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full"
-                style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.2)' }}
+                style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.92)', border: '1px solid rgba(255,255,255,0.25)' }}
               >
                 Plan Base Nexo
               </span>
@@ -82,7 +82,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
 
             {/* Affiliate number */}
             <div>
-              <p className="text-[10px] uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <p className="text-[10px] uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.75)' }}>
                 N° de afiliado
               </p>
               <p
@@ -99,7 +99,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
             <div className="p-2 rounded-2xl" style={{ background: 'rgba(255,255,255,0.95)' }}>
               <QRCode value={qrValue} size={60} style={{ display: 'block' }} />
             </div>
-            <p className="text-center" style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.6rem' }}>
+            <p className="text-center" style={{ color: 'rgba(255,255,255,0.68)', fontSize: '0.6rem' }}>
               Verificar
             </p>
           </div>
@@ -127,14 +127,14 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
           </div>
 
           {affiliate?.cobertura_hasta ? (
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.75)' }}>
               Hasta{' '}
-              <span className="font-semibold" style={{ color: 'rgba(255,255,255,0.8)' }}>
+              <span className="font-semibold" style={{ color: 'rgba(255,255,255,0.95)' }}>
                 {formatDate(affiliate.cobertura_hasta)}
               </span>
             </p>
           ) : (
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Nexo by Previnca</p>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.68)' }}>Nexo by Previnca</p>
           )}
         </div>
       </div>
