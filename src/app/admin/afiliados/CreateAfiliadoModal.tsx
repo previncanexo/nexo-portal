@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import type { CreateAffiliatePayload, CreateAffiliateResponse } from '@/lib/types'
+import type { CreateAffiliatePayload, CreateAffiliateResponse, Plan } from '@/lib/types'
 
 interface Props {
+  plans: Plan[]
   onClose: () => void
   onCreated: () => void
 }
@@ -16,6 +17,7 @@ type FormFields = {
   whatsapp: string
   ciudad: string
   fecha_nacimiento: string
+  plan_id: string
 }
 
 type SuccessData = CreateAffiliateResponse
@@ -52,7 +54,7 @@ function Field({
   )
 }
 
-export default function CreateAfiliadoModal({ onClose, onCreated }: Props) {
+export default function CreateAfiliadoModal({ plans, onClose, onCreated }: Props) {
   const [form, setForm] = useState<FormFields>({
     nombre: '',
     apellido: '',
@@ -61,13 +63,14 @@ export default function CreateAfiliadoModal({ onClose, onCreated }: Props) {
     whatsapp: '',
     ciudad: '',
     fecha_nacimiento: '',
+    plan_id: '',
   })
   const [focusedField, setFocusedField] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<SuccessData | null>(null)
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
   }
@@ -93,6 +96,7 @@ export default function CreateAfiliadoModal({ onClose, onCreated }: Props) {
     if (form.whatsapp.trim()) payload.whatsapp = form.whatsapp.trim()
     if (form.ciudad.trim()) payload.ciudad = form.ciudad.trim()
     if (form.fecha_nacimiento) payload.fecha_nacimiento = form.fecha_nacimiento
+    if (form.plan_id.trim()) payload.plan_id = form.plan_id.trim()
 
     try {
       const res = await fetch('/api/affiliates', {
@@ -305,6 +309,27 @@ export default function CreateAfiliadoModal({ onClose, onCreated }: Props) {
                 }}
               />
             </Field>
+
+            {plans.length > 0 && (
+              <Field label="Plan">
+                <select
+                  name="plan_id"
+                  value={form.plan_id}
+                  onChange={handleChange}
+                  onFocus={() => setFocusedField('plan_id')}
+                  onBlur={() => setFocusedField(null)}
+                  className="w-full px-4 py-2.5 rounded-xl text-white text-sm cursor-pointer"
+                  style={getInputStyle('plan_id')}
+                >
+                  <option value="" style={{ background: '#0f1623' }}>Sin plan</option>
+                  {plans.map((p) => (
+                    <option key={p.id} value={p.id} style={{ background: '#0f1623' }}>
+                      {p.name} — ${p.price.toLocaleString('es-AR')}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
 
             {error && (
               <p

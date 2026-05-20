@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import type { Affiliate, AffiliateStatus } from '@/lib/types'
+import type { Affiliate, AffiliateStatus, Plan } from '@/lib/types'
 import CreateAfiliadoModal from './CreateAfiliadoModal'
+
+const PAGE_SIZE = 25
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string }> = {
   active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.12)',   border: 'rgba(22,163,74,0.25)' },
@@ -69,12 +71,15 @@ function exportCSV(list: Affiliate[]) {
   URL.revokeObjectURL(url)
 }
 
-export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[] }) {
+export default function AfiliadosClient({ affiliates, plans }: { affiliates: Affiliate[]; plans: Plan[] }) {
   const router = useRouter()
   const [period, setPeriod] = useState<PeriodFilter>('all')
   const [statusFilter, setStatusFilter] = useState<AffiliateStatus | 'all'>('all')
   const [search, setSearch] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [page, setPage] = useState(0)
+
+  useEffect(() => { setPage(0) }, [search, statusFilter, period])
 
   const filtered = useMemo(() => {
     const start = getStartOf(period)
@@ -91,6 +96,9 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
       return true
     })
   }, [affiliates, period, statusFilter, search])
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   const stats = [
     { label: 'Total',      value: filtered.length,                                                                         accent: 'var(--purple)', accentBg: 'rgba(134,96,239,0.1)' },
@@ -290,7 +298,7 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 && (
+              {paged.length === 0 && (
                 <tr>
                   <td
                     colSpan={8}
@@ -301,11 +309,11 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
                   </td>
                 </tr>
               )}
-              {filtered.map((a, i) => (
+              {paged.map((a, i) => (
                 <tr
                   key={a.id}
                   style={{
-                    borderBottom: i < filtered.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none',
+                    borderBottom: i < paged.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none',
                   }}
                   className="hover:bg-black/[0.025] transition-colors"
                 >
@@ -359,8 +367,48 @@ export default function AfiliadosClient({ affiliates }: { affiliates: Affiliate[
         </div>
       </div>
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between gap-4 pt-2">
+          <span className="text-sm" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
+            {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)} de {filtered.length}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className="px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-30"
+              style={{
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                color: 'rgba(255,255,255,0.85)',
+                cursor: page === 0 ? 'not-allowed' : 'pointer',
+                fontFamily: 'var(--font-dm-sans)',
+              }}
+            >
+              ← Anterior
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+              className="px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-30"
+              style={{
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                color: 'rgba(255,255,255,0.85)',
+                cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer',
+                fontFamily: 'var(--font-dm-sans)',
+              }}
+            >
+              Siguiente →
+            </button>
+          </div>
+        </div>
+      )}
+
       {showCreateModal && (
         <CreateAfiliadoModal
+          plans={plans}
           onClose={() => setShowCreateModal(false)}
           onCreated={() => router.refresh()}
         />

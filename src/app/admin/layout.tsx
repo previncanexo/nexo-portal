@@ -12,6 +12,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if (!user) redirect('/login')
 
+  const adminEmails = (process.env.ADMIN_EMAILS ?? '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+
+  if (adminEmails.length > 0 && !adminEmails.includes(user.email?.toLowerCase() ?? '')) {
+    redirect('/portal')
+  }
+
   return (
     <div className="min-h-screen flex flex-col" style={{ fontFamily: 'var(--font-dm-sans)' }}>
       {/* Override the portal's colorful gradient — admin uses a clean dark slate */}

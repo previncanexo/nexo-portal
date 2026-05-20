@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { AffiliateStatus } from '@/lib/types'
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string; icon: 'check' | 'clock' | 'x' }> = {
@@ -40,7 +40,7 @@ function IconX() {
 
 export default async function VerificarPage({ params }: { params: Promise<{ numero: string }> }) {
   const { numero } = await params
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data: affiliate } = await supabase
     .from('affiliates')

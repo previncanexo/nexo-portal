@@ -89,7 +89,17 @@ function statusColor(status: string): CSSProperties {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
+function StatCard({
+  label,
+  value,
+  delta,
+  revenueDelta,
+}: {
+  label: string
+  value: string | number
+  delta?: { value: number; label: string }
+  revenueDelta?: number
+}) {
   return (
     <div
       className="rounded-2xl p-5 flex flex-col gap-1"
@@ -99,18 +109,39 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
         fontFamily: 'var(--font-dm-sans)',
       }}
     >
-      <span
-        className="text-sm"
-        style={{ color: 'rgba(255,255,255,0.55)' }}
-      >
+      <span className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
         {label}
       </span>
       <span className="text-3xl font-bold text-white">{value}</span>
+      {delta !== undefined && (
+        <span
+          className="text-xs font-medium"
+          style={{ color: delta.value >= 0 ? 'rgb(74,222,128)' : 'rgb(248,113,113)' }}
+        >
+          {delta.value >= 0 ? '+' : ''}{delta.value} {delta.label}
+        </span>
+      )}
+      {revenueDelta !== undefined && (
+        <span
+          className="text-xs font-medium"
+          style={{ color: revenueDelta >= 0 ? 'rgb(74,222,128)' : 'rgb(248,113,113)' }}
+        >
+          {revenueDelta >= 0 ? '+' : ''}${revenueDelta.toLocaleString('es-AR')} vs mes anterior
+        </span>
+      )}
     </div>
   )
 }
 
-function BarChart({ buckets, valueKey }: { buckets: Array<{ label: string; [key: string]: number | string }>; valueKey: string }) {
+function BarChart({
+  buckets,
+  valueKey,
+  formatValue,
+}: {
+  buckets: Array<{ label: string; [key: string]: number | string }>
+  valueKey: string
+  formatValue?: (v: number) => string
+}) {
   const values = buckets.map((b) => Number(b[valueKey]))
   const maxVal = Math.max(...values, 1)
 
@@ -138,10 +169,10 @@ function BarChart({ buckets, valueKey }: { buckets: Array<{ label: string; [key:
               />
             </div>
             <span
-              className="text-xs w-8 shrink-0"
+              className="text-xs w-20 shrink-0 text-right"
               style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}
             >
-              {val}
+              {formatValue ? formatValue(val) : val}
             </span>
           </div>
         )
@@ -158,11 +189,11 @@ export default async function AdminDashboardPage() {
   const monthKeys = lastNMonths(6)
   const sixMonthsAgo = `${monthKeys[0]}-01`
 
-  // Start of current month for revenue query
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+  const today = now.toISOString().split('T')[0]
+  const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
-  // Run all queries in parallel
   const [
     totalRes,
     activeRes,
@@ -171,42 +202,27 @@ export default async function AdminDashboardPage() {
     affiliatesByMonthRes,
     revenueByMonthRes,
     recentRes,
+    expiringRes,
   ] = await Promise.all([
-    // Total affiliates
     supabase.from('affiliates').select('id', { count: 'exact', head: true }),
-
-    // Active affiliates
     supabase.from('affiliates').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-
-    // Pending affiliates
     supabase.from('affiliates').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-
-    // Revenue this month
-    supabase
-      .from('payments')
-      .select('amount')
-      .eq('status', 'approved')
-      .gte('created_at', startOfMonth),
-
-    // New affiliates last 6 months
-    supabase
-      .from('affiliates')
-      .select('created_at')
-      .gte('created_at', sixMonthsAgo),
-
-    // Revenue last 6 months
-    supabase
-      .from('payments')
-      .select('amount, created_at')
-      .eq('status', 'approved')
-      .gte('created_at', sixMonthsAgo),
-
-    // Recent affiliates (last 6)
+    supabase.from('payments').select('amount').eq('status', 'approved').gte('created_at', startOfMonth),
+    supabase.from('affiliates').select('created_at').gte('created_at', sixMonthsAgo),
+    supabase.from('payments').select('amount, created_at').eq('status', 'approved').gte('created_at', sixMonthsAgo),
     supabase
       .from('affiliates')
       .select('id, nombre, apellido, status, created_at')
       .order('created_at', { ascending: false })
       .limit(6),
+    supabase
+      .from('affiliates')
+      .select('id, nombre, apellido, cobertura_hasta')
+      .eq('status', 'active')
+      .gte('cobertura_hasta', today)
+      .lte('cobertura_hasta', in30Days)
+      .order('cobertura_hasta', { ascending: true })
+      .limit(5),
   ])
 
   // ── Stat totals ──────────────────────────────────────────────────────────
@@ -249,6 +265,21 @@ export default async function AdminDashboardPage() {
   // ── Recent affiliates ────────────────────────────────────────────────────
   const recentAffiliates: RecentAffiliate[] = (recentRes.data ?? []) as RecentAffiliate[]
 
+  // ── Expiring coverage ────────────────────────────────────────────────────
+  const expiringAffiliates = (expiringRes.data ?? []) as Array<{
+    id: string
+    nombre: string
+    apellido: string
+    cobertura_hasta: string
+  }>
+
+  // ── Month-over-month deltas ──────────────────────────────────────────────
+  const thisMonthKey = monthKeys[5]
+  const prevMonthKey = monthKeys[4]
+  const newThisMonth = affiliateBuckets.find((b) => b.month === thisMonthKey)?.count ?? 0
+  const newLastMonth = affiliateBuckets.find((b) => b.month === prevMonthKey)?.count ?? 0
+  const revenueLastMonth = revenueBuckets.find((b) => b.month === prevMonthKey)?.total ?? 0
+
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <main
@@ -259,10 +290,15 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
         <StatCard label="Total afiliados" value={totalCount} />
         <StatCard label="Activos" value={activeCount} />
-        <StatCard label="Pendientes" value={pendingCount} />
+        <StatCard
+          label="Nuevos este mes"
+          value={newThisMonth}
+          delta={{ value: newThisMonth - newLastMonth, label: 'vs mes anterior' }}
+        />
         <StatCard
           label="Ingresos este mes"
           value={`$${thisMonthRevenue.toLocaleString('es-AR')}`}
+          revenueDelta={thisMonthRevenue - revenueLastMonth}
         />
       </div>
 
@@ -295,9 +331,47 @@ export default async function AdminDashboardPage() {
           <BarChart
             buckets={revenueBuckets.map((b) => ({ label: b.label, value: b.total }))}
             valueKey="value"
+            formatValue={(v) => `$${v.toLocaleString('es-AR')}`}
           />
         </div>
       </div>
+
+      {/* Expiring coverage */}
+      {expiringAffiliates.length > 0 && (
+        <div
+          className="rounded-2xl p-5 mb-10"
+          style={{
+            background: 'rgba(251,191,36,0.06)',
+            border: '1px solid rgba(251,191,36,0.2)',
+          }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgb(251,191,36)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <p className="text-base font-semibold" style={{ color: 'rgb(251,191,36)' }}>
+              Coberturas por vencer (próximos 30 días)
+            </p>
+          </div>
+          <div className="flex flex-col divide-y" style={{ borderColor: 'rgba(251,191,36,0.1)' }}>
+            {expiringAffiliates.map((a) => (
+              <a
+                key={a.id}
+                href={`/admin/afiliados/${a.id}`}
+                className="flex items-center justify-between py-2.5 gap-4 hover:opacity-80 transition-opacity"
+              >
+                <span className="text-sm font-medium text-white">
+                  {a.nombre} {a.apellido}
+                </span>
+                <span className="text-sm font-mono shrink-0" style={{ color: 'rgb(251,191,36)' }}>
+                  {formatDate(a.cobertura_hasta)}
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Recent affiliates */}
       <div

@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
-import type { Affiliate, AffiliateStatus, Payment } from '@/lib/types'
+import type { Affiliate, AffiliateStatus, Payment, Plan } from '@/lib/types'
 import StatusForm from './StatusForm'
 import PaymentForm from './PaymentForm'
+import EditAfiliadoForm from './EditAfiliadoForm'
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string }> = {
   active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.1)',  border: 'rgba(22,163,74,0.2)' },
@@ -46,7 +47,7 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
   const { id } = await params
   const supabase = createAdminClient()
 
-  const [{ data: affiliateData, error }, { data: paymentsData }] = await Promise.all([
+  const [{ data: affiliateData, error }, { data: paymentsData }, { data: plansData }] = await Promise.all([
     supabase
       .from('affiliates')
       .select('*, plan:plans(*)')
@@ -57,12 +58,17 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
       .select('*')
       .eq('affiliate_id', id)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('plans')
+      .select('*')
+      .order('price'),
   ])
 
   if (error || !affiliateData) notFound()
 
   const affiliate = affiliateData as Affiliate
   const payments = (paymentsData ?? []) as Payment[]
+  const plans = (plansData ?? []) as Plan[]
 
   return (
     <div className="flex flex-col gap-6" style={{ fontFamily: 'var(--font-dm-sans)' }}>
@@ -124,6 +130,14 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
               <DataRow label="Cobertura desde" value={formatDate(affiliate.cobertura_desde)} />
               <DataRow label="Cobertura hasta" value={formatDate(affiliate.cobertura_hasta)} />
             </div>
+          </div>
+
+          {/* Edit personal data */}
+          <div className="glass-card px-6 py-6">
+            <h2 className="text-sm font-bold uppercase tracking-wider mb-5" style={{ color: 'var(--gray-700)' }}>
+              Editar datos
+            </h2>
+            <EditAfiliadoForm affiliate={affiliate} plans={plans} />
           </div>
 
           {/* Payments */}

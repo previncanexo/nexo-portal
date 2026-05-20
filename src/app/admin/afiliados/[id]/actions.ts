@@ -40,6 +40,40 @@ export async function updateAffiliateStatus(
   return { success: true, message: 'Estado actualizado correctamente.' }
 }
 
+export async function updateAffiliateData(affiliateId: string, formData: FormData) {
+  const supabase = createAdminClient()
+
+  const payload: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  }
+
+  const textFields = ['nombre', 'apellido', 'dni', 'whatsapp', 'ciudad'] as const
+  for (const field of textFields) {
+    const value = (formData.get(field) as string | null)?.trim() ?? ''
+    payload[field] = value || null
+  }
+
+  const fechaNacimiento = (formData.get('fecha_nacimiento') as string | null)?.trim() ?? ''
+  payload.fecha_nacimiento = fechaNacimiento || null
+
+  const planId = (formData.get('plan_id') as string | null)?.trim() ?? ''
+  payload.plan_id = planId || null
+
+  const { error } = await supabase
+    .from('affiliates')
+    .update(payload)
+    .eq('id', affiliateId)
+
+  if (error) {
+    return { success: false, message: error.message }
+  }
+
+  revalidatePath(`/admin/afiliados/${affiliateId}`)
+  revalidatePath('/admin/afiliados')
+
+  return { success: true, message: 'Datos actualizados correctamente.' }
+}
+
 export async function addPayment(affiliateId: string, formData: FormData) {
   const supabase = createAdminClient()
 
