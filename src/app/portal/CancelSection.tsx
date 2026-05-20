@@ -32,7 +32,7 @@ export default function CancelSection() {
       <div className="flex justify-center pt-2 pb-6">
         <button
           onClick={() => setModalOpen(true)}
-          className="text-xs transition-opacity hover:opacity-100"
+          className="text-sm transition-opacity hover:opacity-100"
           style={{ color: 'rgba(255,255,255,0.28)', background: 'none', border: 'none', cursor: 'pointer' }}
         >
           Cancelar suscripción
@@ -71,7 +71,7 @@ export default function CancelSection() {
             <p className="text-sm text-center mb-1" style={{ color: 'var(--gray-600)' }}>
               Vas a perder acceso a todos tus beneficios:
             </p>
-            <ul className="text-xs text-center mb-5 space-y-1" style={{ color: 'var(--gray-500)' }}>
+            <ul className="text-sm text-center mb-5 space-y-1" style={{ color: 'var(--gray-500)' }}>
               <li>Teleconsultas DOC24</li>
               <li>Asistencia de urgencias 24/7</li>
               <li>Descuentos en farmacias (50%)</li>
@@ -79,7 +79,7 @@ export default function CancelSection() {
             </ul>
 
             {error && (
-              <p className="text-xs text-center mb-4" style={{ color: '#ef4444' }}>{error}</p>
+              <p className="text-sm text-center mb-4" style={{ color: '#ef4444' }}>{error}</p>
             )}
 
             <div className="flex flex-col gap-2">

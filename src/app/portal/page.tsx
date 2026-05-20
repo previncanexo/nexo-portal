@@ -32,7 +32,7 @@ export default async function PortalPage() {
       {/* Saludo */}
       <div className="pt-1">
         <p
-          className="text-xs font-medium mb-1"
+          className="text-sm font-medium mb-1"
           style={{ color: 'rgba(255,255,255,0.72)', letterSpacing: '0.06em', textTransform: 'uppercase' }}
         >
           {getGreeting()}
@@ -51,7 +51,7 @@ export default async function PortalPage() {
       {/* Credencial */}
       <section>
         <p
-          className="text-[10px] font-semibold uppercase tracking-widest mb-3"
+          className="text-xs font-semibold uppercase tracking-widest mb-3"
           style={{ color: 'rgba(255,255,255,0.70)' }}
         >
           Tu credencial
@@ -62,7 +62,7 @@ export default async function PortalPage() {
       {/* Servicios */}
       <section>
         <p
-          className="text-[10px] font-semibold uppercase tracking-widest mb-3"
+          className="text-xs font-semibold uppercase tracking-widest mb-3"
           style={{ color: 'rgba(255,255,255,0.70)' }}
         >
           Tus servicios
@@ -73,7 +73,7 @@ export default async function PortalPage() {
       {/* Próximamente */}
       <section>
         <p
-          className="text-[10px] font-semibold uppercase tracking-widest mb-3"
+          className="text-xs font-semibold uppercase tracking-widest mb-3"
           style={{ color: 'rgba(255,255,255,0.70)' }}
         >
           Próximamente
@@ -91,12 +91,12 @@ export default async function PortalPage() {
             <p className="text-sm font-bold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
               Servicios A la Carta
             </p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)' }}>
+            <p className="text-sm mt-0.5" style={{ color: 'var(--gray-500)' }}>
               Sumá coberturas adicionales a tu plan.
             </p>
           </div>
           <span
-            className="shrink-0 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wide"
+            className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide"
             style={{ background: 'rgba(134,96,239,0.1)', color: 'var(--purple)' }}
           >
             Pronto

@@ -58,7 +58,7 @@ function FarmaciaModal({ affiliateNumber, onClose }: { affiliateNumber: string; 
         >
           <IconFarmacias />
         </div>
-        <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--gray-400)' }}>
+        <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--gray-600)' }}>
           N° de afiliado
         </p>
         <div
@@ -73,7 +73,7 @@ function FarmaciaModal({ affiliateNumber, onClose }: { affiliateNumber: string; 
         >
           {affiliateNumber}
         </div>
-        <p className="text-xs mb-6" style={{ color: 'var(--gray-500)' }}>
+        <p className="text-sm mb-6" style={{ color: 'var(--gray-500)' }}>
           Mostrá este número en la farmacia para el 50% de descuento.
         </p>
         <button
@@ -207,12 +207,12 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
             {/* Title + subtitle */}
             <div className="relative z-10">
               <p
-                className="text-sm font-bold leading-tight"
+                className="text-base font-bold leading-tight"
                 style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}
               >
                 {service.title}
               </p>
-              <p className="text-xs leading-snug mt-0.5" style={{ color: 'var(--gray-500)' }}>
+              <p className="text-sm leading-snug mt-0.5" style={{ color: 'var(--gray-500)' }}>
                 {service.subtitle}
               </p>
             </div>
@@ -234,7 +234,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
                   />
                 </span>
               )}
-              <span className="text-[10px] font-semibold leading-none" style={{ color: service.badgeColor }}>
+              <span className="text-xs font-semibold leading-none" style={{ color: service.badgeColor }}>
                 {service.badge}
               </span>
             </div>
@@ -245,7 +245,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
             {/* CTA */}
             <button
               onClick={() => handleAction(service)}
-              className="w-full py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-white active:scale-95 transition-transform relative z-10"
+              className="w-full py-2.5 min-h-[44px] rounded-xl text-sm font-bold text-white active:scale-95 transition-transform relative z-10"
               style={{
                 background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
                 cursor: 'pointer',
