@@ -12,15 +12,17 @@ const STATUS_OPTIONS: { value: AffiliateStatus; label: string }[] = [
 ]
 
 const inputStyle: React.CSSProperties = {
-  border: '1px solid rgba(255,255,255,0.12)',
-  background: 'rgba(255,255,255,0.07)',
-  color: 'white',
+  border: '1px solid var(--gray-200)',
+  background: 'var(--gray-100)',
+  color: 'var(--gray-900)',
   fontFamily: 'var(--font-dm-sans)',
   cursor: 'pointer',
+  outline: 'none',
+  transition: 'border-color 0.15s',
 }
 
 const labelStyle: React.CSSProperties = {
-  color: 'rgba(255,255,255,0.65)',
+  color: 'var(--gray-500)',
   fontFamily: 'var(--font-dm-sans)',
 }
 
@@ -100,7 +102,7 @@ export default function StatusForm({
           value={desde}
           onChange={(e) => setDesde(e.target.value)}
           className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all"
-          style={{ ...inputStyle, colorScheme: 'dark' }}
+          style={{ ...inputStyle, colorScheme: 'light' }}
         />
       </div>
 
@@ -119,7 +121,7 @@ export default function StatusForm({
           value={hasta}
           onChange={(e) => setHasta(e.target.value)}
           className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all"
-          style={{ ...inputStyle, colorScheme: 'dark' }}
+          style={{ ...inputStyle, colorScheme: 'light' }}
         />
       </div>
 
