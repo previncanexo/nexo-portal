@@ -74,7 +74,9 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/portal')
+    const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '').split(',').map(e => e.trim())
+    const destination = adminEmails.includes(email.trim().toLowerCase()) ? '/admin' : '/portal'
+    router.push(destination)
     router.refresh()
   }
 
