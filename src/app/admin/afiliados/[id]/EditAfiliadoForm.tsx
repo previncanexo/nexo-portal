@@ -5,14 +5,21 @@ import { updateAffiliateData } from './actions'
 import type { Affiliate, Plan } from '@/lib/types'
 
 const inputStyle: React.CSSProperties = {
-  border: '1px solid rgba(255,255,255,0.12)',
-  background: 'rgba(255,255,255,0.07)',
-  color: 'white',
+  border: '1px solid var(--gray-200)',
+  background: 'var(--gray-100)',
+  color: 'var(--gray-900)',
   fontFamily: 'var(--font-dm-sans)',
+  outline: 'none',
+  transition: 'border-color 0.15s',
+}
+
+const inputFocusStyle: React.CSSProperties = {
+  borderColor: 'var(--purple)',
+  background: '#fff',
 }
 
 const labelStyle: React.CSSProperties = {
-  color: 'rgba(255,255,255,0.65)',
+  color: 'var(--gray-500)',
   fontFamily: 'var(--font-dm-sans)',
 }
 
@@ -29,7 +36,12 @@ interface Props {
 export default function EditAfiliadoForm({ affiliate, plans }: Props) {
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [focused, setFocused] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
+
+  function getStyle(name: string): React.CSSProperties {
+    return focused === name ? { ...inputStyle, ...inputFocusStyle } : inputStyle
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -54,8 +66,10 @@ export default function EditAfiliadoForm({ affiliate, plans }: Props) {
             type="text"
             required
             defaultValue={affiliate.nombre}
-            className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
-            style={inputStyle}
+            className="w-full px-4 py-2.5 rounded-xl text-sm"
+            style={getStyle('nombre')}
+            onFocus={() => setFocused('nombre')}
+            onBlur={() => setFocused(null)}
           />
         </div>
         <div>
@@ -67,8 +81,10 @@ export default function EditAfiliadoForm({ affiliate, plans }: Props) {
             type="text"
             required
             defaultValue={affiliate.apellido}
-            className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
-            style={inputStyle}
+            className="w-full px-4 py-2.5 rounded-xl text-sm"
+            style={getStyle('apellido')}
+            onFocus={() => setFocused('apellido')}
+            onBlur={() => setFocused(null)}
           />
         </div>
       </div>
@@ -82,8 +98,10 @@ export default function EditAfiliadoForm({ affiliate, plans }: Props) {
           type="text"
           required
           defaultValue={affiliate.dni}
-          className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
-          style={inputStyle}
+          className="w-full px-4 py-2.5 rounded-xl text-sm"
+          style={getStyle('dni')}
+          onFocus={() => setFocused('dni')}
+          onBlur={() => setFocused(null)}
         />
       </div>
 
@@ -97,8 +115,10 @@ export default function EditAfiliadoForm({ affiliate, plans }: Props) {
             type="tel"
             defaultValue={affiliate.whatsapp ?? ''}
             placeholder="+54 9 11..."
-            className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
-            style={inputStyle}
+            className="w-full px-4 py-2.5 rounded-xl text-sm"
+            style={getStyle('whatsapp')}
+            onFocus={() => setFocused('whatsapp')}
+            onBlur={() => setFocused(null)}
           />
         </div>
         <div>
@@ -109,8 +129,10 @@ export default function EditAfiliadoForm({ affiliate, plans }: Props) {
             name="ciudad"
             type="text"
             defaultValue={affiliate.ciudad ?? ''}
-            className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
-            style={inputStyle}
+            className="w-full px-4 py-2.5 rounded-xl text-sm"
+            style={getStyle('ciudad')}
+            onFocus={() => setFocused('ciudad')}
+            onBlur={() => setFocused(null)}
           />
         </div>
       </div>
@@ -123,8 +145,10 @@ export default function EditAfiliadoForm({ affiliate, plans }: Props) {
           name="fecha_nacimiento"
           type="date"
           defaultValue={toDateInputValue(affiliate.fecha_nacimiento)}
-          className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
-          style={{ ...inputStyle, colorScheme: 'dark' }}
+          className="w-full px-4 py-2.5 rounded-xl text-sm"
+          style={{ ...getStyle('fecha_nacimiento'), colorScheme: 'light' }}
+          onFocus={() => setFocused('fecha_nacimiento')}
+          onBlur={() => setFocused(null)}
         />
       </div>
 
@@ -136,12 +160,14 @@ export default function EditAfiliadoForm({ affiliate, plans }: Props) {
           <select
             name="plan_id"
             defaultValue={affiliate.plan_id ?? ''}
-            className="w-full px-4 py-2.5 rounded-xl text-sm outline-none cursor-pointer"
-            style={inputStyle}
+            className="w-full px-4 py-2.5 rounded-xl text-sm cursor-pointer"
+            style={getStyle('plan_id')}
+            onFocus={() => setFocused('plan_id')}
+            onBlur={() => setFocused(null)}
           >
-            <option value="" style={{ background: '#0f1623' }}>Sin plan</option>
+            <option value="">Sin plan</option>
             {plans.map((p) => (
-              <option key={p.id} value={p.id} style={{ background: '#0f1623' }}>
+              <option key={p.id} value={p.id}>
                 {p.name} — ${p.price.toLocaleString('es-AR')}
               </option>
             ))}
