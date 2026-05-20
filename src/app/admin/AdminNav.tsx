@@ -18,7 +18,7 @@ export default function AdminNav() {
     <header
       className="sticky top-0 z-50 px-4 sm:px-6 py-3 sm:py-4"
       style={{
-        background: 'rgba(22,33,62,0.92)',
+        background: 'rgba(13,5,32,0.75)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         borderBottom: '1px solid rgba(255,255,255,0.07)',
