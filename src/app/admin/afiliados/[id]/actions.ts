@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendActivationEmail } from '@/lib/emails'
 import type { AffiliateStatus } from '@/lib/types'
 
 export async function updateAffiliateStatus(
@@ -11,6 +12,12 @@ export async function updateAffiliateStatus(
   coberturaHasta?: string,
 ) {
   const supabase = createAdminClient()
+
+  const { data: current } = await supabase
+    .from('affiliates')
+    .select('status, nombre, email, affiliate_number, plan:plans(name)')
+    .eq('id', affiliateId)
+    .single()
 
   const payload: Record<string, unknown> = {
     status,
@@ -32,6 +39,15 @@ export async function updateAffiliateStatus(
 
   if (error) {
     return { success: false, message: error.message }
+  }
+
+  if (status === 'active' && current?.status !== 'active' && current) {
+    await sendActivationEmail({
+      nombre: current.nombre,
+      email: current.email,
+      affiliate_number: current.affiliate_number,
+      plan: Array.isArray(current.plan) ? (current.plan[0] ?? null) : current.plan,
+    })
   }
 
   revalidatePath(`/admin/afiliados/${affiliateId}`)
