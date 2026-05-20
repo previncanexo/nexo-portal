@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import type { CreateAffiliatePayload, CreateAffiliateResponse } from '@/lib/types'
@@ -60,6 +62,29 @@ function generateTempPassword(): string {
 
 export async function POST(request: Request) {
   try {
+    // Only authenticated admins may call this endpoint.
+    // Self-registration uses the Server Action in /registro/actions.ts instead.
+    const cookieStore = await cookies()
+    const supabaseAuth = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll() },
+          setAll() {},
+        },
+      }
+    )
+    const { data: { user: caller } } = await supabaseAuth.auth.getUser()
+    if (!caller) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+    const adminEmailList = (process.env.ADMIN_EMAILS ?? '')
+      .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
+    if (!adminEmailList.includes(caller.email?.toLowerCase() ?? '')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
+
     const body: CreateAffiliatePayload = await request.json()
 
     const { nombre, apellido, dni, email, whatsapp, ciudad, fecha_nacimiento, plan_id } = body

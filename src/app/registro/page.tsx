@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { registerAffiliate } from './actions'
 import type { CreateAffiliateResponse } from '@/lib/types'
 
 const CARD_STYLE = {
@@ -224,27 +225,22 @@ export default function RegistroPage() {
     setError('')
     setLoading(true)
     try {
-      const res = await fetch('/api/affiliates', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nombre: form.nombre.trim(),
-          apellido: form.apellido.trim(),
-          dni: form.dni.trim(),
-          email: form.email.trim().toLowerCase(),
-          whatsapp: form.whatsapp.trim() || undefined,
-          ciudad: form.ciudad.trim() || undefined,
-          fecha_nacimiento: form.fecha_nacimiento || undefined,
-        }),
+      const data = await registerAffiliate({
+        nombre: form.nombre.trim(),
+        apellido: form.apellido.trim(),
+        dni: form.dni.trim(),
+        email: form.email.trim().toLowerCase(),
+        whatsapp: form.whatsapp.trim() || undefined,
+        ciudad: form.ciudad.trim() || undefined,
+        fecha_nacimiento: form.fecha_nacimiento || undefined,
       })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error ?? 'Error al registrar. Intentá de nuevo.')
+      if (!data.success) {
+        setError(data.error)
         return
       }
-      setResult(data as CreateAffiliateResponse)
+      setResult({ affiliate_number: data.affiliate_number, temp_password: data.temp_password, email: data.email })
     } catch {
-      setError('Error de conexión. Verificá tu internet e intentá de nuevo.')
+      setError('Error inesperado. Intentá de nuevo.')
     } finally {
       setLoading(false)
     }
