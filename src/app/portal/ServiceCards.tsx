@@ -77,7 +77,7 @@ function FarmaciaModal({ affiliateNumber, onClose }: { affiliateNumber: string; 
           N° de afiliado
         </p>
         <div
-          className="text-3xl font-bold tracking-widest my-4"
+          className="text-2xl font-bold tracking-wider break-all my-4"
           style={{
             fontFamily: 'monospace',
             background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
@@ -93,7 +93,7 @@ function FarmaciaModal({ affiliateNumber, onClose }: { affiliateNumber: string; 
         </p>
         <button
           onClick={onClose}
-          className="w-full py-2.5 rounded-full text-sm font-semibold text-white"
+          className="w-full py-3 min-h-[44px] rounded-full text-sm font-semibold text-white"
           style={{ background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)', cursor: 'pointer' }}
         >
           Cerrar
@@ -230,7 +230,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
               {/* CTA */}
               <button
                 onClick={() => handleAction(service)}
-                className="w-full py-2 rounded-full text-xs font-bold text-white text-center active:scale-95 transition-transform"
+                className="w-full py-2.5 min-h-[44px] rounded-full text-xs font-bold text-white text-center active:scale-95 transition-transform"
                 style={{
                   background: `linear-gradient(135deg, ${service.colorFrom} 0%, ${service.colorTo} 100%)`,
                   cursor: 'pointer',

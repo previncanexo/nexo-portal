@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative">
+    <div className="min-h-screen flex items-start justify-center px-4 py-12 relative">
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
           />
         </div>
 
-        <div className="rounded-3xl p-8" style={{ background: 'rgba(134,96,239,0.55)', border: '1px solid rgba(255,255,255,0.18)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)' }}>
+        <div className="rounded-3xl p-6 sm:p-8" style={{ background: 'rgba(134,96,239,0.55)', border: '1px solid rgba(255,255,255,0.18)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)' }}>
           {sent ? (
             <div className="text-center">
               <div

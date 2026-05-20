@@ -192,7 +192,7 @@ function BackButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="w-full py-2.5 rounded-full text-xs font-semibold mt-2 transition-all"
+      className="w-full py-3 min-h-[44px] rounded-full text-xs font-semibold mt-2 transition-all"
       style={{ color: 'rgba(255,255,255,0.45)', background: 'transparent', border: 'none', cursor: 'pointer' }}
     >
       ← Volver
@@ -253,10 +253,10 @@ export default function RegistroPage() {
   // ── LISTO ──────────────────────────────────────────────────────────────────
   if (result) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12">
+      <div className="min-h-screen flex items-start justify-center px-4 py-12">
         <div className="w-full max-w-sm relative z-10">
           <Logo />
-          <div className="rounded-3xl p-8 text-center" style={CARD_STYLE}>
+          <div className="rounded-3xl p-6 sm:p-8 text-center" style={CARD_STYLE}>
             <div
               className="w-14 h-14 rounded-full mx-auto mb-5 flex items-center justify-center"
               style={{ background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)' }}
@@ -276,7 +276,7 @@ export default function RegistroPage() {
             <div className="rounded-xl p-4 mb-3 text-left" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <p className="text-xs mb-1 uppercase tracking-wide font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>N° de afiliado</p>
               <p
-                className="text-2xl font-bold tracking-widest"
+                className="text-xl font-bold tracking-wider break-all"
                 style={{
                   fontFamily: 'monospace',
                   background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
@@ -326,13 +326,13 @@ export default function RegistroPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex items-start justify-center px-4 py-12">
       <div className="w-full max-w-sm relative z-10">
         <Logo />
 
         {/* ── STEP 1: DATOS ──────────────────────────────────────────────────── */}
         {step === 1 && (
-          <div className="rounded-3xl p-8" style={CARD_STYLE}>
+          <div className="rounded-3xl p-6 sm:p-8" style={CARD_STYLE}>
             <Stepper step={1} />
             <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'var(--font-dm-sans)' }}>
               Tus datos
@@ -370,7 +370,7 @@ export default function RegistroPage() {
 
         {/* ── STEP 2: PLAN + PAGAR ───────────────────────────────────────────── */}
         {step === 2 && (
-          <div className="rounded-3xl p-8" style={CARD_STYLE}>
+          <div className="rounded-3xl p-6 sm:p-8" style={CARD_STYLE}>
             <Stepper step={2} />
             <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'var(--font-dm-sans)' }}>
               Tu plan

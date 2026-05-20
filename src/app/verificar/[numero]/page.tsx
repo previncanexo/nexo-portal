@@ -52,7 +52,7 @@ export default async function VerificarPage({ params }: { params: Promise<{ nume
   const statusCfg = status ? STATUS_CONFIG[status] : null
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex items-start justify-center px-4 py-12">
       <div className="w-full max-w-sm relative z-10">
 
         {/* Logo */}
@@ -70,7 +70,7 @@ export default async function VerificarPage({ params }: { params: Promise<{ nume
         {!affiliate ? (
           /* Not found */
           <div
-            className="rounded-3xl p-8 text-center"
+            className="rounded-3xl p-6 sm:p-8 text-center"
             style={{
               background: 'rgba(134,96,239,0.55)',
               border: '1px solid rgba(255,255,255,0.18)',
@@ -109,7 +109,7 @@ export default async function VerificarPage({ params }: { params: Promise<{ nume
               style={{ background: 'linear-gradient(90deg, var(--purple) 0%, var(--pink) 100%)' }}
             />
 
-            <div className="p-7">
+            <div className="p-5 sm:p-7">
               {/* Status badge — lo más importante para el verificador */}
               <div
                 className="flex items-center gap-3 px-4 py-3 rounded-2xl mb-6"
@@ -136,7 +136,7 @@ export default async function VerificarPage({ params }: { params: Promise<{ nume
                   <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--gray-400)' }}>
                     Afiliado
                   </p>
-                  <p className="text-2xl font-bold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
+                  <p className="text-xl font-bold leading-snug" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
                     {affiliate.nombre} {affiliate.apellido}
                   </p>
                 </div>
@@ -146,7 +146,7 @@ export default async function VerificarPage({ params }: { params: Promise<{ nume
                     N° de afiliado
                   </p>
                   <p
-                    className="text-2xl font-bold tracking-widest"
+                    className="text-xl font-bold tracking-wider break-all"
                     style={{
                       fontFamily: 'monospace',
                       background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',

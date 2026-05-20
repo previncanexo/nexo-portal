@@ -67,7 +67,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         />
         {/* Orb 3 - Peach bottom */}
         <div
-          className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[400px] h-[400px] rounded-full opacity-15 blur-[100px] pointer-events-none z-0"
+          className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] rounded-full opacity-15 blur-[100px] pointer-events-none z-0"
           style={{
             background: 'radial-gradient(circle, var(--peach) 0%, transparent 70%)',
             animation: 'orb-pulse-2 14s ease-in-out 5s infinite',

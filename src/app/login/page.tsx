@@ -81,7 +81,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative">
+    <div className="min-h-screen flex items-start justify-center px-4 py-12 relative">
       {/* Subtle dot pattern */}
       <div
         className="fixed inset-0 pointer-events-none"
@@ -91,7 +91,7 @@ export default function LoginPage() {
         }}
       />
 
-      <div className="w-full max-w-sm relative z-10">
+      <div className="w-full max-w-sm relative z-10 pb-4">
         {/* Logo */}
         <div className="text-center mb-10">
           <Image
@@ -105,7 +105,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="rounded-3xl p-8" style={{ background: 'rgba(134,96,239,0.55)', border: '1px solid rgba(255,255,255,0.18)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)' }}>
+        <div className="rounded-3xl p-6 sm:p-8" style={{ background: 'rgba(134,96,239,0.55)', border: '1px solid rgba(255,255,255,0.18)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)' }}>
           <h2
             className="text-xl font-semibold text-white mb-1"
             style={{ fontFamily: 'var(--font-dm-sans)' }}
@@ -223,7 +223,7 @@ export default function LoginPage() {
         </div>
 
         {/* Services strip */}
-        <div className="mt-5 flex items-center justify-center gap-4 flex-wrap px-2">
+        <div className="mt-5 flex items-center justify-center gap-3 flex-wrap px-2">
           {LOGIN_SERVICES.map((s) => (
             <div
               key={s.label}

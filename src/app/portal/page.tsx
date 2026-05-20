@@ -34,7 +34,7 @@ export default async function PortalPage() {
           {getGreeting()}
         </p>
         <h1
-          className="text-3xl font-bold text-white"
+          className="text-2xl sm:text-3xl font-bold text-white"
           style={{ fontFamily: 'var(--font-dm-sans)' }}
         >
           {firstName}

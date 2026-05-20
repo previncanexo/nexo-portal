@@ -49,7 +49,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
               Plan Base Nexo · Afiliado
             </p>
             <h2
-              className="text-xl font-bold leading-tight mb-4 truncate"
+              className="text-lg font-bold leading-tight mb-4 truncate"
               style={{ color: 'white', fontFamily: 'var(--font-dm-sans)' }}
             >
               {affiliate ? `${affiliate.nombre} ${affiliate.apellido}` : 'Sin datos'}
@@ -57,7 +57,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
             <div>
               <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.6)' }}>N° de afiliado</p>
               <p
-                className="text-2xl font-bold tracking-widest"
+                className="text-xl font-bold tracking-wider break-all"
                 style={{ fontFamily: 'monospace', color: 'white' }}
               >
                 {affiliate?.affiliate_number ?? '—'}
