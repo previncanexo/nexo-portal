@@ -184,11 +184,11 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
 
   return (
     <>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {services.map((service) => (
           <div
             key={service.id}
-            className="glass-card p-4 sm:p-5 flex flex-col gap-3 relative overflow-hidden"
+            className="glass-card p-5 sm:p-6 flex flex-col gap-4 relative overflow-hidden"
           >
             {/* Subtle glow blob top-right */}
             <div
@@ -198,7 +198,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
 
             {/* Icon */}
             <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 relative z-10"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 relative z-10"
               style={{ background: service.accentBg, color: service.accentColor }}
             >
               <service.Icon />
