@@ -32,18 +32,18 @@ export default async function PortalPage() {
       {/* Saludo */}
       <div className="pt-1">
         <p
-          className="text-sm font-medium mb-1"
+          className="text-sm sm:text-base font-medium mb-1"
           style={{ color: 'rgba(255,255,255,0.72)', letterSpacing: '0.06em', textTransform: 'uppercase' }}
         >
           {getGreeting()}
         </p>
         <h1
-          className="text-2xl sm:text-3xl font-bold text-white leading-tight"
+          className="text-3xl sm:text-4xl font-bold text-white leading-tight"
           style={{ fontFamily: 'var(--font-dm-sans)' }}
         >
           {firstName} 👋
         </h1>
-        <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>
+        <p className="text-sm sm:text-base mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>
           Todos tus beneficios en un solo lugar.
         </p>
       </div>
@@ -51,7 +51,7 @@ export default async function PortalPage() {
       {/* Credencial */}
       <section>
         <p
-          className="text-xs font-semibold uppercase tracking-widest mb-3"
+          className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
           style={{ color: 'rgba(255,255,255,0.70)' }}
         >
           Tu credencial
@@ -62,7 +62,7 @@ export default async function PortalPage() {
       {/* Servicios */}
       <section>
         <p
-          className="text-xs font-semibold uppercase tracking-widest mb-3"
+          className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
           style={{ color: 'rgba(255,255,255,0.70)' }}
         >
           Tus servicios
@@ -73,7 +73,7 @@ export default async function PortalPage() {
       {/* Próximamente */}
       <section>
         <p
-          className="text-xs font-semibold uppercase tracking-widest mb-3"
+          className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
           style={{ color: 'rgba(255,255,255,0.70)' }}
         >
           Próximamente
@@ -88,15 +88,15 @@ export default async function PortalPage() {
             </svg>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="text-sm sm:text-base font-bold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
               Servicios A la Carta
             </p>
-            <p className="text-sm mt-0.5" style={{ color: 'var(--gray-500)' }}>
+            <p className="text-sm sm:text-base mt-0.5" style={{ color: 'var(--gray-500)' }}>
               Sumá coberturas adicionales a tu plan.
             </p>
           </div>
           <span
-            className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide"
+            className="shrink-0 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-full uppercase tracking-wide"
             style={{ background: 'rgba(134,96,239,0.1)', color: 'var(--purple)' }}
           >
             Pronto

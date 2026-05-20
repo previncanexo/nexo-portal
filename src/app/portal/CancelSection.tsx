@@ -32,7 +32,7 @@ export default function CancelSection() {
       <div className="flex justify-center pt-2 pb-6">
         <button
           onClick={() => setModalOpen(true)}
-          className="text-sm transition-opacity hover:opacity-100"
+          className="text-sm sm:text-base transition-opacity hover:opacity-100"
           style={{ color: 'rgba(255,255,255,0.28)', background: 'none', border: 'none', cursor: 'pointer' }}
         >
           Cancelar suscripción
@@ -62,16 +62,16 @@ export default function CancelSection() {
             </div>
 
             <h3
-              className="text-base font-bold text-center mb-2"
+              className="text-base sm:text-lg font-bold text-center mb-2"
               style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}
             >
               ¿Cancelar tu suscripción?
             </h3>
 
-            <p className="text-sm text-center mb-1" style={{ color: 'var(--gray-600)' }}>
+            <p className="text-sm sm:text-base text-center mb-1" style={{ color: 'var(--gray-600)' }}>
               Vas a perder acceso a todos tus beneficios:
             </p>
-            <ul className="text-sm text-center mb-5 space-y-1" style={{ color: 'var(--gray-500)' }}>
+            <ul className="text-sm sm:text-base text-center mb-5 space-y-1" style={{ color: 'var(--gray-500)' }}>
               <li>Teleconsultas DOC24</li>
               <li>Asistencia de urgencias 24/7</li>
               <li>Descuentos en farmacias (50%)</li>

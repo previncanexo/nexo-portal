@@ -65,7 +65,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
             {/* Plan badge */}
             <div className="inline-flex items-center gap-1.5 mb-4">
               <span
-                className="text-xs font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full"
+                className="text-xs sm:text-sm font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full"
                 style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.92)', border: '1px solid rgba(255,255,255,0.25)' }}
               >
                 Plan Base Nexo
@@ -74,7 +74,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
 
             {/* Name */}
             <h2
-              className="text-xl font-bold leading-tight mb-4 truncate"
+              className="text-xl sm:text-2xl font-bold leading-tight mb-4 truncate"
               style={{ color: 'white', fontFamily: 'var(--font-dm-sans)' }}
             >
               {affiliate ? `${affiliate.nombre} ${affiliate.apellido}` : 'Sin datos'}
@@ -82,11 +82,11 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
 
             {/* Affiliate number */}
             <div>
-              <p className="text-xs uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.75)' }}>
+              <p className="text-xs sm:text-sm uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.75)' }}>
                 N° de afiliado
               </p>
               <p
-                className="text-2xl font-bold tracking-wider break-all"
+                className="text-2xl sm:text-3xl font-bold tracking-wider break-all"
                 style={{ fontFamily: 'monospace', color: 'white', letterSpacing: '0.1em' }}
               >
                 {affiliate?.affiliate_number ?? '—'}
@@ -99,7 +99,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
             <div className="p-2 rounded-2xl" style={{ background: 'rgba(255,255,255,0.95)' }}>
               <QRCode value={qrValue} size={60} style={{ display: 'block' }} />
             </div>
-            <p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.68)' }}>
+            <p className="text-xs sm:text-sm text-center" style={{ color: 'rgba(255,255,255,0.68)' }}>
               Verificar
             </p>
           </div>
@@ -112,7 +112,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
         {/* Status + date */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold"
             style={{ background: statusCfg.bg, border: `1px solid ${statusCfg.border}`, color: statusCfg.color }}
           >
             {status === 'active' ? (
@@ -127,14 +127,14 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
           </div>
 
           {affiliate?.cobertura_hasta ? (
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>
+            <p className="text-sm sm:text-base" style={{ color: 'rgba(255,255,255,0.75)' }}>
               Hasta{' '}
               <span className="font-semibold" style={{ color: 'rgba(255,255,255,0.95)' }}>
                 {formatDate(affiliate.cobertura_hasta)}
               </span>
             </p>
           ) : (
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.68)' }}>Nexo by Previnca</p>
+            <p className="text-sm sm:text-base" style={{ color: 'rgba(255,255,255,0.68)' }}>Nexo by Previnca</p>
           )}
         </div>
       </div>

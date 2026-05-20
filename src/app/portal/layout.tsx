@@ -17,7 +17,7 @@ export default async function PortalLayout({ children }: { children: React.React
   return (
     <div className="min-h-screen flex flex-col">
       <PortalHeader affiliate={affiliate as Affiliate | null} />
-      <main className="flex-1 relative z-10 px-4 py-6 max-w-2xl mx-auto w-full">
+      <main className="flex-1 relative z-10 px-4 sm:px-6 py-6 sm:py-10 max-w-3xl mx-auto w-full">
         {children}
       </main>
     </div>

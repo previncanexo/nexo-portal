@@ -32,7 +32,7 @@ export default function PortalHeader({ affiliate }: PortalHeaderProps) {
 
   return (
     <header
-      className="sticky top-0 z-50 px-4 py-3"
+      className="sticky top-0 z-50 px-4 sm:px-6 py-3 sm:py-4"
       style={{
         background: 'linear-gradient(135deg, color-mix(in srgb, var(--purple) 85%, transparent) 0%, color-mix(in srgb, var(--pink) 85%, transparent) 100%)',
         backdropFilter: 'blur(16px)',
@@ -40,13 +40,13 @@ export default function PortalHeader({ affiliate }: PortalHeaderProps) {
         borderBottom: '1px solid rgba(255,255,255,0.15)',
       }}
     >
-      <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
+      <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
         <Image src="/logo.png" alt="Nexo by Previnca" width={100} height={40} style={{ objectFit: 'contain', height: '36px', width: 'auto' }} priority />
 
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-1.5 text-white/80">
             <IconPerson />
-            <span className="text-sm font-medium truncate max-w-[180px]">{displayName}</span>
+            <span className="text-sm sm:text-base font-medium truncate max-w-[200px]">{displayName}</span>
           </div>
           <button
             onClick={handleLogout}
