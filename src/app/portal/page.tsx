@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Affiliate } from '@/lib/types'
 import CredentialCard from './CredentialCard'
 import ServiceCards from './ServiceCards'
+import CancelSection from './CancelSection'
 
 function getGreeting(): string {
   const hour = new Date(Date.now() - 3 * 60 * 60 * 1000).getUTCHours()
@@ -102,6 +103,9 @@ export default async function PortalPage() {
           </span>
         </div>
       </section>
+
+      {/* Cancelar suscripción */}
+      <CancelSection />
 
     </div>
   )
