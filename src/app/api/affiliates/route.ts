@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { adminAffiliateLimiter } from '@/lib/ratelimit'
 import type { CreateAffiliatePayload, CreateAffiliateResponse } from '@/lib/types'
 
 function credentialsEmailHtml(
@@ -83,6 +84,17 @@ export async function POST(request: Request) {
       .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
     if (!adminEmailList.includes(caller.email?.toLowerCase() ?? '')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
+
+    // Rate limiting per admin email
+    if (adminAffiliateLimiter) {
+      const { success } = await adminAffiliateLimiter.limit(caller.email!)
+      if (!success) {
+        return NextResponse.json(
+          { error: 'Límite de creación de afiliados alcanzado. Esperá unos minutos.' },
+          { status: 429 }
+        )
+      }
     }
 
     const body: CreateAffiliatePayload = await request.json()

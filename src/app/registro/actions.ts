@@ -1,6 +1,8 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { registrationLimiter } from '@/lib/ratelimit'
 import { Resend } from 'resend'
 
 function generateTempPassword(): string {
@@ -73,6 +75,16 @@ type RegisterResult =
   | { success: false; error: string }
 
 export async function registerAffiliate(input: RegisterInput): Promise<RegisterResult> {
+  // Rate limiting by IP
+  if (registrationLimiter) {
+    const headersList = await headers()
+    const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
+    const { success } = await registrationLimiter.limit(ip)
+    if (!success) {
+      return { success: false, error: 'Demasiados intentos. Esperá unos minutos e intentá de nuevo.' }
+    }
+  }
+
   const { nombre, apellido, dni, email, whatsapp, ciudad, fecha_nacimiento } = input
 
   if (!nombre || !apellido || !dni || !email) {
