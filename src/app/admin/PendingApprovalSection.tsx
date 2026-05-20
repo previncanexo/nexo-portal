@@ -21,6 +21,7 @@ function ApproveButton({ affiliateId }: { affiliateId: string }) {
   const [done, setDone] = useState(false)
 
   function handleApprove() {
+    if (!confirm('¿Confirmar activación del afiliado? Esta acción se puede revertir desde el perfil.')) return
     startTransition(async () => {
       const result = await quickApproveAffiliate(affiliateId)
       if (result.success) setDone(true)
