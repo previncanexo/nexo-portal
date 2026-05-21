@@ -211,13 +211,6 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     } catch (rollbackErr) {
       console.error('[mp] Rollback error:', rollbackErr)
     }
-    let detail: string
-    try {
-      detail = JSON.stringify(err)
-    } catch {
-      detail = String(err)
-    }
-    console.error('[mp] PreApproval error detail:', detail)
-    return { success: false, error: `Error MP: ${detail}` }
+    return { success: false, error: 'Error al iniciar el pago con Mercado Pago. Intentá de nuevo.' }
   }
 }
