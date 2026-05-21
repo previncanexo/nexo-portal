@@ -68,7 +68,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
                 className="text-xs sm:text-sm font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full"
                 style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.92)', border: '1px solid rgba(255,255,255,0.25)' }}
               >
-                Plan Base Nexo
+                {affiliate?.plan?.name ?? 'Plan Base Nexo'}
               </span>
             </div>
 

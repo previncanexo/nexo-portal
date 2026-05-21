@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import type { Affiliate } from '@/lib/types'
+import { createAdminClient } from '@/lib/supabase/admin'
+import type { Affiliate, Payment } from '@/lib/types'
 import CredentialCard from './CredentialCard'
 import ServiceCards from './ServiceCards'
 import CancelSection from './CancelSection'
+import PaymentHistory from './PaymentHistory'
 
 function getGreeting(): string {
   const hour = new Date(Date.now() - 3 * 60 * 60 * 1000).getUTCHours()
@@ -25,6 +27,20 @@ export default async function PortalPage() {
     .single()
 
   const firstName = affiliate?.nombre ?? 'Afiliado'
+  const isPending = affiliate?.status === 'pending'
+  const isActive = affiliate?.status === 'active'
+
+  let payments: Payment[] = []
+  if (affiliate?.id) {
+    const adminClient = createAdminClient()
+    const { data } = await adminClient
+      .from('payments')
+      .select('*')
+      .eq('affiliate_id', affiliate.id)
+      .order('created_at', { ascending: false })
+      .limit(24)
+    payments = (data ?? []) as Payment[]
+  }
 
   return (
     <div className="flex flex-col gap-7 pb-10">
@@ -48,6 +64,29 @@ export default async function PortalPage() {
         </p>
       </div>
 
+      {/* Banner estado pendiente */}
+      {isPending && (
+        <div
+          className="rounded-2xl px-4 py-4 flex items-start gap-3"
+          style={{
+            background: 'rgba(251,191,36,0.12)',
+            border: '1px solid rgba(251,191,36,0.30)',
+          }}
+        >
+          <svg className="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div>
+            <p className="text-sm font-semibold" style={{ color: '#fbbf24' }}>
+              Tu pago está siendo procesado
+            </p>
+            <p className="text-sm mt-0.5" style={{ color: 'rgba(251,191,36,0.80)' }}>
+              Tu cuenta se activará automáticamente en cuanto confirmemos el pago. Revisá tu email para más información.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Credencial */}
       <section>
         <p
@@ -67,7 +106,41 @@ export default async function PortalPage() {
         >
           Tus servicios
         </p>
-        <ServiceCards affiliate={affiliate as Affiliate | null} />
+        {isActive ? (
+          <ServiceCards affiliate={affiliate as Affiliate | null} />
+        ) : (
+          <div
+            className="glass-card px-5 py-6 flex items-center gap-4"
+          >
+            <div
+              className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(251,191,36,0.1)' }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm sm:text-base font-bold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
+                Servicios no disponibles
+              </p>
+              <p className="text-sm sm:text-base mt-0.5" style={{ color: 'var(--gray-500)' }}>
+                Tus servicios estarán disponibles cuando tu cuenta esté activa.
+              </p>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Historial de pagos */}
+      <section>
+        <p
+          className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
+          style={{ color: 'rgba(255,255,255,0.70)' }}
+        >
+          Historial de pagos
+        </p>
+        <PaymentHistory payments={payments} />
       </section>
 
       {/* Próximamente */}
