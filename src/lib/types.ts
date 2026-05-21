@@ -25,6 +25,7 @@ export interface Affiliate {
   cobertura_hasta: string | null
   user_id: string | null
   notes: string | null
+  mp_subscription_id: string | null
   created_at: string
   updated_at: string
   plan?: Plan

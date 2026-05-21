@@ -6,6 +6,7 @@ import CredentialCard from './CredentialCard'
 import ServiceCards from './ServiceCards'
 import CancelSection from './CancelSection'
 import PaymentHistory from './PaymentHistory'
+import RetryPaymentButton from './RetryPaymentButton'
 
 function getGreeting(): string {
   const hour = new Date(Date.now() - 3 * 60 * 60 * 1000).getUTCHours()
@@ -81,8 +82,9 @@ export default async function PortalPage() {
               Tu pago está siendo procesado
             </p>
             <p className="text-sm mt-0.5" style={{ color: 'rgba(251,191,36,0.80)' }}>
-              Tu cuenta se activará automáticamente en cuanto confirmemos el pago. Revisá tu email para más información.
+              Tu cuenta se activará automáticamente en cuanto confirmemos el pago. Si no completaste el pago, podés hacerlo ahora.
             </p>
+            <RetryPaymentButton />
           </div>
         </div>
       )}

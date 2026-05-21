@@ -3,7 +3,19 @@
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendActivationEmail } from '@/lib/emails'
+import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import type { AffiliateStatus } from '@/lib/types'
+
+async function cancelMpSubscription(subscriptionId: string): Promise<void> {
+  if (!process.env.MP_ACCESS_TOKEN) return
+  try {
+    const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
+    const preApprovalClient = new PreApproval(mpClient)
+    await preApprovalClient.update({ id: subscriptionId, body: { status: 'cancelled' } })
+  } catch (err) {
+    console.error('[admin] MP subscription cancel error:', err)
+  }
+}
 
 export async function updateAffiliateStatus(
   affiliateId: string,
@@ -15,7 +27,7 @@ export async function updateAffiliateStatus(
 
   const { data: current } = await supabase
     .from('affiliates')
-    .select('status, nombre, email, affiliate_number, plan:plans(name)')
+    .select('status, nombre, email, affiliate_number, mp_subscription_id, plan:plans(name)')
     .eq('id', affiliateId)
     .single()
 
@@ -48,6 +60,14 @@ export async function updateAffiliateStatus(
       affiliate_number: current.affiliate_number,
       plan: Array.isArray(current.plan) ? (current.plan[0] ?? null) : current.plan,
     })
+  }
+
+  if (
+    (status === 'suspended' || status === 'cancelled') &&
+    current?.status !== status &&
+    (current as any)?.mp_subscription_id
+  ) {
+    await cancelMpSubscription((current as any).mp_subscription_id)
   }
 
   revalidatePath(`/admin/afiliados/${affiliateId}`)

@@ -267,6 +267,13 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
       throw new Error('MP no devolvió URL de pago')
     }
 
+    if (mpResponse.id) {
+      await supabase
+        .from('affiliates')
+        .update({ mp_subscription_id: String(mpResponse.id) })
+        .eq('id', affiliate.id)
+    }
+
     return { success: true, checkoutUrl: mpResponse.init_point }
   } catch (err) {
     // Rollback: delete affiliate and auth user

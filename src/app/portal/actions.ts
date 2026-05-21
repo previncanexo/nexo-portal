@@ -1,0 +1,72 @@
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { MercadoPagoConfig, PreApproval } from 'mercadopago'
+
+type RetryResult =
+  | { success: true; checkoutUrl: string }
+  | { success: false; error: string }
+
+export async function retryPayment(): Promise<RetryResult> {
+  if (!process.env.MP_ACCESS_TOKEN) {
+    return { success: false, error: 'El sistema de pagos no está configurado.' }
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'No autenticado.' }
+
+  const admin = createAdminClient()
+  const { data: affiliate } = await admin
+    .from('affiliates')
+    .select('id, email, status, plan:plans(id, name, price)')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!affiliate) return { success: false, error: 'Afiliado no encontrado.' }
+  if (affiliate.status !== 'pending') {
+    return { success: false, error: 'La cuenta no está en estado pendiente.' }
+  }
+
+  const rawPlan = affiliate.plan as any
+  const plan = Array.isArray(rawPlan) ? rawPlan[0] : rawPlan
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+
+  try {
+    const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
+    const preApprovalClient = new PreApproval(mpClient)
+
+    const mpResponse = await preApprovalClient.create({
+      body: {
+        reason: plan?.name ?? 'Plan Base Nexo',
+        payer_email: affiliate.email,
+        back_url: `${appUrl}/registro/exito`,
+        auto_recurring: {
+          frequency: 1,
+          frequency_type: 'months',
+          transaction_amount: plan?.price ?? 19500,
+          currency_id: 'ARS',
+        },
+        external_reference: affiliate.id,
+        status: 'pending',
+      },
+    })
+
+    if (!mpResponse.init_point) {
+      throw new Error('MP no devolvió URL de pago')
+    }
+
+    if (mpResponse.id) {
+      await admin
+        .from('affiliates')
+        .update({ mp_subscription_id: String(mpResponse.id) })
+        .eq('id', affiliate.id)
+    }
+
+    return { success: true, checkoutUrl: mpResponse.init_point }
+  } catch (err) {
+    console.error('[retry-payment]', err)
+    return { success: false, error: 'No se pudo iniciar el pago. Intentá de nuevo.' }
+  }
+}

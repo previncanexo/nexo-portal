@@ -38,7 +38,11 @@ export async function POST(req: NextRequest) {
         if (affiliate && affiliate.status === 'pending') {
           await supabase
             .from('affiliates')
-            .update({ status: 'active', updated_at: new Date().toISOString() })
+            .update({
+              status: 'active',
+              mp_subscription_id: body.data!.id,
+              updated_at: new Date().toISOString(),
+            })
             .eq('id', preApproval.external_reference)
 
           await sendActivationEmail({
