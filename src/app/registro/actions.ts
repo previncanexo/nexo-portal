@@ -3,6 +3,8 @@
 import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { registrationLimiter } from '@/lib/ratelimit'
+import { sendActivationEmail } from '@/lib/emails'
+import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import { Resend } from 'resend'
 
 function generateTempPassword(): string {
@@ -150,5 +152,127 @@ export async function registerAffiliate(input: RegisterInput): Promise<RegisterR
     affiliate_number: affiliate.affiliate_number,
     temp_password: tempPassword,
     email,
+  }
+}
+
+type InitiatePaymentResult =
+  | { success: true; checkoutUrl: string }
+  | { success: false; error: string }
+
+export async function initiatePayment(input: RegisterInput): Promise<InitiatePaymentResult> {
+  if (!process.env.MP_ACCESS_TOKEN) {
+    return { success: false, error: 'El sistema de pagos no está configurado.' }
+  }
+
+  if (registrationLimiter) {
+    const headersList = await headers()
+    const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
+    const { success } = await registrationLimiter.limit(ip)
+    if (!success) {
+      return { success: false, error: 'Demasiados intentos. Esperá unos minutos e intentá de nuevo.' }
+    }
+  }
+
+  const { nombre, apellido, dni, email, whatsapp, ciudad, fecha_nacimiento } = input
+
+  if (!nombre || !apellido || !dni || !email) {
+    return { success: false, error: 'Faltan campos obligatorios: nombre, apellido, DNI y email.' }
+  }
+  if (!/^\d{7,8}$/.test(dni)) {
+    return { success: false, error: 'El DNI debe tener 7 u 8 dígitos numéricos (sin puntos ni espacios).' }
+  }
+
+  const supabase = createAdminClient()
+  const tempPassword = generateTempPassword()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+
+  // Fetch default plan
+  const { data: plan } = await supabase
+    .from('plans')
+    .select('id, name, price')
+    .order('price', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  // Create auth user
+  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    email,
+    password: tempPassword,
+    email_confirm: true,
+  })
+
+  if (authError) {
+    return { success: false, error: authError.message.includes('already registered')
+      ? 'Ya existe una cuenta con ese email.'
+      : `Error al crear la cuenta: ${authError.message}` }
+  }
+
+  const userId = authData.user.id
+
+  // Create affiliate
+  const affiliateData: Record<string, unknown> = {
+    nombre, apellido, dni, email,
+    user_id: userId,
+    status: 'pending',
+    plan_id: plan?.id ?? null,
+  }
+  if (whatsapp) affiliateData.whatsapp = whatsapp
+  if (ciudad) affiliateData.ciudad = ciudad
+  if (fecha_nacimiento) affiliateData.fecha_nacimiento = fecha_nacimiento
+
+  const { data: affiliate, error: affiliateError } = await supabase
+    .from('affiliates')
+    .insert(affiliateData)
+    .select('id, affiliate_number')
+    .single()
+
+  if (affiliateError) {
+    await supabase.auth.admin.deleteUser(userId)
+    return { success: false, error: `Error al crear el afiliado: ${affiliateError.message}` }
+  }
+
+  // Send credentials email so user has their password
+  if (process.env.RESEND_API_KEY) {
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    await resend.emails.send({
+      from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+      to: email,
+      subject: 'Tus credenciales de acceso a Nexo',
+      html: credentialsEmailHtml(nombre, affiliate.affiliate_number, email, tempPassword, appUrl),
+    }).catch((err) => console.error('[registro] Resend error:', err))
+  }
+
+  // Create MP subscription
+  try {
+    const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
+    const preApprovalClient = new PreApproval(mpClient)
+
+    const mpResponse = await preApprovalClient.create({
+      body: {
+        reason: plan?.name ?? 'Plan Base Nexo',
+        payer_email: email,
+        back_url: `${appUrl}/registro/exito`,
+        auto_recurring: {
+          frequency: 1,
+          frequency_type: 'months',
+          transaction_amount: plan?.price ?? 19500,
+          currency_id: 'ARS',
+        },
+        external_reference: affiliate.id,
+        status: 'pending',
+      },
+    })
+
+    if (!mpResponse.init_point) {
+      throw new Error('MP no devolvió URL de pago')
+    }
+
+    return { success: true, checkoutUrl: mpResponse.init_point }
+  } catch (err) {
+    // Rollback: delete affiliate and auth user
+    await supabase.from('affiliates').delete().eq('id', affiliate.id)
+    await supabase.auth.admin.deleteUser(userId)
+    console.error('[mp] PreApproval error:', err)
+    return { success: false, error: 'Error al iniciar el pago con Mercado Pago. Intentá de nuevo.' }
   }
 }

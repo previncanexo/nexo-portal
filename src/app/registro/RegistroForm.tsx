@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { registerAffiliate } from './actions'
-import type { CreateAffiliateResponse } from '@/lib/types'
+import { initiatePayment } from './actions'
 
 const CARD_STYLE = {
   background: 'rgba(134,96,239,0.55)',
@@ -211,7 +210,6 @@ export default function RegistroForm({ plan }: { plan: PlanInfo }) {
   const [form, setForm] = useState<FormData>(initialForm)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [result, setResult] = useState<CreateAffiliateResponse | null>(null)
 
   function setField(field: keyof FormData) {
     return (value: string) => setForm((prev) => ({ ...prev, [field]: value }))
@@ -234,7 +232,7 @@ export default function RegistroForm({ plan }: { plan: PlanInfo }) {
     setError('')
     setLoading(true)
     try {
-      const data = await registerAffiliate({
+      const data = await initiatePayment({
         nombre: form.nombre.trim(),
         apellido: form.apellido.trim(),
         dni: form.dni.trim(),
@@ -247,87 +245,12 @@ export default function RegistroForm({ plan }: { plan: PlanInfo }) {
         setError(data.error)
         return
       }
-      setResult({ affiliate_number: data.affiliate_number, temp_password: data.temp_password, email: data.email })
+      window.location.href = data.checkoutUrl
     } catch {
       setError('Error inesperado. Intentá de nuevo.')
     } finally {
       setLoading(false)
     }
-  }
-
-  // ── LISTO ──────────────────────────────────────────────────────────────────
-  if (result) {
-    return (
-      <div className="min-h-screen flex items-start justify-center px-4 py-12">
-        <div className="w-full max-w-sm relative z-10">
-          <Logo />
-          <div className="rounded-3xl p-6 sm:p-8 text-center" style={CARD_STYLE}>
-            <div
-              className="w-14 h-14 rounded-full mx-auto mb-5 flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)' }}
-            >
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
-
-            <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-              ¡Solicitud registrada!
-            </h2>
-            <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              Tu cuenta fue creada. Guardá estos datos para ingresar.
-            </p>
-
-            <div className="rounded-xl p-4 mb-3 text-left" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <p className="text-xs mb-1 uppercase tracking-wide font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>N° de afiliado</p>
-              <p
-                className="text-xl font-bold tracking-wider break-all"
-                style={{
-                  fontFamily: 'monospace',
-                  background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                {result.affiliate_number}
-              </p>
-            </div>
-
-            <div className="rounded-xl p-4 mb-4 text-left" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <p className="text-xs mb-3 uppercase tracking-wide font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>Credenciales de acceso</p>
-              <div className="flex flex-col gap-2">
-                <div>
-                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Email: </span>
-                  <span className="text-sm text-white font-medium">{result.email}</span>
-                </div>
-                <div>
-                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Contraseña temporal: </span>
-                  <span className="text-sm font-bold tracking-wider text-white" style={{ fontFamily: 'monospace' }}>
-                    {result.temp_password}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div
-              className="text-xs px-4 py-3 rounded-xl mb-6"
-              style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.2)', color: 'rgba(250,204,21,0.85)' }}
-            >
-              Guardá esta contraseña. Te recomendamos cambiarla al ingresar por primera vez.
-            </div>
-
-            <a
-              href="/login"
-              className="block w-full py-3 rounded-full font-bold text-sm text-center transition-opacity hover:opacity-90"
-              style={{ background: 'white', color: 'var(--purple)', fontFamily: 'var(--font-dm-sans)' }}
-            >
-              Ingresar al portal
-            </a>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (
