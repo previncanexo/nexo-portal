@@ -3,7 +3,6 @@
 import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { registrationLimiter } from '@/lib/ratelimit'
-import { sendActivationEmail } from '@/lib/emails'
 import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import { Resend } from 'resend'
 
@@ -71,89 +70,6 @@ interface RegisterInput {
   ciudad?: string
   fecha_nacimiento?: string
   plan_id?: string
-}
-
-type RegisterResult =
-  | { success: true; affiliate_number: string; temp_password: string; email: string }
-  | { success: false; error: string }
-
-export async function registerAffiliate(input: RegisterInput): Promise<RegisterResult> {
-  // Rate limiting by IP
-  if (registrationLimiter) {
-    const headersList = await headers()
-    const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
-    const { success } = await registrationLimiter.limit(ip)
-    if (!success) {
-      return { success: false, error: 'Demasiados intentos. Esperá unos minutos e intentá de nuevo.' }
-    }
-  }
-
-  const { nombre, apellido, dni, email, whatsapp, ciudad, fecha_nacimiento } = input
-
-  if (!nombre || !apellido || !dni || !email) {
-    return { success: false, error: 'Faltan campos obligatorios: nombre, apellido, DNI y email' }
-  }
-  if (!/^\d{7,8}$/.test(dni)) {
-    return { success: false, error: 'El DNI debe tener 7 u 8 dígitos numéricos (sin puntos ni espacios)' }
-  }
-
-  const supabase = createAdminClient()
-  const tempPassword = generateTempPassword()
-
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-    email,
-    password: tempPassword,
-    email_confirm: true,
-  })
-
-  if (authError) {
-    return { success: false, error: `Error creando usuario: ${authError.message}` }
-  }
-
-  const userId = authData.user.id
-
-  const affiliateData: Record<string, unknown> = {
-    nombre,
-    apellido,
-    dni,
-    email,
-    user_id: userId,
-    status: 'pending',
-  }
-  if (whatsapp) affiliateData.whatsapp = whatsapp
-  if (ciudad) affiliateData.ciudad = ciudad
-  if (fecha_nacimiento) affiliateData.fecha_nacimiento = fecha_nacimiento
-
-  const { data: affiliate, error: affiliateError } = await supabase
-    .from('affiliates')
-    .insert(affiliateData)
-    .select('affiliate_number')
-    .single()
-
-  if (affiliateError) {
-    await supabase.auth.admin.deleteUser(userId)
-    return { success: false, error: `Error creando afiliado: ${affiliateError.message}` }
-  }
-
-  if (process.env.RESEND_API_KEY) {
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
-    await resend.emails.send({
-      from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
-      to: email,
-      subject: `Bienvenido a Nexo — tus credenciales de acceso`,
-      html: credentialsEmailHtml(nombre, affiliate.affiliate_number, email, tempPassword, appUrl),
-    }).catch((err) => {
-      console.error('[registro] Resend error:', err)
-    })
-  }
-
-  return {
-    success: true,
-    affiliate_number: affiliate.affiliate_number,
-    temp_password: tempPassword,
-    email,
-  }
 }
 
 type InitiatePaymentResult =

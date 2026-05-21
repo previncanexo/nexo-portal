@@ -1,5 +1,3 @@
-'use server'
-
 import { createHmac, timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, PreApproval, Payment } from 'mercadopago'
@@ -30,6 +28,12 @@ function verifyMpSignature(
   }
 }
 
+function addOneMonth(dateStr: string | null): string {
+  const base = dateStr ? new Date(dateStr) : new Date()
+  base.setMonth(base.getMonth() + 1)
+  return base.toISOString().split('T')[0]
+}
+
 export async function POST(req: NextRequest) {
   let body: { type?: string; action?: string; data?: { id?: string } }
 
@@ -43,28 +47,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
-  // Verify MP webhook signature when secret is configured
   const webhookSecret = process.env.MP_WEBHOOK_SECRET
   if (webhookSecret && body.data?.id) {
     const xSignature = req.headers.get('x-signature') ?? ''
     const xRequestId = req.headers.get('x-request-id') ?? ''
     if (xSignature && !verifyMpSignature(xSignature, xRequestId, body.data.id, webhookSecret)) {
       console.warn('[mp-webhook] Invalid signature — request rejected')
-      return NextResponse.json({ ok: true }) // return 200 to avoid MP retries on config issues
+      return NextResponse.json({ ok: true })
     }
   }
 
   const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
+  const supabase = createAdminClient()
 
   try {
-    // Subscription authorized → activate affiliate
     if (body.type === 'subscription_preapproval' && body.data?.id) {
       const preApprovalClient = new PreApproval(mpClient)
       const preApproval = await preApprovalClient.get({ id: body.data.id })
 
-      if (preApproval.status === 'authorized' && preApproval.external_reference) {
-        const supabase = createAdminClient()
+      if (!preApproval.external_reference) {
+        return NextResponse.json({ ok: true })
+      }
 
+      if (preApproval.status === 'authorized') {
         const { data: affiliate } = await supabase
           .from('affiliates')
           .select('status, nombre, email, affiliate_number, plan:plans(name)')
@@ -76,7 +81,7 @@ export async function POST(req: NextRequest) {
             .from('affiliates')
             .update({
               status: 'active',
-              mp_subscription_id: body.data!.id,
+              mp_subscription_id: body.data.id,
               updated_at: new Date().toISOString(),
             })
             .eq('id', preApproval.external_reference)
@@ -89,17 +94,29 @@ export async function POST(req: NextRequest) {
           })
         }
       }
+
+      // Cancelled or paused by MP → suspend active affiliate
+      if (preApproval.status === 'cancelled' || preApproval.status === 'paused') {
+        const { data: affiliate } = await supabase
+          .from('affiliates')
+          .select('status')
+          .eq('id', preApproval.external_reference)
+          .single()
+
+        if (affiliate?.status === 'active') {
+          await supabase
+            .from('affiliates')
+            .update({ status: 'suspended', updated_at: new Date().toISOString() })
+            .eq('id', preApproval.external_reference)
+        }
+      }
     }
 
-    // Subscription payment approved → record in payments table
     if (body.type === 'payment' && body.data?.id) {
       const paymentClient = new Payment(mpClient)
       const payment = await paymentClient.get({ id: Number(body.data.id) })
 
       if (payment.status === 'approved' && (payment as any).subscription_id) {
-        const supabase = createAdminClient()
-
-        // Idempotency: skip if already recorded
         const { count } = await supabase
           .from('payments')
           .select('id', { count: 'exact', head: true })
@@ -120,6 +137,21 @@ export async function POST(req: NextRequest) {
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             })
+
+            // Extend cobertura_hasta by 1 month on each successful monthly payment
+            const { data: affiliateData } = await supabase
+              .from('affiliates')
+              .select('cobertura_hasta')
+              .eq('id', preApproval.external_reference)
+              .single()
+
+            await supabase
+              .from('affiliates')
+              .update({
+                cobertura_hasta: addOneMonth(affiliateData?.cobertura_hasta ?? null),
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', preApproval.external_reference)
           }
         }
       }
@@ -128,6 +160,5 @@ export async function POST(req: NextRequest) {
     console.error('[mp-webhook]', err)
   }
 
-  // Always return 200 so MP doesn't retry
   return NextResponse.json({ ok: true })
 }

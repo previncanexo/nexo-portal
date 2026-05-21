@@ -20,7 +20,7 @@ export async function retryPayment(): Promise<RetryResult> {
   const admin = createAdminClient()
   const { data: affiliate } = await admin
     .from('affiliates')
-    .select('id, email, status, plan:plans(id, name, price)')
+    .select('id, email, status, mp_subscription_id, plan:plans(id, name, price)')
     .eq('user_id', user.id)
     .single()
 
@@ -33,10 +33,20 @@ export async function retryPayment(): Promise<RetryResult> {
   const plan = Array.isArray(rawPlan) ? rawPlan[0] : rawPlan
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
 
-  try {
-    const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
-    const preApprovalClient = new PreApproval(mpClient)
+  const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
+  const preApprovalClient = new PreApproval(mpClient)
 
+  // Cancel previous pending subscription to avoid orphaned preapprovals in MP
+  const oldSubscriptionId = (affiliate as any).mp_subscription_id as string | null | undefined
+  if (oldSubscriptionId) {
+    try {
+      await preApprovalClient.update({ id: oldSubscriptionId, body: { status: 'cancelled' } })
+    } catch (err) {
+      console.error('[retry-payment] Cancel old preapproval error:', err)
+    }
+  }
+
+  try {
     const mpResponse = await preApprovalClient.create({
       body: {
         reason: plan?.name ?? 'Plan Base Nexo',

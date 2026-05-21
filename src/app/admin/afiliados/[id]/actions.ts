@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendActivationEmail, sendPaymentConfirmedEmail } from '@/lib/emails'
+import { sendActivationEmail, sendPaymentConfirmedEmail, sendResubscribeEmail } from '@/lib/emails'
 import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import type { AffiliateStatus } from '@/lib/types'
 
@@ -27,7 +27,7 @@ export async function updateAffiliateStatus(
 
   const { data: current } = await supabase
     .from('affiliates')
-    .select('status, nombre, email, affiliate_number, mp_subscription_id, plan:plans(name)')
+    .select('status, nombre, email, affiliate_number, mp_subscription_id, plan:plans(id, name, price)')
     .eq('id', affiliateId)
     .single()
 
@@ -68,6 +68,44 @@ export async function updateAffiliateStatus(
     (current as any)?.mp_subscription_id
   ) {
     await cancelMpSubscription((current as any).mp_subscription_id)
+  }
+
+  // Reactivating a previously suspended affiliate: create a new MP subscription
+  // so they can resume monthly charges, and notify them via email
+  if (status === 'active' && current?.status === 'suspended' && process.env.MP_ACCESS_TOKEN) {
+    const rawPlan = (current as any).plan
+    const plan = Array.isArray(rawPlan) ? rawPlan[0] : rawPlan
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+    try {
+      const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
+      const preApprovalClient = new PreApproval(mpClient)
+      const mpResponse = await preApprovalClient.create({
+        body: {
+          reason: plan?.name ?? 'Plan Base Nexo',
+          payer_email: current.email,
+          back_url: `${appUrl}/portal`,
+          auto_recurring: {
+            frequency: 1,
+            frequency_type: 'months',
+            transaction_amount: plan?.price ?? 19500,
+            currency_id: 'ARS',
+          },
+          external_reference: affiliateId,
+          status: 'pending',
+        },
+      })
+      if (mpResponse.id) {
+        await supabase
+          .from('affiliates')
+          .update({ mp_subscription_id: String(mpResponse.id) })
+          .eq('id', affiliateId)
+      }
+      if (mpResponse.init_point) {
+        await sendResubscribeEmail(current.nombre, current.email, mpResponse.init_point)
+      }
+    } catch (err) {
+      console.error('[admin] MP reactivation preapproval error:', err)
+    }
   }
 
   revalidatePath(`/admin/afiliados/${affiliateId}`)

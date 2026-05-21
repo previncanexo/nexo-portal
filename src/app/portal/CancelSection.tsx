@@ -3,11 +3,15 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function CancelSection() {
+type Status = 'pending' | 'active' | 'suspended' | 'cancelled'
+
+export default function CancelSection({ status }: { status: Status }) {
   const router = useRouter()
   const [modalOpen, setModalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  if (status === 'cancelled' || status === 'suspended') return null
 
   async function handleConfirm() {
     setLoading(true)

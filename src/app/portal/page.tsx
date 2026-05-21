@@ -7,6 +7,7 @@ import ServiceCards from './ServiceCards'
 import CancelSection from './CancelSection'
 import PaymentHistory from './PaymentHistory'
 import RetryPaymentButton from './RetryPaymentButton'
+import ActiveWatcher from './ActiveWatcher'
 
 function getGreeting(): string {
   const hour = new Date(Date.now() - 3 * 60 * 60 * 1000).getUTCHours()
@@ -27,15 +28,26 @@ export default async function PortalPage() {
     .eq('user_id', user.id)
     .single()
 
-  const firstName = affiliate?.nombre ?? 'Afiliado'
-  const status = affiliate?.status ?? 'pending'
+  if (!affiliate) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
+        <p className="text-base font-semibold text-white">No encontramos tu afiliación.</p>
+        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.60)' }}>
+          Si creés que es un error, contactate con Nexo para resolver tu situación.
+        </p>
+      </div>
+    )
+  }
+
+  const firstName = affiliate.nombre
+  const status = affiliate.status as 'pending' | 'active' | 'suspended' | 'cancelled'
   const isPending = status === 'pending'
   const isActive = status === 'active'
   const isSuspended = status === 'suspended'
   const isCancelled = status === 'cancelled'
 
   let payments: Payment[] = []
-  if (affiliate?.id) {
+  if (affiliate.id) {
     const adminClient = createAdminClient()
     const { data } = await adminClient
       .from('payments')
@@ -216,7 +228,10 @@ export default async function PortalPage() {
       </section>
 
       {/* Cancelar suscripción */}
-      <CancelSection />
+      <CancelSection status={status} />
+
+      {/* Realtime: auto-refresh when pending → active */}
+      {isPending && <ActiveWatcher affiliateId={affiliate.id} />}
 
     </div>
   )
