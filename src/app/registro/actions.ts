@@ -82,11 +82,16 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
   }
 
   if (registrationLimiter) {
-    const headersList = await headers()
-    const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
-    const { success } = await registrationLimiter.limit(ip)
-    if (!success) {
-      return { success: false, error: 'Demasiados intentos. Esperá unos minutos e intentá de nuevo.' }
+    try {
+      const headersList = await headers()
+      const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
+      const { success } = await registrationLimiter.limit(ip)
+      if (!success) {
+        return { success: false, error: 'Demasiados intentos. Esperá unos minutos e intentá de nuevo.' }
+      }
+    } catch (err) {
+      console.error('[registro] Rate limiter error (fail open):', err)
+      // Fail open: si Redis no responde, dejamos pasar el registro
     }
   }
 
@@ -198,10 +203,15 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
 
     return { success: true, checkoutUrl: mpResponse.init_point }
   } catch (err) {
-    // Rollback: delete affiliate and auth user
-    await supabase.from('affiliates').delete().eq('id', affiliate.id)
-    await supabase.auth.admin.deleteUser(userId)
     console.error('[mp] PreApproval error:', err)
-    return { success: false, error: 'Error al iniciar el pago con Mercado Pago. Intentá de nuevo.' }
+    // Rollback: delete affiliate and auth user
+    try {
+      await supabase.from('affiliates').delete().eq('id', affiliate.id)
+      await supabase.auth.admin.deleteUser(userId)
+    } catch (rollbackErr) {
+      console.error('[mp] Rollback error:', rollbackErr)
+    }
+    const detail = err instanceof Error ? err.message : String(err)
+    return { success: false, error: `Error al iniciar el pago con Mercado Pago: ${detail}` }
   }
 }
