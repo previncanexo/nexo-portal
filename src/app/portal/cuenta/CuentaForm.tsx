@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { updateProfile } from './actions'
+import { updateProfile, notifyPasswordChanged } from './actions'
 import type { Affiliate } from '@/lib/types'
 
 const INPUT_BASE: React.CSSProperties = {
@@ -187,6 +187,7 @@ export default function CuentaForm({ affiliate }: { affiliate: Affiliate }) {
       setCurrentPwd('')
       setNewPwd('')
       setConfirmPwd('')
+      notifyPasswordChanged(affiliate.nombre, affiliate.email).catch(() => {})
     } finally {
       setPwdLoading(false)
     }

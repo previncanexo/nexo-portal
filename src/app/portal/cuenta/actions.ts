@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendPasswordChangedEmail } from '@/lib/emails'
 
 export async function updateProfile(
   affiliateId: string,
@@ -23,4 +24,8 @@ export async function updateProfile(
   revalidatePath('/portal')
   revalidatePath('/portal/cuenta')
   return { success: true }
+}
+
+export async function notifyPasswordChanged(nombre: string, email: string): Promise<void> {
+  await sendPasswordChangedEmail(nombre, email)
 }

@@ -228,7 +228,14 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
 
   if (affiliateError) {
     await supabase.auth.admin.deleteUser(userId)
-    return { success: false, error: `Error al crear el afiliado: ${affiliateError.message}` }
+    const isDniDuplicate = (affiliateError as any).code === '23505' &&
+      affiliateError.message.toLowerCase().includes('dni')
+    return {
+      success: false,
+      error: isDniDuplicate
+        ? 'Ya existe una cuenta con ese DNI. Si olvidaste tu contraseña, podés recuperarla desde el login.'
+        : `Error al crear el afiliado: ${affiliateError.message}`,
+    }
   }
 
   // Send credentials email so user has their password
