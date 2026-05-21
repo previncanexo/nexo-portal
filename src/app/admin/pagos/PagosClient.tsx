@@ -51,6 +51,7 @@ function formatMonthLabel(key: string): string {
 }
 
 export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
+  const [search, setSearch] = useState<string>('')
   const [monthFilter, setMonthFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
 
@@ -60,12 +61,22 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
   }, [payments])
 
   const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim()
     return payments.filter((p) => {
       if (monthFilter !== 'all' && getMonthKey(p.created_at) !== monthFilter) return false
       if (statusFilter !== 'all' && p.status !== statusFilter) return false
+      if (q) {
+        const haystack = [
+          p.affiliate?.nombre ?? '',
+          p.affiliate?.apellido ?? '',
+          p.affiliate?.affiliate_number ?? '',
+          p.external_id ?? '',
+        ].join(' ').toLowerCase()
+        if (!haystack.includes(q)) return false
+      }
       return true
     })
-  }, [payments, monthFilter, statusFilter])
+  }, [payments, search, monthFilter, statusFilter])
 
   const totalApproved = useMemo(
     () => filtered.filter((p) => p.status === 'approved').reduce((sum, p) => sum + p.amount, 0),
@@ -144,7 +155,17 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Search + Filters */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por nombre o N° afiliado..."
+          className="flex-1 min-w-[200px] px-4 py-2.5 rounded-xl text-sm outline-none"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-dm-sans)' }}
+        />
+      </div>
       <div className="flex flex-wrap gap-3 items-center">
         <select
           value={monthFilter}

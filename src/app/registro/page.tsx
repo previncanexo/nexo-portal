@@ -3,12 +3,14 @@ import RegistroForm from './RegistroForm'
 
 export default async function RegistroPage() {
   const supabase = createAdminClient()
-  const { data: plan } = await supabase
+  const { data: plans } = await supabase
     .from('plans')
-    .select('name, price')
+    .select('id, name, price')
     .order('price', { ascending: true })
-    .limit(1)
-    .maybeSingle()
 
-  return <RegistroForm plan={plan ?? { name: 'Plan Base', price: 19500 }} />
+  const planList = (plans ?? []).length > 0
+    ? plans!
+    : [{ id: '', name: 'Plan Base', price: 19500 }]
+
+  return <RegistroForm plans={planList} />
 }

@@ -70,6 +70,7 @@ interface RegisterInput {
   whatsapp?: string
   ciudad?: string
   fecha_nacimiento?: string
+  plan_id?: string
 }
 
 type RegisterResult =
@@ -186,13 +187,11 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
   const tempPassword = generateTempPassword()
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
 
-  // Fetch default plan
-  const { data: plan } = await supabase
-    .from('plans')
-    .select('id, name, price')
-    .order('price', { ascending: true })
-    .limit(1)
-    .maybeSingle()
+  // Fetch selected plan or default to cheapest
+  const planQuery = supabase.from('plans').select('id, name, price')
+  const { data: plan } = input.plan_id
+    ? await planQuery.eq('id', input.plan_id).maybeSingle()
+    : await planQuery.order('price', { ascending: true }).limit(1).maybeSingle()
 
   // Create auth user
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({

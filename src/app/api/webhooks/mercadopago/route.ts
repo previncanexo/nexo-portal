@@ -1,9 +1,34 @@
 'use server'
 
+import { createHmac, timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, PreApproval, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendActivationEmail } from '@/lib/emails'
+
+function verifyMpSignature(
+  xSignature: string,
+  xRequestId: string,
+  notificationId: string,
+  secret: string,
+): boolean {
+  const parts: Record<string, string> = {}
+  for (const chunk of xSignature.split(',')) {
+    const [k, v] = chunk.split('=', 2)
+    if (k && v) parts[k.trim()] = v.trim()
+  }
+  const { ts, v1 } = parts
+  if (!ts || !v1) return false
+
+  const message = `id:${notificationId};request-id:${xRequestId};ts:${ts}`
+  const expected = createHmac('sha256', secret).update(message).digest('hex')
+
+  try {
+    return timingSafeEqual(Buffer.from(v1, 'hex'), Buffer.from(expected, 'hex'))
+  } catch {
+    return false
+  }
+}
 
 export async function POST(req: NextRequest) {
   let body: { type?: string; action?: string; data?: { id?: string } }
@@ -16,6 +41,17 @@ export async function POST(req: NextRequest) {
 
   if (!process.env.MP_ACCESS_TOKEN) {
     return NextResponse.json({ ok: true })
+  }
+
+  // Verify MP webhook signature when secret is configured
+  const webhookSecret = process.env.MP_WEBHOOK_SECRET
+  if (webhookSecret && body.data?.id) {
+    const xSignature = req.headers.get('x-signature') ?? ''
+    const xRequestId = req.headers.get('x-request-id') ?? ''
+    if (xSignature && !verifyMpSignature(xSignature, xRequestId, body.data.id, webhookSecret)) {
+      console.warn('[mp-webhook] Invalid signature — request rejected')
+      return NextResponse.json({ ok: true }) // return 200 to avoid MP retries on config issues
+    }
   }
 
   const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })

@@ -1,0 +1,25 @@
+{
+  "name": "Nexo by Previnca",
+  "short_name": "Nexo",
+  "description": "Portal de afiliados Nexo by Previnca — teleconsultas, urgencias y más.",
+  "start_url": "/portal",
+  "display": "standalone",
+  "background_color": "#0f0820",
+  "theme_color": "#8660EF",
+  "orientation": "portrait",
+  "lang": "es-AR",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

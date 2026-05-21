@@ -201,13 +201,15 @@ function BackButton({ onClick }: { onClick: () => void }) {
 }
 
 interface PlanInfo {
+  id: string
   name: string
   price: number
 }
 
-export default function RegistroForm({ plan }: { plan: PlanInfo }) {
+export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<FormData>(initialForm)
+  const [selectedPlan, setSelectedPlan] = useState<PlanInfo>(plans[0])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -240,6 +242,7 @@ export default function RegistroForm({ plan }: { plan: PlanInfo }) {
         whatsapp: form.whatsapp.trim() || undefined,
         ciudad: form.ciudad.trim() || undefined,
         fecha_nacimiento: form.fecha_nacimiento || undefined,
+        plan_id: selectedPlan.id || undefined,
       })
       if (!data.success) {
         setError(data.error)
@@ -307,16 +310,38 @@ export default function RegistroForm({ plan }: { plan: PlanInfo }) {
               Confirmá lo que estás por contratar
             </p>
 
+            {/* Plan selector — solo si hay más de uno */}
+            {plans.length > 1 && (
+              <div className="flex flex-col gap-2 mb-4">
+                {plans.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setSelectedPlan(p)}
+                    className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-left transition-all"
+                    style={{
+                      background: selectedPlan.id === p.id ? 'rgba(134,96,239,0.25)' : 'rgba(255,255,255,0.06)',
+                      border: selectedPlan.id === p.id ? '1.5px solid rgba(134,96,239,0.7)' : '1px solid rgba(255,255,255,0.12)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span className="text-sm font-semibold text-white">{p.name}</span>
+                    <span className="text-sm font-bold text-white">${p.price.toLocaleString('es-AR')}<span className="text-xs font-normal ml-1" style={{ color: 'rgba(255,255,255,0.5)' }}>/mes</span></span>
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Plan card */}
             <div className="rounded-2xl p-5 mb-5" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{plan.name}</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{selectedPlan.name}</p>
                   <p className="text-base font-bold text-white">Nexo by Previnca</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>por mes</p>
-                  <p className="text-xl font-bold text-white">${plan.price.toLocaleString('es-AR')}</p>
+                  <p className="text-xl font-bold text-white">${selectedPlan.price.toLocaleString('es-AR')}</p>
                 </div>
               </div>
               <div className="flex flex-col gap-2.5">

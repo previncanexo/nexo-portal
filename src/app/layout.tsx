@@ -22,6 +22,12 @@ export const metadata: Metadata = {
   description: 'Accedé a tus teleconsultas DOC24, urgencias 24/7, descuentos en farmacias y atención odontológica desde un solo lugar.',
   keywords: ['nexo', 'previnca', 'salud', 'teleconsulta', 'doc24', 'urgencias', 'farmacia', 'odontología', 'afiliados'],
   authors: [{ name: 'Previnca' }],
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Nexo',
+  },
   openGraph: {
     type: 'website',
     locale: 'es_AR',

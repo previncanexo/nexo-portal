@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendActivationEmail } from '@/lib/emails'
+import { sendActivationEmail, sendPaymentConfirmedEmail } from '@/lib/emails'
 import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import type { AffiliateStatus } from '@/lib/types'
 
@@ -146,6 +146,7 @@ export async function addPayment(affiliateId: string, formData: FormData) {
     .single()
 
   const { error } = await supabase.from('payments').insert({
+
     affiliate_id: affiliateId,
     amount,
     currency,
@@ -179,6 +180,11 @@ export async function addPayment(affiliateId: string, formData: FormData) {
     revalidatePath(`/admin/afiliados/${affiliateId}`)
 
     return { success: true, message: 'Pago registrado. Afiliado activado automáticamente.' }
+  }
+
+  // Notificar al afiliado si el pago fue aprobado
+  if (paymentStatus === 'approved' && affiliate) {
+    await sendPaymentConfirmedEmail(affiliate.nombre, affiliate.email, amount, currency)
   }
 
   revalidatePath(`/admin/afiliados/${affiliateId}`)
