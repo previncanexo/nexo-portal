@@ -51,6 +51,11 @@ export default async function VerificarPage({ params }: { params: Promise<{ nume
   const status = (affiliate?.status ?? null) as AffiliateStatus | null
   const statusCfg = status ? STATUS_CONFIG[status] : null
 
+  const rawPlan = (affiliate as any)?.plan
+  const planName: string | null = rawPlan
+    ? (Array.isArray(rawPlan) ? (rawPlan[0]?.name ?? null) : rawPlan.name ?? null)
+    : null
+
   return (
     <div className="min-h-screen flex items-start justify-center px-4 py-12">
       <div className="w-full max-w-sm relative z-10">
@@ -125,7 +130,7 @@ export default async function VerificarPage({ params }: { params: Promise<{ nume
                     {statusCfg?.label}
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)' }}>
-                    Plan Base Nexo by Previnca
+                    {planName ?? 'Nexo by Previnca'}
                   </p>
                 </div>
               </div>

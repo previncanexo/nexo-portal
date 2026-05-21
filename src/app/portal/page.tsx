@@ -27,8 +27,11 @@ export default async function PortalPage() {
     .single()
 
   const firstName = affiliate?.nombre ?? 'Afiliado'
-  const isPending = affiliate?.status === 'pending'
-  const isActive = affiliate?.status === 'active'
+  const status = affiliate?.status ?? 'pending'
+  const isPending = status === 'pending'
+  const isActive = status === 'active'
+  const isSuspended = status === 'suspended'
+  const isCancelled = status === 'cancelled'
 
   let payments: Payment[] = []
   if (affiliate?.id) {
@@ -64,14 +67,11 @@ export default async function PortalPage() {
         </p>
       </div>
 
-      {/* Banner estado pendiente */}
+      {/* Banner estado no activo */}
       {isPending && (
         <div
           className="rounded-2xl px-4 py-4 flex items-start gap-3"
-          style={{
-            background: 'rgba(251,191,36,0.12)',
-            border: '1px solid rgba(251,191,36,0.30)',
-          }}
+          style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.30)' }}
         >
           <svg className="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -82,6 +82,42 @@ export default async function PortalPage() {
             </p>
             <p className="text-sm mt-0.5" style={{ color: 'rgba(251,191,36,0.80)' }}>
               Tu cuenta se activará automáticamente en cuanto confirmemos el pago. Revisá tu email para más información.
+            </p>
+          </div>
+        </div>
+      )}
+      {isSuspended && (
+        <div
+          className="rounded-2xl px-4 py-4 flex items-start gap-3"
+          style={{ background: 'rgba(251,146,60,0.12)', border: '1px solid rgba(251,146,60,0.30)' }}
+        >
+          <svg className="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fb923c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div>
+            <p className="text-sm font-semibold" style={{ color: '#fb923c' }}>
+              Tu cuenta está suspendida
+            </p>
+            <p className="text-sm mt-0.5" style={{ color: 'rgba(251,146,60,0.80)' }}>
+              Tu acceso a los servicios está temporalmente suspendido. Contactate con Nexo para regularizar tu situación.
+            </p>
+          </div>
+        </div>
+      )}
+      {isCancelled && (
+        <div
+          className="rounded-2xl px-4 py-4 flex items-start gap-3"
+          style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.30)' }}
+        >
+          <svg className="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          <div>
+            <p className="text-sm font-semibold" style={{ color: '#f87171' }}>
+              Tu suscripción fue cancelada
+            </p>
+            <p className="text-sm mt-0.5" style={{ color: 'rgba(248,113,113,0.80)' }}>
+              Tu afiliación a Nexo está cancelada. Si querés reactivarla, contactate con nosotros.
             </p>
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Affiliate } from '@/lib/types'
@@ -43,11 +44,15 @@ export default function PortalHeader({ affiliate }: PortalHeaderProps) {
       <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
         <Image src="/logo.png" alt="Nexo by Previnca" width={100} height={40} style={{ objectFit: 'contain', height: '36px', width: 'auto' }} priority />
 
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1.5 text-white/80">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/portal/cuenta"
+            className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 min-h-[44px] rounded-full transition-all hover:bg-white/10"
+            style={{ color: 'rgba(255,255,255,0.80)', fontFamily: 'var(--font-dm-sans)' }}
+          >
             <IconPerson />
-            <span className="text-sm sm:text-base font-medium truncate max-w-[200px]">{displayName}</span>
-          </div>
+            <span className="hidden sm:inline truncate max-w-[160px]">{displayName}</span>
+          </Link>
           <button
             onClick={handleLogout}
             className="text-sm font-semibold px-4 py-2.5 min-h-[44px] rounded-full transition-all hover:bg-white/20 active:scale-95"
