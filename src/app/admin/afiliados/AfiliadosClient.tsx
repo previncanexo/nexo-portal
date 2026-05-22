@@ -208,7 +208,6 @@ export default function AfiliadosClient({ affiliates, plans }: { affiliates: Aff
                 background: period === p.value ? 'rgba(134,96,239,0.25)' : 'transparent',
                 color: period === p.value ? 'white' : 'rgba(255,255,255,0.70)',
                 border: period === p.value ? '1px solid rgba(134,96,239,0.50)' : '1px solid transparent',
-                border: 'none',
                 cursor: 'pointer',
                 fontFamily: 'var(--font-dm-sans)',
               }}
