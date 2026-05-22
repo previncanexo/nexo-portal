@@ -50,11 +50,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="es" className={`${dmSans.variable} ${dmSerifDisplay.variable} h-full`}>
       <body className="min-h-full flex flex-col">
-        {/* Background image */}
-        <div
-          className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: 'url(/bg.png)' }}
-        />
         {/* Orb 1 - Purple top right */}
         <div
           className="fixed -top-32 -right-32 w-[400px] h-[400px] lg:w-[500px] lg:h-[500px] rounded-full opacity-25 blur-[100px] pointer-events-none z-0"
