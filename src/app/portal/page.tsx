@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Affiliate, Payment } from '@/lib/types'
-import CredentialCard from './CredentialCard'
+import CredentialWithDownload from './CredentialWithDownload'
 import ServiceCards from './ServiceCards'
 import CancelSection from './CancelSection'
 import PaymentHistory from './PaymentHistory'
@@ -145,7 +145,7 @@ export default async function PortalPage() {
         >
           Tu credencial
         </p>
-        <CredentialCard affiliate={affiliate as Affiliate | null} />
+        <CredentialWithDownload affiliate={affiliate as Affiliate} />
       </section>
 
       {/* Servicios */}
