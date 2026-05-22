@@ -79,39 +79,29 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Orb purple top-left */}
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          top: '-80px',
-          left: '-120px',
-          width: '500px',
-          height: '500px',
-          borderRadius: '50%',
-          background: 'var(--purple)',
-          opacity: 0.06,
-          filter: 'blur(130px)',
-        }}
+      {/* Foto de fondo */}
+      <Image
+        src="/login-bg.webp"
+        alt=""
+        fill
+        priority
+        className="object-cover object-center pointer-events-none select-none"
+        style={{ zIndex: 0 }}
       />
-      {/* Orb pink bottom-right */}
+      {/* Overlay oscuro sobre la foto */}
       <div
-        className="absolute pointer-events-none"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          bottom: '-100px',
-          right: '-100px',
-          width: '450px',
-          height: '450px',
-          borderRadius: '50%',
-          background: 'var(--pink)',
-          opacity: 0.05,
-          filter: 'blur(110px)',
+          zIndex: 1,
+          background: 'linear-gradient(135deg, rgba(10,3,40,0.72) 0%, rgba(18,5,61,0.55) 50%, rgba(45,18,102,0.65) 100%)',
         }}
       />
       {/* Grain overlay */}
       <div
-        className="pointer-events-none fixed inset-0"
+        className="pointer-events-none absolute inset-0"
         style={{
-          opacity: 0.15,
+          zIndex: 2,
+          opacity: 0.18,
           backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E\")",
           mixBlendMode: 'overlay',
         }}
