@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { DM_Sans, DM_Serif_Display } from 'next/font/google'
 import './globals.css'
+import { InstallBanner } from './components/InstallBanner'
 
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
@@ -50,32 +51,33 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="es" className={`${dmSans.variable} ${dmSerifDisplay.variable} h-full`}>
       <body className="min-h-full flex flex-col">
-        {/* Orb 1 - Purple top right */}
-        <div
-          className="fixed -top-32 -right-32 w-[400px] h-[400px] lg:w-[500px] lg:h-[500px] rounded-full opacity-25 blur-[100px] pointer-events-none z-0"
-          style={{
-            background: 'radial-gradient(circle, var(--purple) 0%, transparent 70%)',
-            animation: 'orb-pulse-1 10s ease-in-out infinite',
-          }}
-        />
-        {/* Orb 2 - Pink left */}
-        <div
-          className="fixed top-1/3 -left-40 w-[350px] h-[350px] rounded-full opacity-20 blur-[100px] pointer-events-none z-0 hidden md:block"
-          style={{
-            background: 'radial-gradient(circle, var(--pink) 0%, transparent 70%)',
-            animation: 'orb-pulse-2 12s ease-in-out 3s infinite',
-          }}
-        />
-        {/* Orb 3 - Peach bottom */}
-        <div
-          className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] rounded-full opacity-15 blur-[100px] pointer-events-none z-0"
-          style={{
-            background: 'radial-gradient(circle, var(--peach) 0%, transparent 70%)',
-            animation: 'orb-pulse-2 14s ease-in-out 5s infinite',
-          }}
-        />
+        {/* Orbs — contenidos en fixed inset-0 para no causar scroll horizontal */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+          <div
+            className="-top-32 -right-32 absolute w-[400px] h-[400px] lg:w-[500px] lg:h-[500px] rounded-full opacity-25 blur-[100px]"
+            style={{
+              background: 'radial-gradient(circle, var(--purple) 0%, transparent 70%)',
+              animation: 'orb-pulse-1 10s ease-in-out infinite',
+            }}
+          />
+          <div
+            className="top-1/3 -left-40 absolute w-[350px] h-[350px] rounded-full opacity-20 blur-[100px] hidden md:block"
+            style={{
+              background: 'radial-gradient(circle, var(--pink) 0%, transparent 70%)',
+              animation: 'orb-pulse-2 12s ease-in-out 3s infinite',
+            }}
+          />
+          <div
+            className="bottom-20 left-1/2 -translate-x-1/2 absolute w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] rounded-full opacity-15 blur-[100px]"
+            style={{
+              background: 'radial-gradient(circle, var(--peach) 0%, transparent 70%)',
+              animation: 'orb-pulse-2 14s ease-in-out 5s infinite',
+            }}
+          />
+        </div>
         <div className="relative z-10 flex flex-col min-h-full">
           {children}
+          <InstallBanner />
         </div>
       </body>
     </html>
