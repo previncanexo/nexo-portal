@@ -44,76 +44,114 @@ function IconOdontologia() {
   )
 }
 
+const phoneIconPath = "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l.97-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
+
 function UrgenciasModal({ onClose }: { onClose: () => void }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)' }}
+      style={{ background: 'rgba(5,2,25,0.75)', backdropFilter: 'blur(12px)' }}
       onClick={onClose}
     >
-      <div className="glass-card p-8 w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-3 mb-6">
-          <div
-            className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: 'rgba(220,38,38,0.15)', color: '#ef4444' }}
-          >
-            <IconUrgencias />
-          </div>
-          <div>
-            <p className="text-base font-bold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
-              Urgencias Médicas
-            </p>
-            <p className="text-xs" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
-              Disponible 24/7
-            </p>
+      <div
+        className="w-full max-w-sm rounded-3xl overflow-hidden"
+        style={{
+          background: 'rgba(18,5,61,0.82)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06) inset',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header con gradiente rojo */}
+        <div
+          className="px-6 pt-7 pb-6 relative overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.22) 0%, rgba(139,0,0,0.12) 100%)', borderBottom: '1px solid rgba(220,38,38,0.18)' }}
+        >
+          {/* Glow de fondo */}
+          <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none" style={{ background: 'rgba(220,38,38,0.18)', filter: 'blur(24px)' }} />
+
+          <div className="flex items-center gap-4 relative">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(220,38,38,0.20)', border: '1px solid rgba(220,38,38,0.35)', color: '#f87171' }}
+            >
+              <IconUrgencias />
+            </div>
+            <div className="flex-1">
+              <p className="text-base font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                Urgencias Médicas
+              </p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                <p className="text-xs font-medium" style={{ color: 'rgba(248,113,113,0.80)', fontFamily: 'var(--font-dm-sans)' }}>
+                  Disponible 24/7
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 mb-6">
+        {/* Números */}
+        <div className="px-5 py-5 flex flex-col gap-3">
           <a
             href="tel:3414345400"
-            className="flex items-center justify-between px-4 py-3 rounded-2xl transition-opacity active:opacity-70"
-            style={{ background: 'rgba(220,38,38,0.10)', border: '1px solid rgba(220,38,38,0.20)' }}
+            className="group flex items-center justify-between px-5 py-4 rounded-2xl active:scale-95 transition-all"
+            style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.18) 0%, rgba(185,28,28,0.12) 100%)', border: '1px solid rgba(220,38,38,0.28)' }}
           >
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'rgba(220,38,38,0.70)', fontFamily: 'var(--font-dm-sans)' }}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(248,113,113,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
                 Contacto principal
               </p>
-              <p className="text-base font-bold font-mono" style={{ color: '#ef4444' }}>
+              <p className="text-xl font-bold tracking-wide" style={{ color: '#fca5a5', fontFamily: 'monospace', letterSpacing: '0.04em' }}>
                 341-434-5400
               </p>
             </div>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l.97-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-            </svg>
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(220,38,38,0.22)', border: '1px solid rgba(220,38,38,0.35)' }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d={phoneIconPath}/>
+              </svg>
+            </div>
           </a>
 
           <a
             href="tel:3415286900"
-            className="flex items-center justify-between px-4 py-3 rounded-2xl transition-opacity active:opacity-70"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)' }}
+            className="flex items-center justify-between px-5 py-4 rounded-2xl active:scale-95 transition-all"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}
           >
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
                 Contacto alternativo
               </p>
-              <p className="text-base font-bold font-mono" style={{ color: 'var(--gray-800)' }}>
+              <p className="text-xl font-bold tracking-wide" style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'monospace', letterSpacing: '0.04em' }}>
                 341-528-6900
               </p>
             </div>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--gray-500)' }}>
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l.97-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-            </svg>
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d={phoneIconPath}/>
+              </svg>
+            </div>
           </a>
         </div>
 
-        <button
-          onClick={onClose}
-          className="w-full py-3 min-h-[44px] rounded-full text-sm font-bold"
-          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', color: 'var(--gray-700)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
-        >
-          Cerrar
-        </button>
+        {/* Footer */}
+        <div className="px-5 pb-6">
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-2xl text-sm font-semibold transition-opacity hover:opacity-80 active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.50)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+          >
+            Cerrar
+          </button>
+        </div>
       </div>
     </div>
   )
