@@ -102,7 +102,7 @@ export default function StatusForm({
           value={desde}
           onChange={(e) => setDesde(e.target.value)}
           className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all"
-          style={{ ...inputStyle, colorScheme: 'light' }}
+          style={{ ...inputStyle, colorScheme: 'dark' }}
         />
       </div>
 
@@ -121,7 +121,7 @@ export default function StatusForm({
           value={hasta}
           onChange={(e) => setHasta(e.target.value)}
           className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all"
-          style={{ ...inputStyle, colorScheme: 'light' }}
+          style={{ ...inputStyle, colorScheme: 'dark' }}
         />
       </div>
 

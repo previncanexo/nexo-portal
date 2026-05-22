@@ -15,7 +15,7 @@ const inputStyle: React.CSSProperties = {
 
 const inputFocusStyle: React.CSSProperties = {
   borderColor: 'var(--purple)',
-  background: '#fff',
+  background: 'rgba(255,255,255,0.12)',
 }
 
 const labelStyle: React.CSSProperties = {
@@ -146,7 +146,7 @@ export default function EditAfiliadoForm({ affiliate, plans }: Props) {
           type="date"
           defaultValue={toDateInputValue(affiliate.fecha_nacimiento)}
           className="w-full px-4 py-2.5 rounded-xl text-sm"
-          style={{ ...getStyle('fecha_nacimiento'), colorScheme: 'light' }}
+          style={{ ...getStyle('fecha_nacimiento'), colorScheme: 'dark' }}
           onFocus={() => setFocused('fecha_nacimiento')}
           onBlur={() => setFocused(null)}
         />

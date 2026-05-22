@@ -61,7 +61,7 @@ export default function PaymentForm({ affiliateId }: PaymentFormProps) {
             placeholder="0.00"
             required
             className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all"
-            style={{ ...inputStyle, colorScheme: 'light' }}
+            style={{ ...inputStyle, colorScheme: 'dark' }}
           />
         </div>
 

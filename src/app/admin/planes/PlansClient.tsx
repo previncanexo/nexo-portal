@@ -76,7 +76,7 @@ function PlanForm({
             defaultValue={plan?.price ?? ''}
             placeholder="19500"
             className="w-full px-4 py-2.5 rounded-xl text-sm"
-            style={{ ...inputStyle, colorScheme: 'light' }}
+            style={{ ...inputStyle, colorScheme: 'dark' }}
           />
         </div>
       </div>
