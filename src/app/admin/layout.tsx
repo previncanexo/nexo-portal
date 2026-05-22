@@ -36,7 +36,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
-          background: 'linear-gradient(135deg, rgba(10,3,40,0.72) 0%, rgba(18,5,61,0.60) 50%, rgba(45,18,102,0.65) 100%)',
+          background: 'linear-gradient(135deg, rgba(10,3,40,0.88) 0%, rgba(18,5,61,0.80) 50%, rgba(45,18,102,0.84) 100%)',
           zIndex: 0,
         }}
       />

@@ -147,10 +147,11 @@ export default function AfiliadosClient({ affiliates, plans }: { affiliates: Aff
             onClick={() => setShowCreateModal(true)}
             className="px-4 py-2 rounded-full text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
             style={{
-              background: 'white',
-              color: 'var(--purple)',
+              background: 'linear-gradient(to right, var(--purple), var(--pink))',
+              color: 'white',
               fontFamily: 'var(--font-dm-sans)',
               cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(134,96,239,0.35)',
             }}
           >
             Nuevo afiliado

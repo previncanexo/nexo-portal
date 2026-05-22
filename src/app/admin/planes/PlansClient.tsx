@@ -238,7 +238,14 @@ export default function PlansClient({
         <button
           onClick={() => setShowCreate((v) => !v)}
           className="px-4 py-2 rounded-full text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
-          style={{ background: 'white', color: 'var(--purple)', fontFamily: 'var(--font-dm-sans)', cursor: 'pointer' }}
+          style={{
+            background: showCreate ? 'rgba(255,255,255,0.12)' : 'linear-gradient(to right, var(--purple), var(--pink))',
+            border: showCreate ? '1px solid rgba(255,255,255,0.20)' : 'none',
+            color: 'white',
+            fontFamily: 'var(--font-dm-sans)',
+            cursor: 'pointer',
+            boxShadow: showCreate ? 'none' : '0 4px 16px rgba(134,96,239,0.35)',
+          }}
         >
           {showCreate ? 'Cancelar' : '+ Nuevo plan'}
         </button>
