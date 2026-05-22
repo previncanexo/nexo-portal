@@ -46,7 +46,105 @@ function IconOdontologia() {
 
 const phoneIconPath = "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l.97-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
 
-function UrgenciasModal({ onClose }: { onClose: () => void }) {
+interface ServiceItem {
+  id: string
+  title: string
+  subtitle: string
+  badge: string
+  badgeColor: string
+  badgeBg: string
+  badgeDot?: boolean
+  buttonLabel: string
+  buttonAction: 'link' | 'tel' | 'modal' | 'info'
+  buttonHref?: string
+  accentColor: string
+  accentBg: string
+  glowColor: string
+  Icon: React.ComponentType
+  description: string
+  descriptionExtra?: string
+  bullets: string[]
+}
+
+/* ── Modal genérico de información ── */
+function ServiceInfoModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background: 'rgba(5,2,25,0.78)', backdropFilter: 'blur(12px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm rounded-3xl overflow-hidden"
+        style={{
+          background: 'rgba(18,5,61,0.88)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06) inset',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div
+          className="px-6 pt-6 pb-5 flex items-center gap-4"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          <div
+            className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+            style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}
+          >
+            <service.Icon />
+          </div>
+          <div>
+            <p className="font-bold text-white text-base leading-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+              {service.title}
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
+              {service.subtitle}
+            </p>
+          </div>
+        </div>
+
+        {/* Contenido */}
+        <div className="px-6 py-5 max-h-[55vh] overflow-y-auto flex flex-col gap-4">
+          <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>
+            {service.description}
+          </p>
+          {service.descriptionExtra && (
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>
+              {service.descriptionExtra}
+            </p>
+          )}
+          <ul className="flex flex-col gap-2.5">
+            {service.bullets.map((bullet, i) => (
+              <li key={i} className="flex items-start gap-2.5">
+                <span className="text-sm mt-px shrink-0" style={{ color: 'var(--pink)' }}>✔</span>
+                <span className="text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.68)', fontFamily: 'var(--font-dm-sans)' }}>
+                  {bullet}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 pb-6 pt-1">
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-2xl text-sm font-semibold transition-opacity active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.50)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Modal Urgencias (descripción + teléfonos) ── */
+function UrgenciasModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
@@ -64,14 +162,12 @@ function UrgenciasModal({ onClose }: { onClose: () => void }) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header con gradiente rojo */}
+        {/* Header */}
         <div
           className="px-6 pt-7 pb-6 relative overflow-hidden"
           style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.22) 0%, rgba(139,0,0,0.12) 100%)', borderBottom: '1px solid rgba(220,38,38,0.18)' }}
         >
-          {/* Glow de fondo */}
           <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none" style={{ background: 'rgba(220,38,38,0.18)', filter: 'blur(24px)' }} />
-
           <div className="flex items-center gap-4 relative">
             <div
               className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
@@ -80,70 +176,67 @@ function UrgenciasModal({ onClose }: { onClose: () => void }) {
               <IconUrgencias />
             </div>
             <div className="flex-1">
-              <p className="text-base font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-                Urgencias Médicas
-              </p>
+              <p className="text-base font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>Urgencias Médicas</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
-                <p className="text-xs font-medium" style={{ color: 'rgba(248,113,113,0.80)', fontFamily: 'var(--font-dm-sans)' }}>
-                  Disponible 24/7
-                </p>
+                <p className="text-xs font-medium" style={{ color: 'rgba(248,113,113,0.80)', fontFamily: 'var(--font-dm-sans)' }}>Disponible 24/7</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Números */}
-        <div className="px-5 py-5 flex flex-col gap-3">
+        {/* Descripción */}
+        <div className="px-6 pt-5 pb-2 flex flex-col gap-3">
+          <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
+            {service.description}
+          </p>
+          {service.descriptionExtra && (
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.50)', fontFamily: 'var(--font-dm-sans)' }}>
+              {service.descriptionExtra}
+            </p>
+          )}
+          <ul className="flex flex-col gap-2">
+            {service.bullets.map((bullet, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span className="text-xs mt-0.5 shrink-0" style={{ color: '#f87171' }}>✔</span>
+                <span className="text-xs leading-snug" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>{bullet}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="h-px w-full mt-1" style={{ background: 'rgba(220,38,38,0.15)' }} />
+        </div>
+
+        {/* Teléfonos */}
+        <div className="px-5 py-3 flex flex-col gap-3">
           <a
             href="tel:3414345400"
             className="group flex items-center justify-between px-5 py-4 rounded-2xl active:scale-95 transition-all"
             style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.18) 0%, rgba(185,28,28,0.12) 100%)', border: '1px solid rgba(220,38,38,0.28)' }}
           >
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(248,113,113,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
-                Contacto principal
-              </p>
-              <p className="text-xl font-bold tracking-wide" style={{ color: '#fca5a5', fontFamily: 'monospace', letterSpacing: '0.04em' }}>
-                341-434-5400
-              </p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(248,113,113,0.65)', fontFamily: 'var(--font-dm-sans)' }}>Contacto principal</p>
+              <p className="text-xl font-bold tracking-wide" style={{ color: '#fca5a5', fontFamily: 'monospace', letterSpacing: '0.04em' }}>341-434-5400</p>
             </div>
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(220,38,38,0.22)', border: '1px solid rgba(220,38,38,0.35)' }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d={phoneIconPath}/>
-              </svg>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(220,38,38,0.22)', border: '1px solid rgba(220,38,38,0.35)' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d={phoneIconPath} /></svg>
             </div>
           </a>
-
           <a
             href="tel:3415286900"
             className="flex items-center justify-between px-5 py-4 rounded-2xl active:scale-95 transition-all"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}
           >
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
-                Contacto alternativo
-              </p>
-              <p className="text-xl font-bold tracking-wide" style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'monospace', letterSpacing: '0.04em' }}>
-                341-528-6900
-              </p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>Contacto alternativo</p>
+              <p className="text-xl font-bold tracking-wide" style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'monospace', letterSpacing: '0.04em' }}>341-528-6900</p>
             </div>
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d={phoneIconPath}/>
-              </svg>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d={phoneIconPath} /></svg>
             </div>
           </a>
         </div>
 
-        {/* Footer */}
-        <div className="px-5 pb-6">
+        <div className="px-5 pb-6 pt-2">
           <button
             onClick={onClose}
             className="w-full py-3 rounded-2xl text-sm font-semibold transition-opacity hover:opacity-80 active:scale-95"
@@ -157,38 +250,60 @@ function UrgenciasModal({ onClose }: { onClose: () => void }) {
   )
 }
 
-function FarmaciaModal({ affiliateNumber, onClose }: { affiliateNumber: string; onClose: () => void }) {
+/* ── Modal Farmacias (descripción + credencial) ── */
+function FarmaciaModal({ service, affiliateNumber, onClose }: { service: ServiceItem; affiliateNumber: string; onClose: () => void }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)' }}
       onClick={onClose}
     >
-      <div className="glass-card p-8 text-center w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
-        <div
-          className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}
-        >
-          <IconFarmacias />
+      <div className="glass-card p-6 w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3 mb-5" style={{ borderBottom: '1px solid rgba(134,96,239,0.12)', paddingBottom: '1rem' }}>
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}
+          >
+            <IconFarmacias />
+          </div>
+          <div>
+            <p className="text-sm font-bold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>Farmacias</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>Descuentos en red nacional</p>
+          </div>
         </div>
-        <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--gray-600)', fontFamily: 'var(--font-dm-sans)' }}>
-          N° de afiliado
+
+        <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--gray-600)', fontFamily: 'var(--font-dm-sans)' }}>
+          {service.description}
         </p>
-        <div
-          className="text-2xl font-bold tracking-wider break-all my-4"
-          style={{
-            fontFamily: 'monospace',
-            background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
-        >
-          {affiliateNumber}
+        {service.descriptionExtra && (
+          <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
+            {service.descriptionExtra}
+          </p>
+        )}
+        <ul className="flex flex-col gap-1.5 mb-5">
+          {service.bullets.map((bullet, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <span className="text-xs mt-0.5 shrink-0" style={{ color: 'var(--purple)' }}>✔</span>
+              <span className="text-xs leading-snug" style={{ color: 'var(--gray-600)', fontFamily: 'var(--font-dm-sans)' }}>{bullet}</span>
+            </li>
+          ))}
+        </ul>
+
+        <div style={{ borderTop: '1px solid rgba(134,96,239,0.12)', paddingTop: '1rem' }}>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-1 text-center" style={{ color: 'var(--gray-600)', fontFamily: 'var(--font-dm-sans)' }}>
+            N° de afiliado
+          </p>
+          <div
+            className="text-2xl font-bold tracking-wider break-all my-3 text-center"
+            style={{ fontFamily: 'monospace', background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+          >
+            {affiliateNumber}
+          </div>
+          <p className="text-sm mb-4 text-center" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
+            Mostrá este número en la farmacia para el 50% de descuento.
+          </p>
         </div>
-        <p className="text-sm mb-6" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
-          Mostrá este número en la farmacia para el 50% de descuento.
-        </p>
+
         <button
           onClick={onClose}
           className="w-full py-3 min-h-[44px] rounded-full text-sm font-bold text-white"
@@ -201,47 +316,40 @@ function FarmaciaModal({ affiliateNumber, onClose }: { affiliateNumber: string; 
   )
 }
 
-interface ServiceItem {
-  id: string
-  title: string
-  subtitle: string
-  badge: string
-  badgeColor: string
-  badgeBg: string
-  badgeDot?: boolean
-  buttonLabel: string
-  buttonAction: 'link' | 'tel' | 'modal'
-  buttonHref?: string
-  accentColor: string
-  accentBg: string
-  glowColor: string
-  Icon: React.ComponentType
-}
-
+/* ── Componente principal ── */
 export default function ServiceCards({ affiliate }: ServiceCardsProps) {
   const [farmaciaModalOpen, setFarmaciaModalOpen] = useState(false)
   const [urgenciasModalOpen, setUrgenciasModalOpen] = useState(false)
+  const [infoService, setInfoService] = useState<ServiceItem | null>(null)
 
   const services: ServiceItem[] = [
     {
       id: 'teleconsultas',
-      title: 'DOC24',
-      subtitle: 'Médico online las 24 horas',
+      title: 'Teleconsultas Médicas 24/7',
+      subtitle: 'Médico online desde tu celular',
       badge: '24hs · En vivo',
       badgeColor: '#16a34a',
       badgeBg: 'rgba(22,163,74,0.08)',
       badgeDot: true,
-      buttonLabel: 'Acceder ahora',
-      buttonAction: 'link',
-      buttonHref: '#',
+      buttonLabel: 'Ver información',
+      buttonAction: 'info',
       accentColor: 'white',
       accentBg: 'rgba(134,96,239,0.10)',
       glowColor: 'rgba(134,96,239,0.15)',
       Icon: IconDOC24,
+      description: 'Consultá con médicos clínicos y pediatras estés donde estés, sin traslados ni largas esperas. Con Nexo accedés a atención médica online las 24 horas, directamente desde tu celular.',
+      descriptionExtra: 'Porque sentirte bien también es poder resolver una consulta médica de forma simple y segura, adaptada a tu ritmo de vida.',
+      bullets: [
+        'Atención médica online 24/7',
+        'Desde cualquier lugar',
+        'Ideal para consultas cotidianas',
+        'Atención rápida y práctica',
+        'Más comodidad y bienestar para tu día a día',
+      ],
     },
     {
       id: 'urgencias',
-      title: 'Urgencias Médicas',
+      title: 'Emergencias 24/7',
       subtitle: 'Asistencia médica inmediata',
       badge: 'Disponible 24/7',
       badgeColor: '#dc2626',
@@ -253,10 +361,19 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       accentBg: 'rgba(134,96,239,0.10)',
       glowColor: 'rgba(220,38,38,0.12)',
       Icon: IconUrgencias,
+      description: 'Porque los imprevistos pasan. Con Nexo tenés asistencia inmediata ante urgencias, las 24 horas, todos los días, para que puedas sentirte acompañado cuando más lo necesitás.',
+      descriptionExtra: 'Todo de forma simple, rápida y pensada para tu estilo de vida. Porque el bienestar también es tener tranquilidad y respaldo en cualquier momento.',
+      bullets: [
+        'Atención rápida 24/7',
+        'Cobertura en tu zona',
+        'Acceso simple desde tu credencial digital',
+        'Más tranquilidad para tu día a día',
+        'Respaldo cuando lo necesitás',
+      ],
     },
     {
       id: 'farmacias',
-      title: 'Farmacias',
+      title: 'Descuentos en Farmacias',
       subtitle: 'Red de farmacias adheridas',
       badge: '50% descuento',
       badgeColor: '#059669',
@@ -267,26 +384,43 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       accentBg: 'rgba(134,96,239,0.10)',
       glowColor: 'rgba(16,185,129,0.12)',
       Icon: IconFarmacias,
+      description: 'Cuidar tu salud también puede ser más accesible. Con Nexo accedés a descuentos exclusivos en medicamentos y productos de farmacia en todo el país.',
+      descriptionExtra: 'Porque el bienestar también es ahorrar en lo que necesitás todos los días, de forma simple y sin complicaciones.',
+      bullets: [
+        'Hasta 50% OFF en farmacias adheridas',
+        'Red nacional de farmacias',
+        'Más ahorro en medicamentos y productos esenciales',
+        'Todo al alcance desde tu credencial digital',
+      ],
     },
     {
       id: 'odontologia',
-      title: 'Odontología',
+      title: 'Guardia Odontológica',
       subtitle: 'Guardias y consultas urgentes',
       badge: 'Urgencias dentales',
       badgeColor: '#7c3aed',
       badgeBg: 'rgba(124,58,237,0.08)',
-      buttonLabel: 'Más información',
-      buttonAction: 'link',
-      buttonHref: '#',
+      buttonLabel: 'Ver información',
+      buttonAction: 'info',
       accentColor: 'white',
       accentBg: 'rgba(134,96,239,0.10)',
       glowColor: 'rgba(139,92,246,0.12)',
       Icon: IconOdontologia,
+      description: 'Un dolor de muela o una urgencia pueden aparecer cuando menos lo esperás. Con Nexo accedés a atención odontológica rápida y práctica para resolverlo de manera simple y con respaldo profesional.',
+      descriptionExtra: 'Una solución pensada para acompañarte cuando realmente lo necesitás, cuidando tu bienestar y tu tranquilidad.',
+      bullets: [
+        'Atención odontológica de urgencia',
+        'Acceso digital simple',
+        'Cobertura práctica y accesible',
+        'Más tranquilidad para tu día a día',
+      ],
     },
   ]
 
   function handleAction(service: ServiceItem) {
-    if (service.buttonAction === 'modal') {
+    if (service.buttonAction === 'info') {
+      setInfoService(service)
+    } else if (service.buttonAction === 'modal') {
       if (service.id === 'urgencias') setUrgenciasModalOpen(true)
       else setFarmaciaModalOpen(true)
     } else if (service.buttonAction === 'tel' && service.buttonHref) {
@@ -296,6 +430,9 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     }
   }
 
+  const urgenciasService = services.find(s => s.id === 'urgencias')!
+  const farmaciaService = services.find(s => s.id === 'farmacias')!
+
   return (
     <>
       <div className="flex flex-col gap-3">
@@ -304,30 +441,20 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
             key={service.id}
             className="glass-card rounded-2xl flex items-center gap-4 p-4 sm:p-5 relative overflow-hidden"
           >
-            {/* Subtle glow */}
             <div
               className="absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl pointer-events-none"
               style={{ background: service.glowColor }}
             />
 
-            {/* Icon */}
             <div
               className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 relative z-10"
-              style={{
-                background: 'linear-gradient(135deg, var(--purple), var(--pink))',
-                color: 'white',
-                boxShadow: '0 4px 16px rgba(134,96,239,0.22)',
-              }}
+              style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}
             >
               <service.Icon />
             </div>
 
-            {/* Title + subtitle */}
             <div className="flex-1 min-w-0 relative z-10">
-              <p
-                className="text-sm sm:text-base font-bold leading-tight"
-                style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}
-              >
+              <p className="text-sm sm:text-base font-bold leading-tight" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
                 {service.title}
               </p>
               <p className="text-sm leading-snug mt-0.5" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
@@ -335,7 +462,6 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
               </p>
             </div>
 
-            {/* CTA pill badge */}
             <button
               onClick={() => handleAction(service)}
               className="shrink-0 relative z-10 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
@@ -362,13 +488,17 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       </div>
 
       {urgenciasModalOpen && (
-        <UrgenciasModal onClose={() => setUrgenciasModalOpen(false)} />
+        <UrgenciasModal service={urgenciasService} onClose={() => setUrgenciasModalOpen(false)} />
       )}
       {farmaciaModalOpen && (
         <FarmaciaModal
+          service={farmaciaService}
           affiliateNumber={affiliate?.affiliate_number ?? '—'}
           onClose={() => setFarmaciaModalOpen(false)}
         />
+      )}
+      {infoService && (
+        <ServiceInfoModal service={infoService} onClose={() => setInfoService(null)} />
       )}
     </>
   )
