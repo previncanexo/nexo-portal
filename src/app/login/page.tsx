@@ -115,7 +115,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="glass-card p-7 sm:p-8">
+        <div className="p-7 sm:p-8 rounded-3xl" style={{ background: 'rgba(18,5,61,0.55)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', border: '1px solid rgba(255,255,255,0.14)', boxShadow: '0 8px 40px rgba(0,0,0,0.30)' }}>
           <h2
             className="text-2xl text-white mb-1"
             style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
