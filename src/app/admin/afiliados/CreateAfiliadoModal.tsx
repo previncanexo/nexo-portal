@@ -190,7 +190,11 @@ export default function CreateAfiliadoModal({ plans, onClose, onCreated }: Props
             <button
               onClick={onClose}
               className="w-full py-2.5 rounded-full font-semibold text-sm transition-all hover:opacity-90 active:scale-95"
-              style={{ background: 'white', color: 'var(--purple)' }}
+              style={{
+                background: 'linear-gradient(to right, var(--purple), var(--pink))',
+                color: 'white',
+                boxShadow: '0 4px 16px rgba(134,96,239,0.35)',
+              }}
             >
               Cerrar
             </button>
@@ -371,9 +375,10 @@ export default function CreateAfiliadoModal({ plans, onClose, onCreated }: Props
                 disabled={loading}
                 className="flex-1 py-2.5 rounded-full font-semibold text-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
                 style={{
-                  background: 'white',
-                  color: 'var(--purple)',
+                  background: 'linear-gradient(to right, var(--purple), var(--pink))',
+                  color: 'white',
                   fontFamily: 'var(--font-dm-sans)',
+                  boxShadow: '0 4px 16px rgba(134,96,239,0.35)',
                 }}
               >
                 {loading ? 'Creando...' : 'Crear afiliado'}

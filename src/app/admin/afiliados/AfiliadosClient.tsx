@@ -205,8 +205,9 @@ export default function AfiliadosClient({ affiliates, plans }: { affiliates: Aff
               onClick={() => setPeriod(p.value)}
               className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
               style={{
-                background: period === p.value ? 'white' : 'transparent',
-                color: period === p.value ? 'var(--purple)' : 'rgba(255,255,255,0.70)',
+                background: period === p.value ? 'rgba(134,96,239,0.25)' : 'transparent',
+                color: period === p.value ? 'white' : 'rgba(255,255,255,0.70)',
+                border: period === p.value ? '1px solid rgba(134,96,239,0.50)' : '1px solid transparent',
                 border: 'none',
                 cursor: 'pointer',
                 fontFamily: 'var(--font-dm-sans)',
