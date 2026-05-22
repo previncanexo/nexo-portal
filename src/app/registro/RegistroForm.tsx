@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { initiatePayment } from './actions'
 
@@ -101,9 +101,37 @@ function DateField({
   onChange: (val: string) => void
   required?: boolean
 }) {
-  const displayDate = value
-    ? new Date(value + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    : null
+  // value is YYYY-MM-DD; display is DD/MM/AAAA
+  const isoToDisplay = (iso: string) => {
+    if (!iso) return ''
+    const [y, m, d] = iso.split('-')
+    return y && m && d ? `${d}/${m}/${y}` : ''
+  }
+
+  const [display, setDisplay] = useState(() => isoToDisplay(value))
+
+  useEffect(() => {
+    setDisplay(isoToDisplay(value))
+  }, [value])
+
+  function handleType(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 8)
+    let formatted = digits
+    if (digits.length > 2) formatted = digits.slice(0, 2) + '/' + digits.slice(2)
+    if (digits.length > 4) formatted = digits.slice(0, 2) + '/' + digits.slice(2, 4) + '/' + digits.slice(4)
+    setDisplay(formatted)
+    if (digits.length === 8) {
+      const d = digits.slice(0, 2), m = digits.slice(2, 4), y = digits.slice(4)
+      onChange(`${y}-${m}-${d}`)
+    } else {
+      onChange('')
+    }
+  }
+
+  function handlePickerChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onChange(e.target.value)
+    setDisplay(isoToDisplay(e.target.value))
+  }
 
   return (
     <div>
@@ -116,31 +144,44 @@ function DateField({
         {required && <span style={{ color: 'var(--pink)', marginLeft: 2 }}>*</span>}
       </label>
       <div className="relative">
-        {/* Capa visual */}
-        <div
-          className="w-full px-4 py-3 rounded-xl flex items-center justify-between pointer-events-none"
-          style={fieldBase}
-        >
-          <span style={{ color: displayDate ? 'white' : 'rgba(255,255,255,0.35)', fontSize: '0.95rem' }}>
-            {displayDate ?? 'DD/MM/AAAA'}
-          </span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.40)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {/* Text input — always editable */}
+        <input
+          id={id}
+          type="text"
+          inputMode="numeric"
+          value={display}
+          onChange={handleType}
+          placeholder="DD/MM/AAAA"
+          required={required}
+          className="w-full px-4 py-3 pr-10 rounded-xl text-white outline-none transition-all"
+          style={{ ...fieldBase, colorScheme: 'dark', fontFamily: 'var(--font-dm-sans)', fontSize: '0.95rem' }}
+          onFocus={(e) => {
+            e.target.style.border = '1px solid rgba(134,96,239,0.70)'
+            e.target.style.background = 'rgba(255,255,255,0.10)'
+          }}
+          onBlur={(e) => {
+            e.target.style.border = '1px solid rgba(255,255,255,0.15)'
+            e.target.style.background = 'rgba(255,255,255,0.07)'
+          }}
+        />
+        {/* Calendar icon — native date picker sits invisibly on top of it */}
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.40)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pointer-events-none">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
             <line x1="16" y1="2" x2="16" y2="6"/>
             <line x1="8" y1="2" x2="8" y2="6"/>
             <line x1="3" y1="10" x2="21" y2="10"/>
           </svg>
+          <input
+            type="date"
+            value={value}
+            onChange={handlePickerChange}
+            tabIndex={-1}
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full rounded cursor-pointer"
+            style={{ opacity: 0.001, colorScheme: 'dark' }}
+          />
         </div>
-        {/* Input nativo encima, invisible */}
-        <input
-          id={id}
-          type="date"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          required={required}
-          className="absolute inset-0 w-full h-full rounded-xl outline-none cursor-pointer"
-          style={{ opacity: 0, colorScheme: 'dark' }}
-        />
       </div>
     </div>
   )

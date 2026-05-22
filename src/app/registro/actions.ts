@@ -77,13 +77,15 @@ type InitiatePaymentResult =
   | { success: false; error: string }
 
 export async function initiatePayment(input: RegisterInput): Promise<InitiatePaymentResult> {
-  if (!process.env.MP_ACCESS_TOKEN) {
+  const mpToken = process.env.MP_ACCESS_TOKEN
+  if (!mpToken) {
     return { success: false, error: 'El sistema de pagos no está configurado.' }
   }
 
+  const headersList = await headers()
+
   if (registrationLimiter) {
     try {
-      const headersList = await headers()
       const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
       const { success } = await registrationLimiter.limit(ip)
       if (!success) {
@@ -91,7 +93,6 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
       }
     } catch (err) {
       console.error('[registro] Rate limiter error (fail open):', err)
-      // Fail open: si Redis no responde, dejamos pasar el registro
     }
   }
 
@@ -104,9 +105,12 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     return { success: false, error: 'El DNI debe tener 7 u 8 dígitos numéricos (sin puntos ni espacios).' }
   }
 
+  const proto = headersList.get('x-forwarded-proto') ?? 'https'
+  const host = headersList.get('host') ?? ''
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || `${proto}://${host}`
+
   const supabase = createAdminClient()
   const tempPassword = generateTempPassword()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
 
   // Fetch selected plan or default to cheapest
   const planQuery = supabase.from('plans').select('id, name, price')
@@ -158,20 +162,9 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     }
   }
 
-  // Send credentials email so user has their password
-  if (process.env.RESEND_API_KEY) {
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    await resend.emails.send({
-      from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
-      to: email,
-      subject: 'Tus credenciales de acceso a Nexo',
-      html: credentialsEmailHtml(nombre, affiliate.affiliate_number, email, tempPassword, appUrl),
-    }).catch((err) => console.error('[registro] Resend error:', err))
-  }
-
-  // Create MP subscription
+  // Create MP subscription — email is sent AFTER this succeeds to avoid orphan credentials
   try {
-    const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
+    const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
     const preApprovalClient = new PreApproval(mpClient)
 
     const mpResponse = await preApprovalClient.create({
@@ -201,16 +194,33 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
         .eq('id', affiliate.id)
     }
 
+    // Send credentials email only after payment flow is confirmed
+    if (process.env.RESEND_API_KEY) {
+      const resend = new Resend(process.env.RESEND_API_KEY)
+      await resend.emails.send({
+        from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+        to: email,
+        subject: 'Tus credenciales de acceso a Nexo',
+        html: credentialsEmailHtml(nombre, affiliate.affiliate_number, email, tempPassword, appUrl),
+      }).catch((err) => console.error('[registro] Resend error:', err))
+    }
+
     return { success: true, checkoutUrl: mpResponse.init_point }
-  } catch (err) {
-    console.error('[mp] PreApproval error:', err)
-    // Rollback: delete affiliate and auth user
+  } catch (err: any) {
+    const mpMessage = err?.message ?? String(err)
+    console.error('[mp] PreApproval error:', mpMessage, err)
+    // Rollback: no email was sent yet, so this is a clean undo
     try {
       await supabase.from('affiliates').delete().eq('id', affiliate.id)
       await supabase.auth.admin.deleteUser(userId)
     } catch (rollbackErr) {
       console.error('[mp] Rollback error:', rollbackErr)
     }
-    return { success: false, error: 'Error al iniciar el pago con Mercado Pago. Intentá de nuevo.' }
+    return {
+      success: false,
+      error: `Error al iniciar el pago con Mercado Pago. Intentá de nuevo.${
+        process.env.NODE_ENV === 'development' ? ` (${mpMessage})` : ''
+      }`,
+    }
   }
 }
