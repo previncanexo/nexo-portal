@@ -88,12 +88,16 @@ export async function POST(request: Request) {
 
     // Rate limiting per admin email
     if (adminAffiliateLimiter) {
-      const { success } = await adminAffiliateLimiter.limit(caller.email!)
-      if (!success) {
-        return NextResponse.json(
-          { error: 'Límite de creación de afiliados alcanzado. Esperá unos minutos.' },
-          { status: 429 }
-        )
+      try {
+        const { success } = await adminAffiliateLimiter.limit(caller.email!)
+        if (!success) {
+          return NextResponse.json(
+            { error: 'Límite de creación de afiliados alcanzado. Esperá unos minutos.' },
+            { status: 429 }
+          )
+        }
+      } catch (err) {
+        console.error('[affiliates] Rate limiter error (skipping):', err)
       }
     }
 
