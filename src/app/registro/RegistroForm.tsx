@@ -31,6 +31,14 @@ const PLAN_BENEFITS = [
   'Guardias odontológicas de urgencia',
 ]
 
+const fieldBase: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.07)',
+  border: '1px solid rgba(255,255,255,0.15)',
+  fontFamily: 'var(--font-dm-sans)',
+  fontSize: '0.95rem',
+  color: 'white',
+}
+
 function InputField({
   id,
   label,
@@ -66,14 +74,7 @@ function InputField({
         required={required}
         placeholder={placeholder}
         className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all"
-        style={{
-          background: 'rgba(255,255,255,0.07)',
-          border: '1px solid rgba(255,255,255,0.15)',
-          fontFamily: 'var(--font-dm-sans)',
-          fontSize: '0.95rem',
-          colorScheme: 'dark',
-          color: 'white',
-        }}
+        style={{ ...fieldBase, colorScheme: 'dark' }}
         onFocus={(e) => {
           e.target.style.border = '1px solid rgba(134,96,239,0.70)'
           e.target.style.background = 'rgba(255,255,255,0.10)'
@@ -83,6 +84,64 @@ function InputField({
           e.target.style.background = 'rgba(255,255,255,0.07)'
         }}
       />
+    </div>
+  )
+}
+
+function DateField({
+  id,
+  label,
+  value,
+  onChange,
+  required = false,
+}: {
+  id: string
+  label: string
+  value: string
+  onChange: (val: string) => void
+  required?: boolean
+}) {
+  const displayDate = value
+    ? new Date(value + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : null
+
+  return (
+    <div>
+      <label
+        htmlFor={id}
+        className="block text-sm font-medium mb-1.5"
+        style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}
+      >
+        {label}
+        {required && <span style={{ color: 'var(--pink)', marginLeft: 2 }}>*</span>}
+      </label>
+      <div className="relative">
+        {/* Capa visual */}
+        <div
+          className="w-full px-4 py-3 rounded-xl flex items-center justify-between pointer-events-none"
+          style={fieldBase}
+        >
+          <span style={{ color: displayDate ? 'white' : 'rgba(255,255,255,0.35)', fontSize: '0.95rem' }}>
+            {displayDate ?? 'DD/MM/AAAA'}
+          </span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.40)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        {/* Input nativo encima, invisible */}
+        <input
+          id={id}
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          required={required}
+          className="absolute inset-0 w-full h-full rounded-xl outline-none cursor-pointer"
+          style={{ opacity: 0, colorScheme: 'dark' }}
+        />
+      </div>
     </div>
   )
 }
@@ -306,7 +365,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
               <InputField id="email" label="Email" type="email" value={form.email} onChange={setField('email')} placeholder="tu@email.com" required />
               <InputField id="whatsapp" label="WhatsApp" type="tel" value={form.whatsapp} onChange={setField('whatsapp')} placeholder="+54 9 11 1234-5678" />
               <InputField id="ciudad" label="Ciudad" value={form.ciudad} onChange={setField('ciudad')} placeholder="Buenos Aires" />
-              <InputField id="fecha_nacimiento" label="Fecha de nacimiento" type="date" value={form.fecha_nacimiento} onChange={setField('fecha_nacimiento')} />
+              <DateField id="fecha_nacimiento" label="Fecha de nacimiento" value={form.fecha_nacimiento} onChange={setField('fecha_nacimiento')} />
 
               {error && (
                 <div
