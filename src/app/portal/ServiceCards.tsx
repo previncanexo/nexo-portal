@@ -44,6 +44,81 @@ function IconOdontologia() {
   )
 }
 
+function UrgenciasModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)' }}
+      onClick={onClose}
+    >
+      <div className="glass-card p-8 w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3 mb-6">
+          <div
+            className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+            style={{ background: 'rgba(220,38,38,0.15)', color: '#ef4444' }}
+          >
+            <IconUrgencias />
+          </div>
+          <div>
+            <p className="text-base font-bold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
+              Urgencias Médicas
+            </p>
+            <p className="text-xs" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
+              Disponible 24/7
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 mb-6">
+          <a
+            href="tel:3414345400"
+            className="flex items-center justify-between px-4 py-3 rounded-2xl transition-opacity active:opacity-70"
+            style={{ background: 'rgba(220,38,38,0.10)', border: '1px solid rgba(220,38,38,0.20)' }}
+          >
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'rgba(220,38,38,0.70)', fontFamily: 'var(--font-dm-sans)' }}>
+                Contacto principal
+              </p>
+              <p className="text-base font-bold font-mono" style={{ color: '#ef4444' }}>
+                341-434-5400
+              </p>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l.97-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+          </a>
+
+          <a
+            href="tel:3415286900"
+            className="flex items-center justify-between px-4 py-3 rounded-2xl transition-opacity active:opacity-70"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)' }}
+          >
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
+                Contacto alternativo
+              </p>
+              <p className="text-base font-bold font-mono" style={{ color: 'var(--gray-800)' }}>
+                341-528-6900
+              </p>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--gray-500)' }}>
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l.97-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+          </a>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="w-full py-3 min-h-[44px] rounded-full text-sm font-bold"
+          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', color: 'var(--gray-700)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function FarmaciaModal({ affiliateNumber, onClose }: { affiliateNumber: string; onClose: () => void }) {
   return (
     <div
@@ -107,6 +182,7 @@ interface ServiceItem {
 
 export default function ServiceCards({ affiliate }: ServiceCardsProps) {
   const [farmaciaModalOpen, setFarmaciaModalOpen] = useState(false)
+  const [urgenciasModalOpen, setUrgenciasModalOpen] = useState(false)
 
   const services: ServiceItem[] = [
     {
@@ -127,18 +203,17 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     },
     {
       id: 'urgencias',
-      title: 'Urgencias',
+      title: 'Urgencias Médicas',
       subtitle: 'Asistencia médica inmediata',
       badge: 'Disponible 24/7',
       badgeColor: '#dc2626',
       badgeBg: 'rgba(220,38,38,0.08)',
       badgeDot: true,
-      buttonLabel: 'Llamar ahora',
-      buttonAction: 'tel',
-      buttonHref: 'tel:+541100000000',
+      buttonLabel: 'Ver contactos',
+      buttonAction: 'modal',
       accentColor: 'white',
       accentBg: 'rgba(134,96,239,0.10)',
-      glowColor: 'rgba(134,96,239,0.12)',
+      glowColor: 'rgba(220,38,38,0.12)',
       Icon: IconUrgencias,
     },
     {
@@ -174,7 +249,8 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
 
   function handleAction(service: ServiceItem) {
     if (service.buttonAction === 'modal') {
-      setFarmaciaModalOpen(true)
+      if (service.id === 'urgencias') setUrgenciasModalOpen(true)
+      else setFarmaciaModalOpen(true)
     } else if (service.buttonAction === 'tel' && service.buttonHref) {
       window.location.href = service.buttonHref
     } else if (service.buttonHref) {
@@ -247,6 +323,9 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
         ))}
       </div>
 
+      {urgenciasModalOpen && (
+        <UrgenciasModal onClose={() => setUrgenciasModalOpen(false)} />
+      )}
       {farmaciaModalOpen && (
         <FarmaciaModal
           affiliateNumber={affiliate?.affiliate_number ?? '—'}
