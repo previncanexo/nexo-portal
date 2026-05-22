@@ -25,23 +25,24 @@ export default function RetryPaymentButton() {
   }
 
   return (
-    <div className="mt-3 flex flex-col gap-2">
+    <div className="mt-2 flex flex-col gap-2">
       <button
         onClick={handleClick}
         disabled={loading}
-        className="w-full py-2.5 rounded-full text-sm font-bold transition-opacity"
+        className="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-xs font-bold text-white transition-all"
         style={{
-          background: loading ? 'rgba(0,158,227,0.5)' : '#009ee3',
-          color: 'white',
+          background: 'linear-gradient(to right, var(--purple), var(--pink))',
+          opacity: loading ? 0.55 : 1,
           cursor: loading ? 'not-allowed' : 'pointer',
           border: 'none',
           fontFamily: 'var(--font-dm-sans)',
+          boxShadow: loading ? 'none' : '0 4px 16px rgba(134,96,239,0.25)',
         }}
       >
         {loading ? 'Redirigiendo...' : 'Completar pago con Mercado Pago'}
       </button>
       {error && (
-        <p className="text-xs text-center" style={{ color: '#fca5a5' }}>{error}</p>
+        <p className="text-xs text-center" style={{ color: '#fca5a5', fontFamily: 'var(--font-dm-sans)' }}>{error}</p>
       )}
     </div>
   )

@@ -3,10 +3,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import type { AffiliateStatus } from '@/lib/types'
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string; icon: 'check' | 'clock' | 'x' }> = {
-  active:    { label: 'Afiliado activo',    color: '#16a34a', bg: 'rgba(22,163,74,0.12)',  border: 'rgba(22,163,74,0.3)',  icon: 'check' },
-  pending:   { label: 'Pendiente de activación', color: '#ca8a04', bg: 'rgba(202,138,4,0.12)', border: 'rgba(202,138,4,0.3)', icon: 'clock' },
-  suspended: { label: 'Afiliado suspendido', color: '#ea580c', bg: 'rgba(234,88,12,0.12)', border: 'rgba(234,88,12,0.3)', icon: 'x' },
-  cancelled: { label: 'Afiliado cancelado',  color: '#dc2626', bg: 'rgba(220,38,38,0.12)', border: 'rgba(220,38,38,0.3)', icon: 'x' },
+  active:    { label: 'Afiliado activo',          color: '#86efac', bg: 'rgba(34,197,94,0.12)',   border: 'rgba(34,197,94,0.25)',   icon: 'check' },
+  pending:   { label: 'Pendiente de activación',  color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',  border: 'rgba(251,191,36,0.30)',  icon: 'clock' },
+  suspended: { label: 'Afiliado suspendido',      color: '#fb923c', bg: 'rgba(251,146,60,0.12)',  border: 'rgba(251,146,60,0.30)',  icon: 'x'     },
+  cancelled: { label: 'Afiliado cancelado',       color: '#f87171', bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.30)',   icon: 'x'     },
 }
 
 function formatDate(dateStr: string | null): string {
@@ -16,7 +16,7 @@ function formatDate(dateStr: string | null): string {
 
 function IconCheck() {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="20 6 9 17 4 12" />
     </svg>
   )
@@ -24,7 +24,7 @@ function IconCheck() {
 
 function IconClock() {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
     </svg>
   )
@@ -32,7 +32,7 @@ function IconClock() {
 
 function IconX() {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
     </svg>
   )
@@ -57,158 +57,200 @@ export default async function VerificarPage({ params }: { params: Promise<{ nume
     : null
 
   return (
-    <div className="min-h-screen flex items-start justify-center px-4 py-12">
-      <div className="w-full max-w-sm relative z-10">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/* Orb purple */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: '-80px',
+          left: '-120px',
+          width: '500px',
+          height: '500px',
+          borderRadius: '50%',
+          background: 'var(--purple)',
+          opacity: 0.06,
+          filter: 'blur(130px)',
+        }}
+      />
+      {/* Orb pink */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          bottom: '-100px',
+          right: '-100px',
+          width: '450px',
+          height: '450px',
+          borderRadius: '50%',
+          background: 'var(--pink)',
+          opacity: 0.05,
+          filter: 'blur(110px)',
+        }}
+      />
+      {/* Grain overlay */}
+      <div
+        className="pointer-events-none fixed inset-0"
+        style={{
+          opacity: 0.15,
+          backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E\")",
+          mixBlendMode: 'overlay',
+        }}
+      />
 
+      <div className="w-full max-w-sm relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
           <Image
             src="/logo.png"
             alt="Nexo by Previnca"
-            width={160}
-            height={64}
-            style={{ objectFit: 'contain', height: '56px', width: 'auto', margin: '0 auto' }}
+            width={220}
+            height={88}
+            style={{ objectFit: 'contain', height: '72px', width: 'auto', margin: '0 auto' }}
             priority
           />
         </div>
 
         {!affiliate ? (
           /* Not found */
-          <div
-            className="rounded-3xl p-6 sm:p-8 text-center"
-            style={{
-              background: 'rgba(134,96,239,0.55)',
-              border: '1px solid rgba(255,255,255,0.18)',
-              backdropFilter: 'blur(32px)',
-              WebkitBackdropFilter: 'blur(32px)',
-            }}
-          >
+          <div className="glass-card p-7 sm:p-8 text-center">
             <div
               className="w-16 h-16 rounded-full mx-auto mb-5 flex items-center justify-center"
-              style={{ background: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.4)' }}
+              style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.30)', color: '#f87171' }}
             >
               <IconX />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-              Afiliado no encontrado
+            <h2
+              className="text-2xl text-white mb-2"
+              style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
+            >
+              No encontrado
             </h2>
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
               El número <span className="font-bold text-white">{numero}</span> no corresponde a ningún afiliado registrado en Nexo.
             </p>
           </div>
         ) : (
-          /* Found */
-          <div
-            className="rounded-3xl overflow-hidden"
-            style={{
-              background: 'rgba(255,255,255,0.88)',
-              border: '1px solid rgba(255,255,255,0.6)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-            }}
-          >
-            {/* Gradient top bar */}
+          /* Found — credential card */
+          <div>
+            {/* Credential card with brand gradient */}
             <div
-              className="h-2 w-full"
-              style={{ background: 'linear-gradient(90deg, var(--purple) 0%, var(--pink) 100%)' }}
-            />
-
-            <div className="p-5 sm:p-7">
-              {/* Status badge — lo más importante para el verificador */}
-              <div
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl mb-6"
-                style={{ background: statusCfg?.bg, border: `1px solid ${statusCfg?.border}` }}
+              className="relative overflow-hidden mb-4"
+              style={{
+                background: 'linear-gradient(135deg, var(--purple) 0%, #5b3fb5 50%, var(--pink) 100%)',
+                borderRadius: '20px',
+                boxShadow: '0 12px 40px rgba(134,96,239,0.40), 0 2px 8px rgba(0,0,0,0.2)',
+              }}
+            >
+              {/* Decorative arcs */}
+              <svg
+                className="absolute pointer-events-none"
+                style={{ top: '-20px', right: '-20px', opacity: 0.12 }}
+                width="180"
+                height="180"
+                viewBox="0 0 180 180"
+                fill="none"
               >
-                <div style={{ color: statusCfg?.color }}>
-                  {statusCfg?.icon === 'check' && <IconCheck />}
-                  {statusCfg?.icon === 'clock' && <IconClock />}
-                  {statusCfg?.icon === 'x' && <IconX />}
-                </div>
-                <div>
-                  <p className="text-sm font-bold" style={{ color: statusCfg?.color }}>
-                    {statusCfg?.label}
-                  </p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)' }}>
-                    {planName ?? 'Nexo by Previnca'}
-                  </p>
-                </div>
-              </div>
+                <ellipse cx="160" cy="20" rx="100" ry="100" stroke="white" strokeWidth="1.5" />
+                <ellipse cx="160" cy="20" rx="70" ry="70" stroke="white" strokeWidth="1" />
+                <ellipse cx="160" cy="20" rx="42" ry="42" stroke="white" strokeWidth="0.75" />
+              </svg>
 
-              {/* Affiliate info */}
-              <div className="flex flex-col gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--gray-400)' }}>
-                    Afiliado
-                  </p>
-                  <p className="text-xl font-bold leading-snug" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
-                    {affiliate.nombre} {affiliate.apellido}
-                  </p>
-                </div>
+              {/* Grain texture */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  opacity: 0.08,
+                  mixBlendMode: 'overlay',
+                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")",
+                  backgroundRepeat: 'repeat',
+                  backgroundSize: '128px 128px',
+                }}
+              />
 
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--gray-400)' }}>
-                    N° de afiliado
+              <div className="relative p-5">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
+                    Nexo by Previnca
                   </p>
-                  <p
-                    className="text-xl font-bold tracking-wider break-all"
-                    style={{
-                      fontFamily: 'monospace',
-                      background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                    }}
-                  >
-                    {affiliate.affiliate_number}
-                  </p>
+                  {planName && (
+                    <span
+                      className="text-xs font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full"
+                      style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.90)', border: '1px solid rgba(255,255,255,0.25)', fontFamily: 'var(--font-dm-sans)' }}
+                    >
+                      {planName}
+                    </span>
+                  )}
                 </div>
 
-                {/* Coverage dates */}
+                {/* Name */}
+                <h2
+                  className="text-xl sm:text-2xl leading-tight mb-1"
+                  style={{ color: 'white', fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
+                >
+                  {affiliate.nombre} {affiliate.apellido}
+                </h2>
+
+                {/* Affiliate number */}
+                <p className="text-xs uppercase tracking-widest mb-1 mt-3" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
+                  N° de afiliado
+                </p>
+                <p
+                  className="text-2xl font-bold tracking-wider break-all"
+                  style={{ fontFamily: 'monospace', color: 'white', letterSpacing: '0.1em' }}
+                >
+                  {affiliate.affiliate_number}
+                </p>
+
+                <div className="mt-4 h-px" style={{ background: 'rgba(255,255,255,0.12)' }} />
+
+                {/* Coverage */}
                 {(affiliate.cobertura_desde || affiliate.cobertura_hasta) && (
-                  <div
-                    className="rounded-xl p-4 flex flex-col gap-2"
-                    style={{ background: 'var(--gray-50)', border: '1px solid var(--gray-100)' }}
-                  >
-                    <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--gray-400)' }}>
-                      Vigencia de cobertura
-                    </p>
+                  <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
                     {affiliate.cobertura_desde && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs" style={{ color: 'var(--gray-500)' }}>Desde</span>
-                        <span className="text-sm font-semibold" style={{ color: 'var(--gray-800)' }}>
-                          {formatDate(affiliate.cobertura_desde)}
-                        </span>
+                      <div>
+                        <p className="text-xs uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>Desde</p>
+                        <p className="text-sm font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>{formatDate(affiliate.cobertura_desde)}</p>
                       </div>
                     )}
                     {affiliate.cobertura_hasta && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs" style={{ color: 'var(--gray-500)' }}>Hasta</span>
-                        <span className="text-sm font-semibold" style={{ color: 'var(--gray-800)' }}>
-                          {formatDate(affiliate.cobertura_hasta)}
-                        </span>
+                      <div className="text-right">
+                        <p className="text-xs uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>Hasta</p>
+                        <p className="text-sm font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>{formatDate(affiliate.cobertura_hasta)}</p>
                       </div>
                     )}
                   </div>
                 )}
               </div>
-
-              {/* Footer */}
-              <div
-                className="mt-6 pt-5 text-center"
-                style={{ borderTop: '1px solid var(--gray-100)' }}
-              >
-                <p className="text-xs" style={{ color: 'var(--gray-400)' }}>
-                  Verificación oficial · Nexo by Previnca
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--gray-300)' }}>
-                  {new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}
-                </p>
-              </div>
             </div>
+
+            {/* Status banner */}
+            {statusCfg && (
+              <div
+                className="glass-card rounded-2xl px-4 py-4 flex items-start gap-3"
+                style={{ background: statusCfg.bg, border: `1px solid ${statusCfg.border}` }}
+              >
+                <div className="mt-0.5 shrink-0" style={{ color: statusCfg.color }}>
+                  {statusCfg.icon === 'check' && <IconCheck />}
+                  {statusCfg.icon === 'clock' && <IconClock />}
+                  {statusCfg.icon === 'x' && <IconX />}
+                </div>
+                <div>
+                  <p className="font-semibold text-sm" style={{ color: statusCfg.color, fontFamily: 'var(--font-dm-sans)' }}>
+                    {statusCfg.label}
+                  </p>
+                  <p className="text-sm mt-0.5" style={{ color: statusCfg.color, opacity: 0.80, fontFamily: 'var(--font-dm-sans)' }}>
+                    Verificación oficial · Nexo by Previnca
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Footer */}
+            <p className="text-xs text-center mt-4" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
+              {new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}
+            </p>
           </div>
         )}
-
       </div>
     </div>
   )

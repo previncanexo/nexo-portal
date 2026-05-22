@@ -7,7 +7,7 @@ import type { Affiliate } from '@/lib/types'
 
 const INPUT_BASE: React.CSSProperties = {
   background: 'rgba(255,255,255,0.07)',
-  border: '1px solid rgba(255,255,255,0.12)',
+  border: '1px solid rgba(255,255,255,0.15)',
   color: 'white',
   fontFamily: 'var(--font-dm-sans)',
   fontSize: '0.9rem',
@@ -35,11 +35,15 @@ function Field({
     <div>
       <label
         htmlFor={id}
-        className="block text-xs font-semibold uppercase tracking-wide mb-1.5"
-        style={{ color: readOnly ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.5)' }}
+        className="block text-sm font-medium mb-1.5"
+        style={{ color: readOnly ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}
       >
         {label}
-        {readOnly && <span className="ml-2 normal-case tracking-normal font-normal" style={{ color: 'rgba(255,255,255,0.25)' }}>(no editable)</span>}
+        {readOnly && (
+          <span className="ml-2 text-xs font-normal tracking-normal" style={{ color: 'rgba(255,255,255,0.25)' }}>
+            (no editable)
+          </span>
+        )}
       </label>
       <input
         id={id}
@@ -56,13 +60,13 @@ function Field({
         }}
         onFocus={(e) => {
           if (!readOnly) {
-            e.target.style.border = '1px solid rgba(134,96,239,0.7)'
-            e.target.style.background = 'rgba(255,255,255,0.1)'
+            e.target.style.border = '1px solid rgba(134,96,239,0.70)'
+            e.target.style.background = 'rgba(255,255,255,0.10)'
           }
         }}
         onBlur={(e) => {
           if (!readOnly) {
-            e.target.style.border = '1px solid rgba(255,255,255,0.12)'
+            e.target.style.border = '1px solid rgba(255,255,255,0.15)'
             e.target.style.background = 'rgba(255,255,255,0.07)'
           }
         }}
@@ -71,11 +75,14 @@ function Field({
   )
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-base font-bold text-white mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+    <p
+      className="text-xs uppercase tracking-[0.14em] font-semibold mb-3"
+      style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}
+    >
       {children}
-    </h2>
+    </p>
   )
 }
 
@@ -84,9 +91,10 @@ function Alert({ ok, text }: { ok: boolean; text: string }) {
     <div
       className="text-sm px-4 py-3 rounded-xl"
       style={{
-        background: ok ? 'rgba(74,222,128,0.1)' : 'rgba(239,68,68,0.12)',
-        border: `1px solid ${ok ? 'rgba(74,222,128,0.25)' : 'rgba(239,68,68,0.25)'}`,
-        color: ok ? '#4ade80' : '#fca5a5',
+        background: ok ? 'rgba(34,197,94,0.10)' : 'rgba(239,68,68,0.12)',
+        border: `1px solid ${ok ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.30)'}`,
+        color: ok ? '#86efac' : '#fca5a5',
+        fontFamily: 'var(--font-dm-sans)',
       }}
     >
       {text}
@@ -99,25 +107,19 @@ function PrimaryBtn({ disabled, children }: { disabled?: boolean; children: Reac
     <button
       type="submit"
       disabled={disabled}
-      className="w-full py-3 rounded-full font-bold text-sm transition-opacity mt-1"
+      className="w-full py-3 rounded-full font-bold text-sm text-white transition-all mt-1"
       style={{
-        background: disabled ? 'rgba(255,255,255,0.5)' : 'white',
-        color: disabled ? 'rgba(134,96,239,0.6)' : 'var(--purple)',
+        background: 'linear-gradient(to right, var(--purple), var(--pink))',
+        opacity: disabled ? 0.55 : 1,
         cursor: disabled ? 'not-allowed' : 'pointer',
         fontFamily: 'var(--font-dm-sans)',
         border: 'none',
+        boxShadow: disabled ? 'none' : '0 8px 24px rgba(134,96,239,0.25)',
       }}
     >
       {children}
     </button>
   )
-}
-
-const CARD: React.CSSProperties = {
-  background: 'rgba(134,96,239,0.55)',
-  border: '1px solid rgba(255,255,255,0.18)',
-  backdropFilter: 'blur(32px)',
-  WebkitBackdropFilter: 'blur(32px)',
 }
 
 export default function CuentaForm({ affiliate }: { affiliate: Affiliate }) {
@@ -194,84 +196,88 @@ export default function CuentaForm({ affiliate }: { affiliate: Affiliate }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
 
       {/* ── Mis datos ──────────────────────────────────────────────────────── */}
-      <div className="rounded-3xl p-6 sm:p-7" style={CARD}>
-        <SectionTitle>Mis datos</SectionTitle>
-        <form onSubmit={handleProfile} className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3">
-            <Field id="nombre" label="Nombre" value={affiliate.nombre} readOnly />
-            <Field id="apellido" label="Apellido" value={affiliate.apellido} readOnly />
-          </div>
-          <Field id="dni" label="DNI" value={affiliate.dni} readOnly />
-          <Field id="email" label="Email" type="email" value={affiliate.email} readOnly />
-          <Field
-            id="whatsapp"
-            label="WhatsApp"
-            type="tel"
-            value={whatsapp}
-            onChange={setWhatsapp}
-            placeholder="+54 9 11 1234-5678"
-          />
-          <Field
-            id="ciudad"
-            label="Ciudad"
-            value={ciudad}
-            onChange={setCiudad}
-            placeholder="Buenos Aires"
-          />
-          <Field
-            id="fecha_nacimiento"
-            label="Fecha de nacimiento"
-            type="date"
-            value={fechaNac}
-            onChange={setFechaNac}
-          />
+      <div>
+        <SectionLabel>Mis datos</SectionLabel>
+        <div className="glass-card p-6 sm:p-8 rounded-2xl">
+          <form onSubmit={handleProfile} className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Field id="nombre" label="Nombre" value={affiliate.nombre} readOnly />
+              <Field id="apellido" label="Apellido" value={affiliate.apellido} readOnly />
+            </div>
+            <Field id="dni" label="DNI" value={affiliate.dni} readOnly />
+            <Field id="email" label="Email" type="email" value={affiliate.email} readOnly />
+            <Field
+              id="whatsapp"
+              label="WhatsApp"
+              type="tel"
+              value={whatsapp}
+              onChange={setWhatsapp}
+              placeholder="+54 9 11 1234-5678"
+            />
+            <Field
+              id="ciudad"
+              label="Ciudad"
+              value={ciudad}
+              onChange={setCiudad}
+              placeholder="Buenos Aires"
+            />
+            <Field
+              id="fecha_nacimiento"
+              label="Fecha de nacimiento"
+              type="date"
+              value={fechaNac}
+              onChange={setFechaNac}
+            />
 
-          {profileMsg && <Alert ok={profileMsg.ok} text={profileMsg.text} />}
+            {profileMsg && <Alert ok={profileMsg.ok} text={profileMsg.text} />}
 
-          <PrimaryBtn disabled={profilePending}>
-            {profilePending ? 'Guardando...' : 'Guardar datos'}
-          </PrimaryBtn>
-        </form>
+            <PrimaryBtn disabled={profilePending}>
+              {profilePending ? 'Guardando...' : 'Guardar datos'}
+            </PrimaryBtn>
+          </form>
+        </div>
       </div>
 
       {/* ── Cambiar contraseña ─────────────────────────────────────────────── */}
-      <div className="rounded-3xl p-6 sm:p-7" style={CARD}>
-        <SectionTitle>Cambiar contraseña</SectionTitle>
-        <form onSubmit={handlePassword} className="flex flex-col gap-4">
-          <Field
-            id="current-pwd"
-            label="Contraseña actual"
-            type="password"
-            value={currentPwd}
-            onChange={setCurrentPwd}
-            placeholder="••••••••"
-          />
-          <Field
-            id="new-pwd"
-            label="Nueva contraseña"
-            type="password"
-            value={newPwd}
-            onChange={setNewPwd}
-            placeholder="••••••••"
-          />
-          <Field
-            id="confirm-pwd"
-            label="Confirmar nueva contraseña"
-            type="password"
-            value={confirmPwd}
-            onChange={setConfirmPwd}
-            placeholder="••••••••"
-          />
+      <div>
+        <SectionLabel>Seguridad</SectionLabel>
+        <div className="glass-card p-6 sm:p-8 rounded-2xl">
+          <form onSubmit={handlePassword} className="flex flex-col gap-4">
+            <Field
+              id="current-pwd"
+              label="Contraseña actual"
+              type="password"
+              value={currentPwd}
+              onChange={setCurrentPwd}
+              placeholder="••••••••"
+            />
+            <Field
+              id="new-pwd"
+              label="Nueva contraseña"
+              type="password"
+              value={newPwd}
+              onChange={setNewPwd}
+              placeholder="••••••••"
+            />
+            <Field
+              id="confirm-pwd"
+              label="Confirmar nueva contraseña"
+              type="password"
+              value={confirmPwd}
+              onChange={setConfirmPwd}
+              placeholder="••••••••"
+            />
 
-          {pwdMsg && <Alert ok={pwdMsg.ok} text={pwdMsg.text} />}
+            {pwdMsg && <Alert ok={pwdMsg.ok} text={pwdMsg.text} />}
 
-          <PrimaryBtn disabled={pwdLoading}>
-            {pwdLoading ? 'Guardando...' : 'Cambiar contraseña'}
-          </PrimaryBtn>
-        </form>
+            <PrimaryBtn disabled={pwdLoading}>
+              {pwdLoading ? 'Guardando...' : 'Cambiar contraseña'}
+            </PrimaryBtn>
+          </form>
+        </div>
       </div>
 
     </div>

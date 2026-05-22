@@ -105,19 +105,19 @@ function StatCard({
     <div
       className="rounded-2xl p-5 flex flex-col gap-1"
       style={{
-        background: 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'rgba(255,255,255,0.06)',
+        border: '1px solid rgba(255,255,255,0.10)',
         fontFamily: 'var(--font-dm-sans)',
       }}
     >
-      <span className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
+      <span className="text-xs uppercase tracking-[0.14em] font-semibold" style={{ color: 'rgba(255,255,255,0.45)' }}>
         {label}
       </span>
-      <span className="text-3xl font-bold text-white">{value}</span>
+      <span className="text-3xl font-bold text-white mt-1">{value}</span>
       {delta !== undefined && (
         <span
           className="text-xs font-medium"
-          style={{ color: delta.value >= 0 ? 'rgb(74,222,128)' : 'rgb(248,113,113)' }}
+          style={{ color: delta.value >= 0 ? '#86efac' : '#f87171' }}
         >
           {delta.value >= 0 ? '+' : ''}{delta.value} {delta.label}
         </span>
@@ -125,7 +125,7 @@ function StatCard({
       {revenueDelta !== undefined && (
         <span
           className="text-xs font-medium"
-          style={{ color: revenueDelta >= 0 ? 'rgb(74,222,128)' : 'rgb(248,113,113)' }}
+          style={{ color: revenueDelta >= 0 ? '#86efac' : '#f87171' }}
         >
           {revenueDelta >= 0 ? '+' : ''}${revenueDelta.toLocaleString('es-AR')} vs mes anterior
         </span>
@@ -317,11 +317,12 @@ export default async function AdminDashboardPage() {
         <div
           className="rounded-2xl p-5"
           style={{
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.10)',
           }}
         >
-          <p className="text-lg font-semibold text-white mb-4">Nuevos afiliados</p>
+          <p className="text-xs uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>Nuevos afiliados</p>
+          <p className="text-base font-bold text-white mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Últimos 6 meses</p>
           <BarChart
             buckets={affiliateBuckets.map((b) => ({ label: b.label, value: b.count }))}
             valueKey="value"
@@ -332,11 +333,12 @@ export default async function AdminDashboardPage() {
         <div
           className="rounded-2xl p-5"
           style={{
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.10)',
           }}
         >
-          <p className="text-lg font-semibold text-white mb-4">Ingresos mensuales</p>
+          <p className="text-xs uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>Ingresos mensuales</p>
+          <p className="text-base font-bold text-white mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Últimos 6 meses</p>
           <BarChart
             buckets={revenueBuckets.map((b) => ({ label: b.label, value: b.total }))}
             valueKey="value"
@@ -386,11 +388,12 @@ export default async function AdminDashboardPage() {
       <div
         className="rounded-2xl p-5"
         style={{
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'rgba(255,255,255,0.06)',
+          border: '1px solid rgba(255,255,255,0.10)',
         }}
       >
-        <p className="text-lg font-semibold text-white mb-4">Afiliados recientes</p>
+        <p className="text-xs uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>Afiliados recientes</p>
+        <p className="text-base font-bold text-white mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Últimos registros</p>
 
         {recentAffiliates.length === 0 ? (
           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>

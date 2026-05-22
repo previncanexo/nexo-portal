@@ -32,42 +32,63 @@ export default function PortalHeader({ affiliate }: PortalHeaderProps) {
   const displayName = affiliate ? `${affiliate.nombre} ${affiliate.apellido}` : 'Mi cuenta'
 
   return (
-    <header
-      className="sticky top-0 z-50 px-4 sm:px-6 py-3 sm:py-4"
-      style={{
-        background: 'linear-gradient(135deg, color-mix(in srgb, var(--purple) 85%, transparent) 0%, color-mix(in srgb, var(--pink) 85%, transparent) 100%)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(255,255,255,0.15)',
-      }}
-    >
-      <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
-        <Image src="/logo.png" alt="Nexo by Previnca" width={100} height={40} style={{ objectFit: 'contain', height: '36px', width: 'auto' }} priority />
+    /* Floating pill nav wrapper */
+    <div className="fixed top-3 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+      <nav
+        className="pointer-events-auto w-full max-w-[960px] flex items-center justify-between"
+        style={{
+          background: 'rgba(18,5,61,0.85)',
+          backdropFilter: 'blur(24px) saturate(1.4)',
+          WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
+          border: '1px solid rgba(255,255,255,0.14)',
+          borderRadius: '9999px',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.24)',
+          padding: '6px 8px 6px 20px',
+        }}
+      >
+        {/* Logo */}
+        <Image
+          src="/logo.png"
+          alt="Nexo by Previnca"
+          width={100}
+          height={44}
+          style={{ objectFit: 'contain', height: '44px', width: 'auto' }}
+          priority
+        />
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        {/* Actions */}
+        <div className="flex items-center gap-2">
           <Link
             href="/portal/cuenta"
-            className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 min-h-[44px] rounded-full transition-all hover:bg-white/10"
-            style={{ color: 'rgba(255,255,255,0.80)', fontFamily: 'var(--font-dm-sans)' }}
+            className="flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-full transition-all hover:bg-white/10"
+            style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'var(--font-dm-sans)' }}
           >
             <IconPerson />
             <span className="hidden sm:inline truncate max-w-[160px]">{displayName}</span>
           </Link>
           <button
             onClick={handleLogout}
-            className="text-sm font-semibold px-4 py-2.5 min-h-[44px] rounded-full transition-all hover:bg-white/20 active:scale-95"
+            className="text-sm font-semibold px-4 py-2.5 min-h-[40px] rounded-full transition-all active:scale-95"
             style={{
-              background: 'rgba(255,255,255,0.12)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              color: 'white',
+              background: 'rgba(255,255,255,0.10)',
+              border: '1px solid rgba(255,255,255,0.25)',
+              color: 'rgba(255,255,255,0.85)',
               cursor: 'pointer',
               fontFamily: 'var(--font-dm-sans)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.18)'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.45)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.10)'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'
             }}
           >
             Salir
           </button>
         </div>
-      </div>
-    </header>
+      </nav>
+    </div>
   )
 }

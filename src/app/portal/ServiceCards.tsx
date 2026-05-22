@@ -54,11 +54,11 @@ function FarmaciaModal({ affiliateNumber, onClose }: { affiliateNumber: string; 
       <div className="glass-card p-8 text-center w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
         <div
           className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-          style={{ background: 'rgba(134,96,239,0.1)', color: 'var(--purple)' }}
+          style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}
         >
           <IconFarmacias />
         </div>
-        <p className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--gray-600)' }}>
+        <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--gray-600)', fontFamily: 'var(--font-dm-sans)' }}>
           N° de afiliado
         </p>
         <div
@@ -73,13 +73,13 @@ function FarmaciaModal({ affiliateNumber, onClose }: { affiliateNumber: string; 
         >
           {affiliateNumber}
         </div>
-        <p className="text-sm sm:text-base mb-6" style={{ color: 'var(--gray-500)' }}>
+        <p className="text-sm mb-6" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
           Mostrá este número en la farmacia para el 50% de descuento.
         </p>
         <button
           onClick={onClose}
-          className="w-full py-3 min-h-[44px] rounded-full text-sm font-semibold text-white"
-          style={{ background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)', cursor: 'pointer' }}
+          className="w-full py-3 min-h-[44px] rounded-full text-sm font-bold text-white"
+          style={{ background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
         >
           Cerrar
         </button>
@@ -120,8 +120,8 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       buttonLabel: 'Acceder ahora',
       buttonAction: 'link',
       buttonHref: '#',
-      accentColor: 'var(--purple)',
-      accentBg: 'rgba(134,96,239,0.1)',
+      accentColor: 'white',
+      accentBg: 'rgba(134,96,239,0.10)',
       glowColor: 'rgba(134,96,239,0.15)',
       Icon: IconDOC24,
     },
@@ -136,9 +136,9 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       buttonLabel: 'Llamar ahora',
       buttonAction: 'tel',
       buttonHref: 'tel:+541100000000',
-      accentColor: '#ef4444',
-      accentBg: 'rgba(239,68,68,0.1)',
-      glowColor: 'rgba(239,68,68,0.12)',
+      accentColor: 'white',
+      accentBg: 'rgba(134,96,239,0.10)',
+      glowColor: 'rgba(134,96,239,0.12)',
       Icon: IconUrgencias,
     },
     {
@@ -150,8 +150,8 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       badgeBg: 'rgba(5,150,105,0.08)',
       buttonLabel: 'Ver credencial',
       buttonAction: 'modal',
-      accentColor: '#10b981',
-      accentBg: 'rgba(16,185,129,0.1)',
+      accentColor: 'white',
+      accentBg: 'rgba(134,96,239,0.10)',
       glowColor: 'rgba(16,185,129,0.12)',
       Icon: IconFarmacias,
     },
@@ -165,8 +165,8 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       buttonLabel: 'Más información',
       buttonAction: 'link',
       buttonHref: '#',
-      accentColor: '#8b5cf6',
-      accentBg: 'rgba(139,92,246,0.1)',
+      accentColor: 'white',
+      accentBg: 'rgba(134,96,239,0.10)',
       glowColor: 'rgba(139,92,246,0.12)',
       Icon: IconOdontologia,
     },
@@ -184,13 +184,13 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="flex flex-col gap-3">
         {services.map((service) => (
           <div
             key={service.id}
-            className="glass-card p-5 sm:p-6 flex flex-col gap-4 relative overflow-hidden"
+            className="glass-card rounded-2xl flex items-center gap-4 p-4 sm:p-5 relative overflow-hidden"
           >
-            {/* Subtle glow blob top-right */}
+            {/* Subtle glow */}
             <div
               className="absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl pointer-events-none"
               style={{ background: service.glowColor }}
@@ -198,58 +198,47 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
 
             {/* Icon */}
             <div
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 relative z-10"
-              style={{ background: service.accentBg, color: service.accentColor }}
+              className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 relative z-10"
+              style={{
+                background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+                color: 'white',
+                boxShadow: '0 4px 16px rgba(134,96,239,0.22)',
+              }}
             >
               <service.Icon />
             </div>
 
             {/* Title + subtitle */}
-            <div className="relative z-10">
+            <div className="flex-1 min-w-0 relative z-10">
               <p
-                className="text-base sm:text-lg font-bold leading-tight"
+                className="text-sm sm:text-base font-bold leading-tight"
                 style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}
               >
                 {service.title}
               </p>
-              <p className="text-sm sm:text-base leading-snug mt-0.5" style={{ color: 'var(--gray-500)' }}>
+              <p className="text-sm leading-snug mt-0.5" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
                 {service.subtitle}
               </p>
             </div>
 
-            {/* Badge */}
-            <div
-              className="self-start flex items-center gap-1.5 px-2 py-1 rounded-full relative z-10"
-              style={{ background: service.badgeBg }}
-            >
-              {service.badgeDot && (
-                <span className="relative flex h-1.5 w-1.5 shrink-0">
-                  <span
-                    className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60"
-                    style={{ background: service.badgeColor }}
-                  />
-                  <span
-                    className="relative inline-flex rounded-full h-1.5 w-1.5"
-                    style={{ background: service.badgeColor }}
-                  />
-                </span>
-              )}
-              <span className="text-xs sm:text-sm font-semibold leading-none" style={{ color: service.badgeColor }}>
-                {service.badge}
-              </span>
-            </div>
-
-            {/* Spacer */}
-            <div className="flex-1" />
-
-            {/* CTA */}
+            {/* CTA pill badge */}
             <button
               onClick={() => handleAction(service)}
-              className="w-full py-2.5 sm:py-3 min-h-[44px] rounded-xl text-sm sm:text-base font-bold text-white active:scale-95 transition-transform relative z-10"
+              className="shrink-0 relative z-10 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
               style={{
-                background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
+                background: 'rgba(134,96,239,0.10)',
+                border: '1px solid rgba(134,96,239,0.20)',
+                color: 'var(--purple)',
                 cursor: 'pointer',
                 fontFamily: 'var(--font-dm-sans)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(134,96,239,0.18)'
+                e.currentTarget.style.borderColor = 'rgba(134,96,239,0.35)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(134,96,239,0.10)'
+                e.currentTarget.style.borderColor = 'rgba(134,96,239,0.20)'
               }}
             >
               {service.buttonLabel}

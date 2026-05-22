@@ -56,12 +56,42 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/* Orb purple */}
       <div
-        className="fixed inset-0 pointer-events-none"
+        className="absolute pointer-events-none"
         style={{
-          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
+          top: '-80px',
+          left: '-120px',
+          width: '500px',
+          height: '500px',
+          borderRadius: '50%',
+          background: 'var(--purple)',
+          opacity: 0.06,
+          filter: 'blur(130px)',
+        }}
+      />
+      {/* Orb pink */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          bottom: '-100px',
+          right: '-100px',
+          width: '450px',
+          height: '450px',
+          borderRadius: '50%',
+          background: 'var(--pink)',
+          opacity: 0.05,
+          filter: 'blur(110px)',
+        }}
+      />
+      {/* Grain overlay */}
+      <div
+        className="pointer-events-none fixed inset-0"
+        style={{
+          opacity: 0.15,
+          backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E\")",
+          mixBlendMode: 'overlay',
         }}
       />
 
@@ -70,7 +100,8 @@ export default function ResetPasswordPage() {
           <h1
             className="text-5xl font-normal mb-1"
             style={{
-              fontFamily: 'var(--font-dm-serif)',
+              fontFamily: "'DM Serif Display', serif",
+              fontStyle: 'italic',
               background: 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -79,27 +110,27 @@ export default function ResetPasswordPage() {
           >
             nexo
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>
+          <p style={{ color: 'rgba(255,255,255,0.60)', fontSize: '0.875rem', fontFamily: 'var(--font-dm-sans)' }}>
             by Previnca
           </p>
         </div>
 
-        <div className="glass-card p-8" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)' }}>
+        <div className="glass-card p-7 sm:p-8">
           <h2
-            className="text-xl font-semibold text-white mb-1"
-            style={{ fontFamily: 'var(--font-dm-sans)' }}
+            className="text-2xl text-white mb-1"
+            style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
           >
             Nueva contraseña
           </h2>
-          <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.55)' }}>
+          <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>
             {ready ? 'Elegí tu nueva contraseña.' : 'Verificando el enlace...'}
           </p>
 
           {!ready ? (
-            <div className="flex justify-center py-4">
+            <div className="flex justify-center py-6">
               <div
-                className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-                style={{ borderColor: 'rgba(134,96,239,0.6)', borderTopColor: 'transparent' }}
+                className="w-8 h-8 rounded-full animate-spin"
+                style={{ border: '2px solid rgba(134,96,239,0.30)', borderTopColor: 'var(--purple)' }}
               />
             </div>
           ) : (
@@ -108,7 +139,7 @@ export default function ResetPasswordPage() {
                 <label
                   htmlFor="new-password"
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: 'rgba(255,255,255,0.7)' }}
+                  style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}
                 >
                   Nueva contraseña
                 </label>
@@ -119,16 +150,17 @@ export default function ResetPasswordPage() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 rounded-xl text-white placeholder-white/30 outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all"
                   style={{
                     background: 'rgba(255,255,255,0.07)',
                     border: '1px solid rgba(255,255,255,0.15)',
                     fontFamily: 'var(--font-dm-sans)',
                     fontSize: '0.95rem',
+                    color: 'white',
                   }}
                   onFocus={(e) => {
-                    e.target.style.border = '1px solid rgba(134,96,239,0.7)'
-                    e.target.style.background = 'rgba(255,255,255,0.1)'
+                    e.target.style.border = '1px solid rgba(134,96,239,0.70)'
+                    e.target.style.background = 'rgba(255,255,255,0.10)'
                   }}
                   onBlur={(e) => {
                     e.target.style.border = '1px solid rgba(255,255,255,0.15)'
@@ -141,7 +173,7 @@ export default function ResetPasswordPage() {
                 <label
                   htmlFor="confirm-password"
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: 'rgba(255,255,255,0.7)' }}
+                  style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}
                 >
                   Confirmar contraseña
                 </label>
@@ -152,16 +184,17 @@ export default function ResetPasswordPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 rounded-xl text-white placeholder-white/30 outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all"
                   style={{
                     background: 'rgba(255,255,255,0.07)',
                     border: '1px solid rgba(255,255,255,0.15)',
                     fontFamily: 'var(--font-dm-sans)',
                     fontSize: '0.95rem',
+                    color: 'white',
                   }}
                   onFocus={(e) => {
-                    e.target.style.border = '1px solid rgba(134,96,239,0.7)'
-                    e.target.style.background = 'rgba(255,255,255,0.1)'
+                    e.target.style.border = '1px solid rgba(134,96,239,0.70)'
+                    e.target.style.background = 'rgba(255,255,255,0.10)'
                   }}
                   onBlur={(e) => {
                     e.target.style.border = '1px solid rgba(255,255,255,0.15)'
@@ -174,9 +207,10 @@ export default function ResetPasswordPage() {
                 <div
                   className="text-sm px-4 py-3 rounded-xl"
                   style={{
-                    background: 'rgba(239,68,68,0.15)',
-                    border: '1px solid rgba(239,68,68,0.3)',
+                    background: 'rgba(239,68,68,0.12)',
+                    border: '1px solid rgba(239,68,68,0.30)',
                     color: '#fca5a5',
+                    fontFamily: 'var(--font-dm-sans)',
                   }}
                 >
                   {error}
@@ -186,13 +220,13 @@ export default function ResetPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-opacity mt-2"
+                className="w-full py-3 rounded-full font-bold text-sm text-white transition-all mt-2"
                 style={{
-                  background: loading
-                    ? 'rgba(134,96,239,0.5)'
-                    : 'linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%)',
+                  background: 'linear-gradient(to right, var(--purple), var(--pink))',
+                  opacity: loading ? 0.55 : 1,
                   cursor: loading ? 'not-allowed' : 'pointer',
                   fontFamily: 'var(--font-dm-sans)',
+                  boxShadow: loading ? 'none' : '0 8px 24px rgba(134,96,239,0.30)',
                 }}
               >
                 {loading ? 'Guardando...' : 'Guardar nueva contraseña'}
@@ -204,7 +238,7 @@ export default function ResetPasswordPage() {
             <a
               href="/login"
               className="text-sm transition-opacity hover:opacity-80"
-              style={{ color: 'rgba(255,255,255,0.45)' }}
+              style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}
             >
               ← Volver al login
             </a>

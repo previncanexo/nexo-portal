@@ -4,13 +4,6 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { initiatePayment } from './actions'
 
-const CARD_STYLE = {
-  background: 'rgba(134,96,239,0.55)',
-  border: '1px solid rgba(255,255,255,0.18)',
-  backdropFilter: 'blur(32px)',
-  WebkitBackdropFilter: 'blur(32px)',
-} as const
-
 interface FormData {
   nombre: string
   apellido: string
@@ -59,8 +52,8 @@ function InputField({
     <div>
       <label
         htmlFor={id}
-        className="block text-xs font-semibold mb-1.5 uppercase tracking-wide"
-        style={{ color: 'rgba(255,255,255,0.5)' }}
+        className="block text-sm font-medium mb-1.5"
+        style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}
       >
         {label}
         {required && <span style={{ color: 'var(--pink)', marginLeft: 2 }}>*</span>}
@@ -75,18 +68,18 @@ function InputField({
         className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all"
         style={{
           background: 'rgba(255,255,255,0.07)',
-          border: '1px solid rgba(255,255,255,0.12)',
+          border: '1px solid rgba(255,255,255,0.15)',
           fontFamily: 'var(--font-dm-sans)',
-          fontSize: '0.9rem',
+          fontSize: '0.95rem',
           colorScheme: 'dark',
           color: 'white',
         }}
         onFocus={(e) => {
-          e.target.style.border = '1px solid rgba(134,96,239,0.7)'
-          e.target.style.background = 'rgba(255,255,255,0.1)'
+          e.target.style.border = '1px solid rgba(134,96,239,0.70)'
+          e.target.style.background = 'rgba(255,255,255,0.10)'
         }}
         onBlur={(e) => {
-          e.target.style.border = '1px solid rgba(255,255,255,0.12)'
+          e.target.style.border = '1px solid rgba(255,255,255,0.15)'
           e.target.style.background = 'rgba(255,255,255,0.07)'
         }}
       />
@@ -96,14 +89,14 @@ function InputField({
 
 function Logo() {
   return (
-    <div className="text-center mb-8">
+    <div className="text-center mb-10">
       <a href="/login" className="inline-block">
         <Image
           src="/logo.png"
           alt="Nexo by Previnca"
-          width={120}
-          height={48}
-          style={{ objectFit: 'contain', height: '72px', width: 'auto' }}
+          width={220}
+          height={88}
+          style={{ objectFit: 'contain', height: '88px', width: 'auto' }}
           priority
         />
       </a>
@@ -141,7 +134,7 @@ function Stepper({ step }: { step: number }) {
               </div>
               <span
                 className="text-[10px] font-semibold mt-1 uppercase tracking-wide"
-                style={{ color: active ? 'white' : done ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.3)' }}
+                style={{ color: active ? 'white' : done ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-dm-sans)' }}
               >
                 {label}
               </span>
@@ -173,13 +166,14 @@ function PrimaryButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="w-full py-3 rounded-full font-bold text-sm transition-opacity mt-1 flex items-center justify-center gap-2"
+      className="w-full py-3 rounded-full font-bold text-sm text-white transition-all mt-1 flex items-center justify-center gap-2"
       style={{
-        background: disabled ? 'rgba(255,255,255,0.5)' : 'white',
-        color: disabled ? 'rgba(134,96,239,0.6)' : 'var(--purple)',
+        background: 'linear-gradient(to right, var(--purple), var(--pink))',
+        opacity: disabled ? 0.55 : 1,
         cursor: disabled ? 'not-allowed' : 'pointer',
         fontFamily: 'var(--font-dm-sans)',
         border: 'none',
+        boxShadow: disabled ? 'none' : '0 8px 24px rgba(134,96,239,0.30)',
       }}
     >
       {children}
@@ -193,7 +187,7 @@ function BackButton({ onClick }: { onClick: () => void }) {
       type="button"
       onClick={onClick}
       className="w-full py-3 min-h-[44px] rounded-full text-xs font-semibold mt-2 transition-all"
-      style={{ color: 'rgba(255,255,255,0.45)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+      style={{ color: 'rgba(255,255,255,0.45)', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
     >
       ← Volver
     </button>
@@ -257,20 +251,71 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
   }
 
   return (
-    <div className="min-h-screen flex items-start justify-center px-4 py-12">
+    <div className="min-h-screen flex items-start justify-center px-4 py-12 relative overflow-hidden">
+      {/* Orb purple */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: '-80px',
+          left: '-120px',
+          width: '500px',
+          height: '500px',
+          borderRadius: '50%',
+          background: 'var(--purple)',
+          opacity: 0.06,
+          filter: 'blur(130px)',
+        }}
+      />
+      {/* Orb pink */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          bottom: '-100px',
+          right: '-100px',
+          width: '450px',
+          height: '450px',
+          borderRadius: '50%',
+          background: 'var(--pink)',
+          opacity: 0.05,
+          filter: 'blur(110px)',
+        }}
+      />
+      {/* Grain overlay */}
+      <div
+        className="pointer-events-none fixed inset-0"
+        style={{
+          opacity: 0.15,
+          backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E\")",
+          mixBlendMode: 'overlay',
+        }}
+      />
+
       <div className="w-full max-w-sm relative z-10">
         <Logo />
 
+        {/* Badge + heading above card */}
+        <div className="text-center mb-6">
+          <span
+            className="inline-block px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide text-white mb-4"
+            style={{ background: 'linear-gradient(to right, var(--purple), var(--pink))' }}
+          >
+            Nueva cobertura
+          </span>
+          <h1
+            className="text-2xl sm:text-3xl text-white mb-2"
+            style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
+          >
+            Registrá tu cuenta
+          </h1>
+          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
+            Completá tus datos y elegí tu plan de salud
+          </p>
+        </div>
+
         {/* ── STEP 1: DATOS ──────────────────────────────────────────────────── */}
         {step === 1 && (
-          <div className="rounded-3xl p-6 sm:p-8" style={CARD_STYLE}>
+          <div className="glass-card p-7 sm:p-8">
             <Stepper step={1} />
-            <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-              Tus datos
-            </h2>
-            <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.45)' }}>
-              Completá tu información personal
-            </p>
 
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3">
@@ -284,7 +329,10 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
               <InputField id="fecha_nacimiento" label="Fecha de nacimiento" type="date" value={form.fecha_nacimiento} onChange={setField('fecha_nacimiento')} />
 
               {error && (
-                <div className="text-sm px-4 py-3 rounded-xl" style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5' }}>
+                <div
+                  className="text-sm px-4 py-3 rounded-xl"
+                  style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.30)', color: '#fca5a5', fontFamily: 'var(--font-dm-sans)' }}
+                >
                   {error}
                 </div>
               )}
@@ -301,14 +349,8 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
 
         {/* ── STEP 2: PLAN + PAGAR ───────────────────────────────────────────── */}
         {step === 2 && (
-          <div className="rounded-3xl p-6 sm:p-8" style={CARD_STYLE}>
+          <div className="glass-card p-7 sm:p-8">
             <Stepper step={2} />
-            <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-              Tu plan
-            </h2>
-            <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-              Confirmá lo que estás por contratar
-            </p>
 
             {/* Plan selector — solo si hay más de uno */}
             {plans.length > 1 && (
@@ -320,13 +362,16 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
                     onClick={() => setSelectedPlan(p)}
                     className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-left transition-all"
                     style={{
-                      background: selectedPlan.id === p.id ? 'rgba(134,96,239,0.25)' : 'rgba(255,255,255,0.06)',
-                      border: selectedPlan.id === p.id ? '1.5px solid rgba(134,96,239,0.7)' : '1px solid rgba(255,255,255,0.12)',
+                      background: selectedPlan.id === p.id ? 'rgba(134,96,239,0.15)' : 'rgba(255,255,255,0.06)',
+                      border: selectedPlan.id === p.id ? '1.5px solid rgba(134,96,239,0.60)' : '1px solid rgba(255,255,255,0.12)',
                       cursor: 'pointer',
                     }}
                   >
-                    <span className="text-sm font-semibold text-white">{p.name}</span>
-                    <span className="text-sm font-bold text-white">${p.price.toLocaleString('es-AR')}<span className="text-xs font-normal ml-1" style={{ color: 'rgba(255,255,255,0.5)' }}>/mes</span></span>
+                    <span className="text-sm font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.name}</span>
+                    <span className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                      ${p.price.toLocaleString('es-AR')}
+                      <span className="text-xs font-normal ml-1" style={{ color: 'rgba(255,255,255,0.50)' }}>/mes</span>
+                    </span>
                   </button>
                 ))}
               </div>
@@ -336,12 +381,12 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
             <div className="rounded-2xl p-5 mb-5" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{selectedPlan.name}</p>
-                  <p className="text-base font-bold text-white">Nexo by Previnca</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>{selectedPlan.name}</p>
+                  <p className="text-base font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>Nexo by Previnca</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>por mes</p>
-                  <p className="text-xl font-bold text-white">${selectedPlan.price.toLocaleString('es-AR')}</p>
+                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>por mes</p>
+                  <p className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>${selectedPlan.price.toLocaleString('es-AR')}</p>
                 </div>
               </div>
               <div className="flex flex-col gap-2.5">
@@ -355,7 +400,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>
                     </div>
-                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.75)' }}>{b}</span>
+                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'var(--font-dm-sans)' }}>{b}</span>
                   </div>
                 ))}
               </div>
@@ -368,7 +413,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
               disabled={loading}
               className="w-full py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2.5 transition-all"
               style={{
-                background: loading ? 'rgba(0,158,227,0.5)' : '#009ee3',
+                background: loading ? 'rgba(0,158,227,0.50)' : '#009ee3',
                 color: 'white',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 fontFamily: 'var(--font-dm-sans)',
@@ -392,11 +437,14 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
-              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>Pago seguro · Mercado Pago</span>
+              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>Pago seguro · Mercado Pago</span>
             </div>
 
             {error && (
-              <div className="text-sm px-4 py-3 rounded-xl mt-4" style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5' }}>
+              <div
+                className="text-sm px-4 py-3 rounded-xl mt-4"
+                style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.30)', color: '#fca5a5', fontFamily: 'var(--font-dm-sans)' }}
+              >
                 {error}
               </div>
             )}
@@ -405,9 +453,9 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
           </div>
         )}
 
-        <p className="text-center text-xs mt-5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+        <p className="text-center text-xs mt-5" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>
           ¿Ya tenés cuenta?{' '}
-          <a href="/login" className="underline hover:opacity-80 transition-opacity" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          <a href="/login" className="underline hover:opacity-80 transition-opacity" style={{ color: 'rgba(255,255,255,0.62)' }}>
             Ingresar
           </a>
         </p>

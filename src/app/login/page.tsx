@@ -78,17 +78,46 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-start justify-center px-4 py-12 relative">
-      {/* Subtle dot pattern */}
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/* Orb purple top-left */}
       <div
-        className="fixed inset-0 pointer-events-none"
+        className="absolute pointer-events-none"
         style={{
-          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
+          top: '-80px',
+          left: '-120px',
+          width: '500px',
+          height: '500px',
+          borderRadius: '50%',
+          background: 'var(--purple)',
+          opacity: 0.06,
+          filter: 'blur(130px)',
+        }}
+      />
+      {/* Orb pink bottom-right */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          bottom: '-100px',
+          right: '-100px',
+          width: '450px',
+          height: '450px',
+          borderRadius: '50%',
+          background: 'var(--pink)',
+          opacity: 0.05,
+          filter: 'blur(110px)',
+        }}
+      />
+      {/* Grain overlay */}
+      <div
+        className="pointer-events-none fixed inset-0"
+        style={{
+          opacity: 0.15,
+          backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E\")",
+          mixBlendMode: 'overlay',
         }}
       />
 
-      <div className="w-full max-w-sm relative z-10 pb-4">
+      <div className="w-full max-w-sm relative z-10">
         {/* Logo */}
         <div className="text-center mb-10">
           <Image
@@ -102,14 +131,14 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="rounded-3xl p-6 sm:p-8" style={{ background: 'rgba(134,96,239,0.55)', border: '1px solid rgba(255,255,255,0.18)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)' }}>
+        <div className="glass-card p-7 sm:p-8">
           <h2
-            className="text-xl font-semibold text-white mb-1"
-            style={{ fontFamily: 'var(--font-dm-sans)' }}
+            className="text-2xl text-white mb-1"
+            style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
           >
             Ingresá a tu portal
           </h2>
-          <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.55)' }}>
+          <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>
             Tu salud, siempre cerca
           </p>
 
@@ -118,7 +147,7 @@ export default function LoginPage() {
               <label
                 htmlFor="email"
                 className="block text-sm font-medium mb-1.5"
-                style={{ color: 'rgba(255,255,255,0.7)' }}
+                style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}
               >
                 Email
               </label>
@@ -129,16 +158,17 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="tu@email.com"
-                className="w-full px-4 py-3 rounded-xl text-white placeholder-white/30 outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all"
                 style={{
                   background: 'rgba(255,255,255,0.07)',
                   border: '1px solid rgba(255,255,255,0.15)',
                   fontFamily: 'var(--font-dm-sans)',
                   fontSize: '0.95rem',
+                  color: 'white',
                 }}
                 onFocus={(e) => {
-                  e.target.style.border = '1px solid rgba(134,96,239,0.7)'
-                  e.target.style.background = 'rgba(255,255,255,0.1)'
+                  e.target.style.border = '1px solid rgba(134,96,239,0.70)'
+                  e.target.style.background = 'rgba(255,255,255,0.10)'
                 }}
                 onBlur={(e) => {
                   e.target.style.border = '1px solid rgba(255,255,255,0.15)'
@@ -151,7 +181,7 @@ export default function LoginPage() {
               <label
                 htmlFor="password"
                 className="block text-sm font-medium mb-1.5"
-                style={{ color: 'rgba(255,255,255,0.7)' }}
+                style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}
               >
                 Contraseña
               </label>
@@ -162,16 +192,17 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
-                className="w-full px-4 py-3 rounded-xl text-white placeholder-white/30 outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all"
                 style={{
                   background: 'rgba(255,255,255,0.07)',
                   border: '1px solid rgba(255,255,255,0.15)',
                   fontFamily: 'var(--font-dm-sans)',
                   fontSize: '0.95rem',
+                  color: 'white',
                 }}
                 onFocus={(e) => {
-                  e.target.style.border = '1px solid rgba(134,96,239,0.7)'
-                  e.target.style.background = 'rgba(255,255,255,0.1)'
+                  e.target.style.border = '1px solid rgba(134,96,239,0.70)'
+                  e.target.style.background = 'rgba(255,255,255,0.10)'
                 }}
                 onBlur={(e) => {
                   e.target.style.border = '1px solid rgba(255,255,255,0.15)'
@@ -184,9 +215,10 @@ export default function LoginPage() {
               <div
                 className="text-sm px-4 py-3 rounded-xl"
                 style={{
-                  background: 'rgba(239,68,68,0.15)',
-                  border: '1px solid rgba(239,68,68,0.3)',
+                  background: 'rgba(239,68,68,0.12)',
+                  border: '1px solid rgba(239,68,68,0.30)',
                   color: '#fca5a5',
+                  fontFamily: 'var(--font-dm-sans)',
                 }}
               >
                 {error}
@@ -196,12 +228,13 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-full font-semibold text-sm transition-opacity mt-2"
+              className="w-full py-3 rounded-full font-bold text-sm text-white transition-all mt-2"
               style={{
-                background: loading ? 'rgba(255,255,255,0.5)' : 'white',
-                color: loading ? 'rgba(134,96,239,0.6)' : 'var(--purple)',
+                background: 'linear-gradient(to right, var(--purple), var(--pink))',
+                opacity: loading ? 0.55 : 1,
                 cursor: loading ? 'not-allowed' : 'pointer',
                 fontFamily: 'var(--font-dm-sans)',
+                boxShadow: loading ? 'none' : '0 8px 24px rgba(134,96,239,0.30)',
               }}
             >
               {loading ? 'Ingresando...' : 'Ingresar'}
@@ -212,7 +245,7 @@ export default function LoginPage() {
             <a
               href="/forgot-password"
               className="text-sm transition-opacity hover:opacity-80"
-              style={{ color: 'rgba(255,255,255,0.45)' }}
+              style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}
             >
               ¿Olvidaste tu contraseña?
             </a>
@@ -220,12 +253,12 @@ export default function LoginPage() {
         </div>
 
         {/* Services strip */}
-        <div className="mt-5 flex items-center justify-center gap-3 flex-wrap px-2">
+        <div className="mt-5 flex items-center justify-center gap-4 flex-wrap px-2">
           {LOGIN_SERVICES.map((s) => (
             <div
               key={s.label}
               className="flex items-center gap-1.5"
-              style={{ color: 'rgba(255,255,255,0.4)' }}
+              style={{ color: 'rgba(255,255,255,0.40)' }}
             >
               {s.icon}
               <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-dm-sans)', letterSpacing: '0.02em' }}>
@@ -235,12 +268,12 @@ export default function LoginPage() {
           ))}
         </div>
 
-        <p className="text-center text-xs mt-5" style={{ color: 'rgba(255,255,255,0.3)' }}>
+        <p className="text-center text-xs mt-5" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>
           ¿No tenés cuenta?{' '}
           <a
             href="/registro"
             className="underline hover:opacity-80 transition-opacity"
-            style={{ color: 'rgba(255,255,255,0.5)' }}
+            style={{ color: 'rgba(255,255,255,0.62)' }}
           >
             Registrarse
           </a>
