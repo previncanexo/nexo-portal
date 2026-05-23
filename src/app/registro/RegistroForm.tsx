@@ -26,8 +26,8 @@ const initialForm: FormData = {
 
 const PLAN_BENEFITS = [
   { label: 'Teleconsultas médicas ilimitadas · DOC24', icon: '🩺' },
-  { label: 'Urgencias médicas 24/7', icon: '🚑' },
   { label: 'Descuentos hasta 50% en farmacias', icon: '💊' },
+  { label: 'Urgencias médicas 24/7', icon: '🚑' },
   { label: 'Guardias odontológicas de urgencia', icon: '🦷' },
 ]
 
