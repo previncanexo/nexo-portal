@@ -25,10 +25,10 @@ const initialForm: FormData = {
 }
 
 const PLAN_BENEFITS = [
-  'Teleconsultas médicas ilimitadas · DOC24',
-  'Urgencias médicas 24/7',
-  'Descuentos hasta 50% en farmacias',
-  'Guardias odontológicas de urgencia',
+  { label: 'Teleconsultas médicas ilimitadas · DOC24', icon: '🩺' },
+  { label: 'Urgencias médicas 24/7', icon: '🚑' },
+  { label: 'Descuentos hasta 50% en farmacias', icon: '💊' },
+  { label: 'Guardias odontológicas de urgencia', icon: '🦷' },
 ]
 
 const fieldBase: React.CSSProperties = {
@@ -101,7 +101,6 @@ function DateField({
   onChange: (val: string) => void
   required?: boolean
 }) {
-  // value is YYYY-MM-DD; display is DD/MM/AAAA
   const isoToDisplay = (iso: string) => {
     if (!iso) return ''
     const [y, m, d] = iso.split('-')
@@ -144,7 +143,6 @@ function DateField({
         {required && <span style={{ color: 'var(--pink)', marginLeft: 2 }}>*</span>}
       </label>
       <div className="relative">
-        {/* Text input — always editable */}
         <input
           id={id}
           type="text"
@@ -164,7 +162,6 @@ function DateField({
             e.target.style.background = 'rgba(255,255,255,0.07)'
           }}
         />
-        {/* Calendar icon — native date picker sits invisibly on top of it */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.40)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pointer-events-none">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -183,23 +180,6 @@ function DateField({
           />
         </div>
       </div>
-    </div>
-  )
-}
-
-function Logo() {
-  return (
-    <div className="text-center mb-10">
-      <a href="/login" className="inline-block">
-        <Image
-          src="/logo.png"
-          alt="Nexo by Previnca"
-          width={220}
-          height={88}
-          style={{ objectFit: 'contain', height: '88px', width: 'auto' }}
-          priority
-        />
-      </a>
     </div>
   )
 }
@@ -352,193 +332,320 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
 
   return (
     <div
-      className="min-h-screen flex items-start justify-center px-4 py-12 relative overflow-hidden"
-      style={{ backgroundImage: 'url(/registro-bg.webp)', backgroundSize: 'cover', backgroundPosition: 'center' }}
+      className="min-h-screen lg:grid lg:grid-cols-[1fr_1fr] relative overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #12053d 0%, #2d1266 40%, #6535cc 100%)' }}
     >
-      {/* Overlay oscuro */}
+      {/* ── PANEL IZQUIERDO — branding (solo desktop) ── */}
       <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: 'linear-gradient(135deg, rgba(10,3,40,0.60) 0%, rgba(18,5,61,0.42) 50%, rgba(45,18,102,0.52) 100%)' }}
-      />
-      {/* Grain overlay */}
-      <div
-        className="pointer-events-none absolute inset-0"
+        className="hidden lg:flex flex-col justify-between relative overflow-hidden"
         style={{
-          opacity: 0.18,
-          backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E\")",
-          mixBlendMode: 'overlay',
+          backgroundImage: 'url(/registro-bg.webp)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
         }}
-      />
+      >
+        {/* Overlay */}
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(160deg, rgba(10,3,40,0.72) 0%, rgba(45,18,102,0.58) 50%, rgba(101,53,204,0.45) 100%)' }}
+        />
 
-      <div className="w-full max-w-sm relative z-10">
-        <Logo />
+        {/* Grain */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            opacity: 0.15,
+            backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+            mixBlendMode: 'overlay',
+          }}
+        />
 
-        {/* Badge + heading above card */}
-        <div className="text-center mb-6">
-          <span
-            className="inline-block px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide text-white mb-4"
-            style={{ background: 'linear-gradient(to right, var(--purple), var(--pink))' }}
+        {/* Decorative arcs */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 600 900" fill="none">
+          <ellipse cx="500" cy="450" rx="400" ry="500" stroke="rgba(255,255,255,0.04)" strokeWidth="80"/>
+          <ellipse cx="80" cy="820" rx="200" ry="180" stroke="rgba(201,79,181,0.07)" strokeWidth="50"/>
+        </svg>
+
+        <div className="relative z-10 flex flex-col h-full p-10 xl:p-14">
+          {/* Logo */}
+          <div>
+            <a href="/" className="inline-block">
+              <Image
+                src="/logo.png"
+                alt="Nexo by Previnca"
+                width={180}
+                height={72}
+                style={{ objectFit: 'contain', height: '64px', width: 'auto' }}
+                priority
+              />
+            </a>
+          </div>
+
+          {/* Headline */}
+          <div className="flex-1 flex flex-col justify-center">
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 w-fit"
+              style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)' }}
+            >
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--pink)', animation: 'pulse-dot 2s ease-in-out infinite' }} />
+              <span className="text-xs font-bold tracking-[0.18em] uppercase text-white/70">Nueva cobertura</span>
+            </div>
+
+            <h1
+              className="text-white leading-[1.06] tracking-[-1.5px] mb-8"
+              style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic', fontSize: 'clamp(40px, 4.5vw, 64px)' }}
+            >
+              Tu salud,<br />
+              digitalmente<br />
+              simple
+            </h1>
+
+            <p className="text-base mb-10" style={{ color: 'rgba(255,255,255,0.60)', fontFamily: 'var(--font-dm-sans)', lineHeight: 1.65, maxWidth: '340px' }}>
+              Cobertura médica completa en minutos, sin papeles ni trámites presenciales.
+            </p>
+
+            {/* Benefits */}
+            <div className="flex flex-col gap-3.5">
+              {PLAN_BENEFITS.map((b) => (
+                <div key={b.label} className="flex items-center gap-3">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', boxShadow: '0 4px 12px rgba(134,96,239,0.25)' }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.78)', fontFamily: 'var(--font-dm-sans)' }}>{b.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Price footer */}
+          <div
+            className="rounded-2xl p-5 mt-8"
+            style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', backdropFilter: 'blur(20px)' }}
           >
-            Nueva cobertura
-          </span>
-          <h1
-            className="text-2xl sm:text-3xl text-white mb-2"
-            style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
-          >
-            Registrá tu cuenta
-          </h1>
-          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
-            Completá tus datos y elegí tu plan de salud
-          </p>
-        </div>
-
-        {/* ── STEP 1: DATOS ──────────────────────────────────────────────────── */}
-        {step === 1 && (
-          <div className="p-7 sm:p-8 rounded-3xl" style={{ background: 'rgba(18,5,61,0.55)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', border: '1px solid rgba(255,255,255,0.14)', boxShadow: '0 8px 40px rgba(0,0,0,0.30)' }}>
-            <Stepper step={1} />
-
-            <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-3">
-                <InputField id="nombre" label="Nombre" value={form.nombre} onChange={setField('nombre')} placeholder="Juan" required />
-                <InputField id="apellido" label="Apellido" value={form.apellido} onChange={setField('apellido')} placeholder="García" required />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>Plan Base · Mensual</p>
+                <p className="text-white font-bold text-lg" style={{ fontFamily: 'var(--font-dm-sans)' }}>Nexo by Previnca</p>
               </div>
-              <InputField id="dni" label="DNI" value={form.dni} onChange={setField('dni')} placeholder="12345678" required />
-              <InputField id="email" label="Email" type="email" value={form.email} onChange={setField('email')} placeholder="tu@email.com" required />
-              <InputField id="whatsapp" label="WhatsApp" type="tel" value={form.whatsapp} onChange={setField('whatsapp')} placeholder="+54 9 11 1234-5678" />
-              <InputField id="ciudad" label="Ciudad" value={form.ciudad} onChange={setField('ciudad')} placeholder="Buenos Aires" />
-              <DateField id="fecha_nacimiento" label="Fecha de nacimiento" value={form.fecha_nacimiento} onChange={setField('fecha_nacimiento')} />
+              <div className="text-right">
+                <p className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>por mes</p>
+                <p
+                  className="font-bold leading-none"
+                  style={{ fontFamily: "'DM Serif Display', serif", fontSize: 'clamp(28px, 3vw, 40px)', background: 'linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.75) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                >
+                  $19.500
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── PANEL DERECHO — form ── */}
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-5 py-12 relative"
+        style={{ background: 'rgba(8,2,28,0.60)', backdropFilter: 'blur(0px)' }}
+      >
+        {/* Grain */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            opacity: 0.16,
+            backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+            mixBlendMode: 'overlay',
+          }}
+        />
+
+        <div className="w-full max-w-sm relative z-10">
+          {/* Logo — solo mobile */}
+          <div className="text-center mb-8 lg:hidden">
+            <a href="/login" className="inline-block">
+              <Image
+                src="/logo.png"
+                alt="Nexo by Previnca"
+                width={200}
+                height={80}
+                style={{ objectFit: 'contain', height: '80px', width: 'auto' }}
+                priority
+              />
+            </a>
+          </div>
+
+          {/* Heading */}
+          <div className="mb-6 lg:mb-8">
+            <span
+              className="inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide text-white mb-4"
+              style={{ background: 'linear-gradient(to right, var(--purple), var(--pink))' }}
+            >
+              Nueva cobertura
+            </span>
+            <h2
+              className="text-2xl sm:text-3xl text-white mb-2"
+              style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
+            >
+              {step === 1 ? 'Tus datos' : 'Resumen del plan'}
+            </h2>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>
+              {step === 1 ? 'Completá la información para crear tu cuenta' : 'Revisá tu plan antes de pagar'}
+            </p>
+          </div>
+
+          {/* ── STEP 1: DATOS ── */}
+          {step === 1 && (
+            <div
+              className="p-6 sm:p-7 rounded-3xl"
+              style={{ background: 'rgba(18,5,61,0.55)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', border: '1px solid rgba(255,255,255,0.14)', boxShadow: '0 8px 40px rgba(0,0,0,0.30)' }}
+            >
+              <Stepper step={1} />
+
+              <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <InputField id="nombre" label="Nombre" value={form.nombre} onChange={setField('nombre')} placeholder="Juan" required />
+                  <InputField id="apellido" label="Apellido" value={form.apellido} onChange={setField('apellido')} placeholder="García" required />
+                </div>
+                <InputField id="dni" label="DNI" value={form.dni} onChange={setField('dni')} placeholder="12345678" required />
+                <InputField id="email" label="Email" type="email" value={form.email} onChange={setField('email')} placeholder="tu@email.com" required />
+                <InputField id="whatsapp" label="WhatsApp" type="tel" value={form.whatsapp} onChange={setField('whatsapp')} placeholder="+54 9 11 1234-5678" />
+                <InputField id="ciudad" label="Ciudad" value={form.ciudad} onChange={setField('ciudad')} placeholder="Buenos Aires" />
+                <DateField id="fecha_nacimiento" label="Fecha de nacimiento" value={form.fecha_nacimiento} onChange={setField('fecha_nacimiento')} />
+
+                {error && (
+                  <div
+                    className="text-sm px-4 py-3 rounded-xl"
+                    style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.30)', color: '#fca5a5', fontFamily: 'var(--font-dm-sans)' }}
+                  >
+                    {error}
+                  </div>
+                )}
+
+                <PrimaryButton onClick={handleNext}>
+                  Ver resumen del plan
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                  </svg>
+                </PrimaryButton>
+              </div>
+            </div>
+          )}
+
+          {/* ── STEP 2: PLAN + PAGAR ── */}
+          {step === 2 && (
+            <div
+              className="p-6 sm:p-7 rounded-3xl"
+              style={{ background: 'rgba(18,5,61,0.55)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', border: '1px solid rgba(255,255,255,0.14)', boxShadow: '0 8px 40px rgba(0,0,0,0.30)' }}
+            >
+              <Stepper step={2} />
+
+              {plans.length > 1 && (
+                <div className="flex flex-col gap-2 mb-4">
+                  {plans.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setSelectedPlan(p)}
+                      className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-left transition-all"
+                      style={{
+                        background: selectedPlan.id === p.id ? 'rgba(134,96,239,0.15)' : 'rgba(255,255,255,0.06)',
+                        border: selectedPlan.id === p.id ? '1.5px solid rgba(134,96,239,0.60)' : '1px solid rgba(255,255,255,0.12)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <span className="text-sm font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.name}</span>
+                      <span className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                        ${p.price.toLocaleString('es-AR')}
+                        <span className="text-xs font-normal ml-1" style={{ color: 'rgba(255,255,255,0.50)' }}>/mes</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="rounded-2xl p-5 mb-5" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>{selectedPlan.name}</p>
+                    <p className="text-base font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>Nexo by Previnca</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>por mes</p>
+                    <p className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>${selectedPlan.price.toLocaleString('es-AR')}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2.5">
+                  {PLAN_BENEFITS.map((b) => (
+                    <div key={b.label} className="flex items-center gap-2.5">
+                      <div
+                        className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))' }}
+                      >
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </div>
+                      <span className="text-xs" style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'var(--font-dm-sans)' }}>{b.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handlePagar}
+                disabled={loading}
+                className="w-full py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2.5 transition-all"
+                style={{
+                  background: loading ? 'rgba(0,158,227,0.50)' : '#009ee3',
+                  color: 'white',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontFamily: 'var(--font-dm-sans)',
+                  border: 'none',
+                  boxShadow: loading ? 'none' : '0 4px 16px rgba(0,158,227,0.35)',
+                }}
+              >
+                {loading ? (
+                  'Procesando...'
+                ) : (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                    Pagar con Mercado Pago
+                  </>
+                )}
+              </button>
+
+              <div className="flex items-center justify-center gap-1.5 mt-3">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>Pago seguro · Mercado Pago</span>
+              </div>
 
               {error && (
                 <div
-                  className="text-sm px-4 py-3 rounded-xl"
+                  className="text-sm px-4 py-3 rounded-xl mt-4"
                   style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.30)', color: '#fca5a5', fontFamily: 'var(--font-dm-sans)' }}
                 >
                   {error}
                 </div>
               )}
 
-              <PrimaryButton onClick={handleNext}>
-                Ver resumen del plan
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-                </svg>
-              </PrimaryButton>
+              <BackButton onClick={() => setStep(1)} />
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ── STEP 2: PLAN + PAGAR ───────────────────────────────────────────── */}
-        {step === 2 && (
-          <div className="p-7 sm:p-8 rounded-3xl" style={{ background: 'rgba(18,5,61,0.55)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', border: '1px solid rgba(255,255,255,0.14)', boxShadow: '0 8px 40px rgba(0,0,0,0.30)' }}>
-            <Stepper step={2} />
-
-            {/* Plan selector — solo si hay más de uno */}
-            {plans.length > 1 && (
-              <div className="flex flex-col gap-2 mb-4">
-                {plans.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setSelectedPlan(p)}
-                    className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-left transition-all"
-                    style={{
-                      background: selectedPlan.id === p.id ? 'rgba(134,96,239,0.15)' : 'rgba(255,255,255,0.06)',
-                      border: selectedPlan.id === p.id ? '1.5px solid rgba(134,96,239,0.60)' : '1px solid rgba(255,255,255,0.12)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <span className="text-sm font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.name}</span>
-                    <span className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-                      ${p.price.toLocaleString('es-AR')}
-                      <span className="text-xs font-normal ml-1" style={{ color: 'rgba(255,255,255,0.50)' }}>/mes</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Plan card */}
-            <div className="rounded-2xl p-5 mb-5" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>{selectedPlan.name}</p>
-                  <p className="text-base font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>Nexo by Previnca</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>por mes</p>
-                  <p className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>${selectedPlan.price.toLocaleString('es-AR')}</p>
-                </div>
-              </div>
-              <div className="flex flex-col gap-2.5">
-                {PLAN_BENEFITS.map((b) => (
-                  <div key={b} className="flex items-center gap-2.5">
-                    <div
-                      className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))' }}
-                    >
-                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12"/>
-                      </svg>
-                    </div>
-                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'var(--font-dm-sans)' }}>{b}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Mercado Pago button */}
-            <button
-              type="button"
-              onClick={handlePagar}
-              disabled={loading}
-              className="w-full py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2.5 transition-all"
-              style={{
-                background: loading ? 'rgba(0,158,227,0.50)' : '#009ee3',
-                color: 'white',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontFamily: 'var(--font-dm-sans)',
-                border: 'none',
-                boxShadow: loading ? 'none' : '0 4px 16px rgba(0,158,227,0.35)',
-              }}
-            >
-              {loading ? (
-                'Procesando...'
-              ) : (
-                <>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
-                  </svg>
-                  Pagar con Mercado Pago
-                </>
-              )}
-            </button>
-
-            <div className="flex items-center justify-center gap-1.5 mt-3">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>Pago seguro · Mercado Pago</span>
-            </div>
-
-            {error && (
-              <div
-                className="text-sm px-4 py-3 rounded-xl mt-4"
-                style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.30)', color: '#fca5a5', fontFamily: 'var(--font-dm-sans)' }}
-              >
-                {error}
-              </div>
-            )}
-
-            <BackButton onClick={() => setStep(1)} />
-          </div>
-        )}
-
-        <p className="text-center text-xs mt-5" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>
-          ¿Ya tenés cuenta?{' '}
-          <a href="/login" className="underline hover:opacity-80 transition-opacity" style={{ color: 'rgba(255,255,255,0.62)' }}>
-            Ingresar
-          </a>
-        </p>
+          <p className="text-center text-xs mt-5" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>
+            ¿Ya tenés cuenta?{' '}
+            <a href="/login" className="underline hover:opacity-80 transition-opacity" style={{ color: 'rgba(255,255,255,0.62)' }}>
+              Ingresar
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   )
