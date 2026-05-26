@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, PreApproval, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendActivationEmail } from '@/lib/emails'
+import { sendActivationEmail, sendInternalNewMemberEmail } from '@/lib/emails'
 
 function verifyMpSignature(
   xSignature: string,
@@ -86,11 +86,21 @@ export async function POST(req: NextRequest) {
             })
             .eq('id', preApproval.external_reference)
 
+          const resolvedPlan = Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan
+
           await sendActivationEmail({
             nombre: affiliate.nombre,
             email: affiliate.email,
             affiliate_number: affiliate.affiliate_number,
-            plan: Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan,
+            plan: resolvedPlan,
+          })
+
+          await sendInternalNewMemberEmail({
+            id: preApproval.external_reference,
+            nombre: affiliate.nombre,
+            email: affiliate.email,
+            affiliate_number: affiliate.affiliate_number,
+            plan: resolvedPlan,
           })
         }
       }

@@ -196,6 +196,93 @@ export async function sendResubscribeEmail(nombre: string, email: string, checko
   }).catch((err) => console.error('[resubscribe-email]', err))
 }
 
+function internalNewMemberEmailHtml(
+  nombre: string,
+  email: string,
+  affiliateNumber: string,
+  planName: string | null,
+  affiliateId: string,
+  appUrl: string,
+): string {
+  const now = new Date(Date.now() - 3 * 60 * 60 * 1000)
+  const dateStr = now.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
+  const timeStr = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+<tr><td align="center">
+<table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+<tr><td style="height:6px;background:linear-gradient(90deg,#8660EF,#E879A0);"></td></tr>
+<tr><td style="padding:32px 36px 0;">
+  <p style="margin:0 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#8660EF;">Nueva alta confirmada</p>
+  <h1 style="margin:0 0 20px;font-size:22px;color:#111827;">Un nuevo afiliado se sumó a Nexo</h1>
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-bottom:24px;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding-bottom:14px;">
+          <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Afiliado</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#111827;">${nombre}</p>
+          <p style="margin:2px 0 0;font-size:13px;color:#6b7280;">${email}</p>
+        </td>
+      </tr>
+      <tr><td style="border-top:1px solid #e5e7eb;padding-top:14px;padding-bottom:14px;">
+        <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">N° de afiliado</p>
+        <p style="margin:0;font-size:18px;font-weight:700;color:#8660EF;font-family:monospace;">${affiliateNumber}</p>
+      </td></tr>
+      ${planName ? `<tr><td style="border-top:1px solid #e5e7eb;padding-top:14px;padding-bottom:14px;">
+        <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Plan</p>
+        <p style="margin:0;font-size:14px;font-weight:600;color:#374151;">${planName}</p>
+      </td></tr>` : ''}
+      <tr><td style="border-top:1px solid #e5e7eb;padding-top:14px;">
+        <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Fecha y hora de alta</p>
+        <p style="margin:0;font-size:14px;font-weight:600;color:#374151;">${dateStr} · ${timeStr} hs (ARG)</p>
+      </td></tr>
+    </table>
+  </div>
+  <a href="${appUrl}/admin/afiliados/${affiliateId}" style="display:inline-block;background:#8660EF;color:#ffffff;padding:12px 24px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Ver en el admin →</a>
+</td></tr>
+<tr><td style="padding:24px 36px 32px;">
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Este mail es solo para uso interno. · Nexo by Previnca · Generado automáticamente.</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`
+}
+
+export async function sendInternalNewMemberEmail(affiliate: {
+  id: string
+  nombre: string
+  email: string
+  affiliate_number: string
+  plan?: { name: string } | null
+}): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const planName = Array.isArray(affiliate.plan)
+    ? (affiliate.plan[0]?.name ?? null)
+    : (affiliate.plan?.name ?? null)
+
+  await resend.emails.send({
+    from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+    to: ['lgurini@previncasalud.com.ar', 'krodriguez@previncasalud.com.ar'],
+    cc: ['sistemas@previncasalud.com.ar'],
+    subject: `Nueva alta — ${affiliate.nombre} se suscribió a Nexo`,
+    html: internalNewMemberEmailHtml(
+      affiliate.nombre,
+      affiliate.email,
+      affiliate.affiliate_number,
+      planName,
+      affiliate.id,
+      appUrl,
+    ),
+  }).catch((err) => console.error('[internal-new-member-email]', err))
+}
+
 export async function sendActivationEmail(affiliate: {
   nombre: string
   email: string
