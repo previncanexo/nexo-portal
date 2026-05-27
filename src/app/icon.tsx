@@ -12,13 +12,13 @@ export default function Icon() {
           width: '32px',
           height: '32px',
           borderRadius: '7px',
-          background: 'linear-gradient(135deg, #12053d 0%, #6535cc 65%, #c94fb5 100%)',
+          background: 'linear-gradient(135deg, #8660EF 0%, #E879A0 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <span style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontStyle: 'italic', color: 'white', lineHeight: 1 }}>
+        <span style={{ fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '22px', fontWeight: 800, color: 'white', lineHeight: 1 }}>
           N
         </span>
       </div>
