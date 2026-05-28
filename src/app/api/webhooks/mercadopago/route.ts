@@ -77,11 +77,14 @@ export async function POST(req: NextRequest) {
           .single()
 
         if (affiliate && affiliate.status === 'pending') {
+          const today = new Date().toISOString().split('T')[0]
           await supabase
             .from('affiliates')
             .update({
               status: 'active',
               mp_subscription_id: body.data.id,
+              cobertura_desde: today,
+              cobertura_hasta: addOneMonth(today),
               updated_at: new Date().toISOString(),
             })
             .eq('id', preApproval.external_reference)
@@ -165,12 +168,14 @@ export async function POST(req: NextRequest) {
 
             // Activate pending affiliate when first payment is approved
             if (affiliateData?.status === 'pending') {
+              const today = new Date().toISOString().split('T')[0]
               await supabase
                 .from('affiliates')
                 .update({
                   status: 'active',
                   mp_subscription_id: String((payment as any).subscription_id),
-                  cobertura_hasta: addOneMonth(null),
+                  cobertura_desde: today,
+                  cobertura_hasta: addOneMonth(today),
                   updated_at: new Date().toISOString(),
                 })
                 .eq('id', preApproval.external_reference)
