@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Affiliate, AffiliateStatus, Payment, Plan } from '@/lib/types'
 import StatusForm from './StatusForm'
+
+export const dynamic = 'force-dynamic'
 import PaymentForm from './PaymentForm'
 import EditAfiliadoForm from './EditAfiliadoForm'
 import NotesForm from './NotesForm'

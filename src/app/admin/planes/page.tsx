@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import type { Plan } from '@/lib/types'
 import PlansClient from './PlansClient'
 
+export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Planes · Admin Nexo' }
 
 export default async function PlanesPage() {

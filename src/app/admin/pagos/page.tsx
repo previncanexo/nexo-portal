@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import PagosClient from './PagosClient'
 
+export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Pagos · Admin Nexo' }
 
 export default async function PagosPage() {

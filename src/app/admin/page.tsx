@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 import PendingApprovalSection from './PendingApprovalSection'
 
+export const dynamic = 'force-dynamic'
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface MonthBucket {

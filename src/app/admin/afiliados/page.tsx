@@ -2,6 +2,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import type { Affiliate, Plan } from '@/lib/types'
 import AfiliadosClient from './AfiliadosClient'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AfiliadosPage() {
   const supabase = createAdminClient()
 
