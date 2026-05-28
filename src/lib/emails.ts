@@ -14,8 +14,9 @@ function activationEmailHtml(
 <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
 <tr><td style="height:6px;background:linear-gradient(90deg,#8660EF,#E879A0);"></td></tr>
 <tr><td style="padding:36px 36px 0;">
-  <h1 style="margin:0 0 8px;font-size:24px;color:#8660EF;">¡Tu cuenta fue aprobada!</h1>
-  <p style="margin:0 0 24px;color:#374151;font-size:15px;">Hola <strong>${nombre}</strong>, tu cuenta de Nexo fue revisada y activada. Ya podés acceder al portal con tus credenciales.</p>
+  <h1 style="margin:0 0 16px;font-size:24px;color:#8660EF;">¡Bienvenido/a a Previnca Nexo!</h1>
+  <p style="margin:0 0 12px;color:#374151;font-size:15px;">Hola <strong>${nombre}</strong>, gracias por sumarte a una nueva manera de acceder a servicios de salud y bienestar de forma simple, flexible y digital.</p>
+  <p style="margin:0 0 24px;color:#374151;font-size:15px;">Junto a este mensaje recibís tu credencial digital para comenzar a disfrutar de nuestros servicios.</p>
   <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-bottom:24px;">
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr><td style="padding-bottom:12px;">
@@ -28,11 +29,14 @@ function activationEmailHtml(
       </td></tr>` : ''}
     </table>
   </div>
-  <p style="margin:0 0 24px;font-size:13px;color:#6b7280;">Usá el email y la contraseña que te enviamos al momento del registro. Si no la recordás, podés restablecerla desde el portal.</p>
-  <a href="${appUrl}/login" style="display:inline-block;background:#8660EF;color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Ingresar al Portal →</a>
+  <p style="margin:0 0 12px;font-size:14px;color:#6b7280;">Dentro de las próximas <strong style="color:#374151;">24 hs hábiles</strong> quedará habilitado el servicio de <strong style="color:#374151;">DOC 24</strong>, para que puedas acceder a teleconsultas médicas cuando lo necesites.</p>
+  <p style="margin:0 0 24px;font-size:14px;color:#6b7280;">Recordá que estamos a disposición para acompañarte y responder cualquier consulta que tengas.</p>
+  <a href="${appUrl}/login" style="display:inline-block;background:linear-gradient(135deg,#8660EF,#E879A0);color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Acceder al portal →</a>
 </td></tr>
 <tr><td style="padding:24px 36px 36px;">
-  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Nexo by Previnca · Este correo fue generado automáticamente.</p>
+  <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#374151;">¡Gracias por elegirnos!</p>
+  <p style="margin:0 0 0;font-size:13px;color:#6b7280;">Equipo Previnca Nexo</p>
+  <p style="margin:20px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Este correo fue generado automáticamente · Previnca Nexo</p>
 </td></tr>
 </table>
 </td></tr>
@@ -297,7 +301,7 @@ export async function sendActivationEmail(affiliate: {
   await resend.emails.send({
     from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
     to: affiliate.email,
-    subject: '¡Tu cuenta Nexo fue aprobada!',
+    subject: '¡Bienvenido/a a Previnca Nexo!',
     html: activationEmailHtml(affiliate.nombre, affiliate.affiliate_number, affiliate.plan?.name ?? null, appUrl),
   }).catch((err) => {
     console.error('[activation-email] Resend error:', err)
