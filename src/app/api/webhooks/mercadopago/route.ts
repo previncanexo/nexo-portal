@@ -153,20 +153,57 @@ export async function POST(req: NextRequest) {
               updated_at: new Date().toISOString(),
             })
 
-            // Extend cobertura_hasta by 1 month on each successful monthly payment
             const { data: affiliateData } = await supabase
               .from('affiliates')
-              .select('cobertura_hasta')
+              .select('status, nombre, apellido, dni, email, affiliate_number, plan:plans(name), cobertura_hasta')
               .eq('id', preApproval.external_reference)
               .single()
 
-            await supabase
-              .from('affiliates')
-              .update({
-                cobertura_hasta: addOneMonth(affiliateData?.cobertura_hasta ?? null),
-                updated_at: new Date().toISOString(),
+            // Activate pending affiliate when first payment is approved
+            if (affiliateData?.status === 'pending') {
+              await supabase
+                .from('affiliates')
+                .update({
+                  status: 'active',
+                  mp_subscription_id: String((payment as any).subscription_id),
+                  cobertura_hasta: addOneMonth(null),
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', preApproval.external_reference)
+
+              const resolvedPlan = Array.isArray(affiliateData.plan)
+                ? (affiliateData.plan[0] ?? null)
+                : affiliateData.plan
+              const certNum = parseInt(affiliateData.affiliate_number ?? '0', 10)
+              const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
+
+              await sendActivationEmail({
+                nombre: affiliateData.nombre,
+                email: affiliateData.email,
+                affiliate_number: affiliateData.affiliate_number,
+                plan: resolvedPlan,
               })
-              .eq('id', preApproval.external_reference)
+
+              await sendInternalNewMemberEmail({
+                id: preApproval.external_reference,
+                nombre: affiliateData.nombre,
+                apellido: affiliateData.apellido,
+                dni: affiliateData.dni,
+                email: affiliateData.email,
+                affiliate_number: affiliateData.affiliate_number,
+                farmacia_number: farmaciaNumber,
+                plan: resolvedPlan,
+              })
+            } else {
+              // Already active — just extend cobertura_hasta
+              await supabase
+                .from('affiliates')
+                .update({
+                  cobertura_hasta: addOneMonth(affiliateData?.cobertura_hasta ?? null),
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', preApproval.external_reference)
+            }
           }
         }
       }
