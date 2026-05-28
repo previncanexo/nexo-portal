@@ -384,13 +384,6 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
 
           {/* Headline */}
           <div className="flex-1 flex flex-col justify-center">
-            <div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 w-fit"
-              style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)' }}
-            >
-              <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--pink)', animation: 'pulse-dot 2s ease-in-out infinite' }} />
-              <span className="text-xs font-bold tracking-[0.18em] uppercase text-white/70">Nueva cobertura</span>
-            </div>
 
             <h1
               className="text-white leading-[1.06] tracking-[-1.5px] mb-8"
@@ -479,12 +472,6 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
 
           {/* Heading */}
           <div className="mb-6 lg:mb-8">
-            <span
-              className="inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide text-white mb-4"
-              style={{ background: 'linear-gradient(to right, var(--purple), var(--pink))' }}
-            >
-              Nueva cobertura
-            </span>
             <h2
               className="text-2xl sm:text-3xl text-white mb-2"
               style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
@@ -555,7 +542,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
                 <InputField id="dni" label="DNI" value={form.dni} onChange={setField('dni')} placeholder="12345678" required />
                 <InputField id="email" label="Email" type="email" value={form.email} onChange={setField('email')} placeholder="tu@email.com" required />
                 <InputField id="whatsapp" label="WhatsApp" type="tel" value={form.whatsapp} onChange={setField('whatsapp')} placeholder="+54 9 11 1234-5678" />
-                <InputField id="ciudad" label="Ciudad" value={form.ciudad} onChange={setField('ciudad')} placeholder="Buenos Aires" />
+                <InputField id="ciudad" label="Ciudad" value={form.ciudad} onChange={setField('ciudad')} placeholder="Rosario" />
                 <DateField id="fecha_nacimiento" label="Fecha de nacimiento" value={form.fecha_nacimiento} onChange={setField('fecha_nacimiento')} />
 
                 {error && (
@@ -568,7 +555,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
                 )}
 
                 <PrimaryButton onClick={handleNext}>
-                  Ver resumen del plan
+                  Siguiente
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
                   </svg>
@@ -606,7 +593,6 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
               <div className="rounded-2xl p-5 mb-5" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>{selectedPlan.name}</p>
                     <p className="text-base font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>Nexo by Previnca</p>
                   </div>
                   <div className="text-right">
