@@ -87,6 +87,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <InstallBanner />
         </div>
 
+        {/* Google Analytics */}
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-FB048EVRQH" strategy="afterInteractive" />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-FB048EVRQH');`}
+        </Script>
+
         {/* Meta Pixel */}
         <Script id="meta-pixel" strategy="afterInteractive">
           {`!function(f,b,e,v,n,t,s)
