@@ -10,7 +10,7 @@ export default async function RegistroPage() {
 
   const planList = (plans ?? []).length > 0
     ? plans!
-    : [{ id: '', name: 'Plan Base', price: 19500 }]
+    : [{ id: '', name: 'Nexo by Previnca', price: 19500 }]
 
   return <RegistroForm plans={planList} />
 }

@@ -49,7 +49,7 @@ export async function retryPayment(): Promise<RetryResult> {
   try {
     const mpResponse = await preApprovalClient.create({
       body: {
-        reason: plan?.name ?? 'Plan Base Nexo',
+        reason: plan?.name ?? 'Nexo by Previnca',
         payer_email: affiliate.email,
         back_url: `${appUrl}/registro/exito`,
         auto_recurring: {

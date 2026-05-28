@@ -169,7 +169,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
 
     const mpResponse = await preApprovalClient.create({
       body: {
-        reason: plan?.name ?? 'Plan Base Nexo',
+        reason: plan?.name ?? 'Nexo by Previnca',
         payer_email: email,
         back_url: `${appUrl}/registro/exito`,
         auto_recurring: {

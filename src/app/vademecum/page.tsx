@@ -81,7 +81,7 @@ export default function VademecumPage() {
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-white mb-5"
             style={{ background: 'linear-gradient(to right, #8660EF, #E879A0)' }}
           >
-            Plan Base · 50% de descuento
+            Nexo by Previnca · 50% de descuento
           </div>
           <h1
             className="text-white mb-3 leading-tight"

@@ -81,7 +81,7 @@ export async function updateAffiliateStatus(
       const preApprovalClient = new PreApproval(mpClient)
       const mpResponse = await preApprovalClient.create({
         body: {
-          reason: plan?.name ?? 'Plan Base Nexo',
+          reason: plan?.name ?? 'Nexo by Previnca',
           payer_email: current.email,
           back_url: `${appUrl}/portal`,
           auto_recurring: {
