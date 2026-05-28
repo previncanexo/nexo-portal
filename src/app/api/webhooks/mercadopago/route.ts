@@ -135,22 +135,26 @@ export async function POST(req: NextRequest) {
         const { count } = await supabase
           .from('payments')
           .select('id', { count: 'exact', head: true })
-          .eq('external_id', String(payment.id))
+          .eq('mp_payment_id', String(payment.id))
 
         if ((count ?? 0) === 0) {
           const preApprovalClient = new PreApproval(mpClient)
           const preApproval = await preApprovalClient.get({ id: (payment as any).subscription_id })
 
           if (preApproval.external_reference) {
+            const today = new Date()
+            const nextMonth = new Date(today)
+            nextMonth.setMonth(nextMonth.getMonth() + 1)
+
             await supabase.from('payments').insert({
               affiliate_id: preApproval.external_reference,
-              amount: payment.transaction_amount ?? 0,
+              mp_payment_id: String(payment.id),
+              mp_status: 'approved',
+              amount: Math.round(payment.transaction_amount ?? 0),
               currency: payment.currency_id ?? 'ARS',
-              status: 'approved',
-              payment_method: payment.payment_type_id ?? null,
-              external_id: String(payment.id),
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
+              paid_at: new Date().toISOString(),
+              period_from: today.toISOString().split('T')[0],
+              period_to: nextMonth.toISOString().split('T')[0],
             })
 
             const { data: affiliateData } = await supabase
