@@ -11,9 +11,12 @@ interface Med {
   m: string
 }
 
+const PAGE_SIZE = 50
+
 export default function VademecumPage() {
   const [meds, setMeds] = useState<Med[]>([])
   const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -22,8 +25,8 @@ export default function VademecumPage() {
       .then((data) => { setMeds(data); setLoading(false) })
   }, [])
 
-  const results = useMemo(() => {
-    if (!query.trim()) return meds.slice(0, 50)
+  const filtered = useMemo(() => {
+    if (!query.trim()) return meds
     const q = query.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
     const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
     return meds.filter(
@@ -32,10 +35,31 @@ export default function VademecumPage() {
         normalize(m.m).includes(q) ||
         normalize(m.c).includes(q) ||
         normalize(m.l).includes(q)
-    ).slice(0, 200)
+    )
   }, [query, meds])
 
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const results = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const isFiltering = query.trim().length > 0
+
+  // Reset to page 1 when query changes
+  useEffect(() => { setPage(1) }, [query])
+
+  const goTo = (p: number) => {
+    setPage(p)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  // Build page range for pagination buttons
+  const pageRange = useMemo(() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
+    const range: (number | '...')[] = [1]
+    if (page > 3) range.push('...')
+    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) range.push(i)
+    if (page < totalPages - 2) range.push('...')
+    range.push(totalPages)
+    return range
+  }, [page, totalPages])
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #12053d 0%, #1e0a5a 40%, #2d1266 100%)' }}>
@@ -71,7 +95,7 @@ export default function VademecumPage() {
         </div>
 
         {/* Search */}
-        <div className="relative mb-6">
+        <div className="relative mb-4">
           <svg
             className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
             width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -107,9 +131,11 @@ export default function VademecumPage() {
 
         {/* Count */}
         <div className="mb-4 text-xs text-white/40 px-1" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-          {loading ? 'Cargando...' : isFiltering
-            ? `${results.length} resultado${results.length !== 1 ? 's' : ''} para "${query}"${results.length === 200 ? ' (mostrando los primeros 200)' : ''}`
-            : `Mostrando 50 de ${meds.length.toLocaleString('es-AR')} medicamentos — usá el buscador para filtrar`
+          {loading
+            ? 'Cargando...'
+            : isFiltering
+              ? `${filtered.length.toLocaleString('es-AR')} resultado${filtered.length !== 1 ? 's' : ''} para "${query}"`
+              : `${meds.length.toLocaleString('es-AR')} medicamentos en total`
           }
         </div>
 
@@ -119,25 +145,25 @@ export default function VademecumPage() {
             <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-purple-400 animate-spin" />
           </div>
         ) : (
-          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-            {/* Table header */}
-            <div
-              className="grid text-xs font-bold uppercase tracking-wider text-white/40 px-5 py-3"
-              style={{ background: 'rgba(255,255,255,0.04)', gridTemplateColumns: '2fr 2fr 1.5fr 1.5fr', fontFamily: 'var(--font-dm-sans)' }}
-            >
-              <span>Nombre</span>
-              <span>Presentación</span>
-              <span>Laboratorio</span>
-              <span>Molécula</span>
-            </div>
-
-            {results.length === 0 ? (
-              <div className="py-16 text-center text-white/40 text-sm" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-                No se encontraron resultados para <strong className="text-white/60">"{query}"</strong>
+          <>
+            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+              {/* Table header */}
+              <div
+                className="grid text-xs font-bold uppercase tracking-wider text-white/40 px-5 py-3"
+                style={{ background: 'rgba(255,255,255,0.04)', gridTemplateColumns: '2fr 2fr 1.5fr 1.5fr', fontFamily: 'var(--font-dm-sans)' }}
+              >
+                <span>Nombre</span>
+                <span>Presentación</span>
+                <span>Laboratorio</span>
+                <span>Molécula</span>
               </div>
-            ) : (
-              <div>
-                {results.map((med, i) => (
+
+              {results.length === 0 ? (
+                <div className="py-16 text-center text-white/40 text-sm" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                  No se encontraron resultados para <strong className="text-white/60">"{query}"</strong>
+                </div>
+              ) : (
+                results.map((med, i) => (
                   <div
                     key={i}
                     className="grid px-5 py-3.5 text-sm transition-colors hover:bg-white/[0.03]"
@@ -152,13 +178,66 @@ export default function VademecumPage() {
                     <span className="text-white/50 truncate pr-3">{med.l}</span>
                     <span className="text-white/50 truncate">{med.m}</span>
                   </div>
-                ))}
+                ))
+              )}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-1.5 mt-8 flex-wrap">
+                <button
+                  onClick={() => goTo(page - 1)}
+                  disabled={page === 1}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10"
+                  style={{ border: '1px solid rgba(255,255,255,0.12)' }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                  </svg>
+                </button>
+
+                {pageRange.map((p, i) =>
+                  p === '...' ? (
+                    <span key={`dots-${i}`} className="w-9 h-9 flex items-center justify-center text-white/30 text-sm">…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => goTo(p as number)}
+                      className="w-9 h-9 rounded-xl text-sm font-semibold transition-all"
+                      style={{
+                        background: page === p ? 'linear-gradient(to right, #8660EF, #E879A0)' : 'transparent',
+                        border: page === p ? 'none' : '1px solid rgba(255,255,255,0.12)',
+                        color: page === p ? 'white' : 'rgba(255,255,255,0.55)',
+                        fontFamily: 'var(--font-dm-sans)',
+                      }}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+
+                <button
+                  onClick={() => goTo(page + 1)}
+                  disabled={page === totalPages}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10"
+                  style={{ border: '1px solid rgba(255,255,255,0.12)' }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </button>
               </div>
             )}
-          </div>
+
+            {/* Page info */}
+            {totalPages > 1 && (
+              <p className="text-center text-xs text-white/30 mt-3" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                Página {page} de {totalPages}
+              </p>
+            )}
+          </>
         )}
 
-        {/* Footer note */}
         <p className="text-center text-xs text-white/30 mt-8" style={{ fontFamily: 'var(--font-dm-sans)' }}>
           Listado sujeto a disponibilidad en farmacias adheridas. El descuento aplica únicamente con credencial Nexo activa.
         </p>
