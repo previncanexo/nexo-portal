@@ -7,9 +7,9 @@ interface PaymentRow {
   id: string
   amount: number
   currency: string
-  status: string
-  payment_method: string | null
-  external_id: string | null
+  mp_status: string
+  mp_payment_id: string | null
+  paid_at: string | null
   created_at: string
   affiliate: {
     id: string
@@ -25,12 +25,6 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   rejected: { label: 'Rechazado', color: '#dc2626', bg: 'rgba(220,38,38,0.1)',  border: 'rgba(220,38,38,0.2)' },
 }
 
-const METHOD_LABELS: Record<string, string> = {
-  transferencia: 'Transferencia',
-  efectivo:      'Efectivo',
-  mercado_pago:  'Mercado Pago',
-  otro:          'Otro',
-}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -64,13 +58,13 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
     const q = search.toLowerCase().trim()
     return payments.filter((p) => {
       if (monthFilter !== 'all' && getMonthKey(p.created_at) !== monthFilter) return false
-      if (statusFilter !== 'all' && p.status !== statusFilter) return false
+      if (statusFilter !== 'all' && p.mp_status !== statusFilter) return false
       if (q) {
         const haystack = [
           p.affiliate?.nombre ?? '',
           p.affiliate?.apellido ?? '',
           p.affiliate?.affiliate_number ?? '',
-          p.external_id ?? '',
+          p.mp_payment_id ?? '',
         ].join(' ').toLowerCase()
         if (!haystack.includes(q)) return false
       }
@@ -79,23 +73,22 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
   }, [payments, search, monthFilter, statusFilter])
 
   const totalApproved = useMemo(
-    () => filtered.filter((p) => p.status === 'approved').reduce((sum, p) => sum + p.amount, 0),
+    () => filtered.filter((p) => p.mp_status === 'approved').reduce((sum, p) => sum + p.amount, 0),
     [filtered]
   )
 
-  const countApproved = filtered.filter((p) => p.status === 'approved').length
+  const countApproved = filtered.filter((p) => p.mp_status === 'approved').length
 
   function exportCSV() {
-    const headers = ['Fecha', 'Afiliado', 'N° Afiliado', 'Monto', 'Moneda', 'Método', 'Estado', 'ID externo']
+    const headers = ['Fecha', 'Afiliado', 'N° Afiliado', 'Monto', 'Moneda', 'Estado', 'ID MP']
     const rows = filtered.map((p) => [
-      formatDate(p.created_at),
+      formatDate(p.paid_at ?? p.created_at),
       p.affiliate ? `${p.affiliate.nombre} ${p.affiliate.apellido}` : '—',
       p.affiliate?.affiliate_number ?? '—',
       p.amount.toFixed(2),
       p.currency,
-      METHOD_LABELS[p.payment_method ?? ''] ?? p.payment_method ?? '—',
-      STATUS_CONFIG[p.status]?.label ?? p.status,
-      p.external_id ?? '',
+      STATUS_CONFIG[p.mp_status]?.label ?? p.mp_status,
+      p.mp_payment_id ?? '',
     ])
     const csv = [headers, ...rows]
       .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
@@ -206,7 +199,7 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
           <table className="w-full" style={{ fontFamily: 'var(--font-dm-sans)' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid rgba(0,0,0,0.08)', background: 'rgba(0,0,0,0.03)' }}>
-                {['Fecha', 'Afiliado', 'Monto', 'Método', 'Estado', 'ID externo', ''].map((col) => (
+                {['Fecha', 'Afiliado', 'Monto', 'Estado', 'ID MP', ''].map((col) => (
                   <th key={col} className="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: 'var(--gray-700)' }}>
                     {col}
                   </th>
@@ -222,7 +215,7 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
                 </tr>
               )}
               {filtered.map((p, i) => {
-                const statusCfg = STATUS_CONFIG[p.status] ?? STATUS_CONFIG.pending
+                const statusCfg = STATUS_CONFIG[p.mp_status] ?? STATUS_CONFIG.pending
                 return (
                   <tr
                     key={p.id}
@@ -230,7 +223,7 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
                     className="hover:bg-black/[0.025] transition-colors"
                   >
                     <td className="px-5 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--gray-700)' }}>
-                      {formatDate(p.created_at)}
+                      {formatDate(p.paid_at ?? p.created_at)}
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap">
                       {p.affiliate ? (
@@ -249,9 +242,6 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
                     <td className="px-5 py-4 whitespace-nowrap text-sm font-bold" style={{ color: 'var(--gray-900)' }}>
                       {formatAmount(p.amount, p.currency)}
                     </td>
-                    <td className="px-5 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--gray-600)' }}>
-                      {METHOD_LABELS[p.payment_method ?? ''] ?? p.payment_method ?? '—'}
-                    </td>
                     <td className="px-5 py-4 whitespace-nowrap">
                       <span
                         className="inline-block text-xs font-bold px-3 py-1.5 rounded-full"
@@ -261,7 +251,7 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
                       </span>
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap text-xs font-mono" style={{ color: 'var(--gray-500)' }}>
-                      {p.external_id ?? '—'}
+                      {p.mp_payment_id ?? '—'}
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap">
                       {p.affiliate && (
