@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       if (preApproval.status === 'authorized') {
         const { data: affiliate } = await supabase
           .from('affiliates')
-          .select('status, nombre, email, affiliate_number, plan:plans(name)')
+          .select('status, nombre, apellido, dni, email, affiliate_number, plan:plans(name)')
           .eq('id', preApproval.external_reference)
           .single()
 
@@ -87,6 +87,8 @@ export async function POST(req: NextRequest) {
             .eq('id', preApproval.external_reference)
 
           const resolvedPlan = Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan
+          const certNum = parseInt(affiliate.affiliate_number ?? '0', 10)
+          const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
 
           await sendActivationEmail({
             nombre: affiliate.nombre,
@@ -98,8 +100,11 @@ export async function POST(req: NextRequest) {
           await sendInternalNewMemberEmail({
             id: preApproval.external_reference,
             nombre: affiliate.nombre,
+            apellido: affiliate.apellido,
+            dni: affiliate.dni,
             email: affiliate.email,
             affiliate_number: affiliate.affiliate_number,
+            farmacia_number: farmaciaNumber,
             plan: resolvedPlan,
           })
         }

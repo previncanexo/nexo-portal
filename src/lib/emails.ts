@@ -202,8 +202,11 @@ export async function sendResubscribeEmail(nombre: string, email: string, checko
 
 function internalNewMemberEmailHtml(
   nombre: string,
+  apellido: string,
+  dni: string,
   email: string,
   affiliateNumber: string,
+  farmaciaNumber: string,
   planName: string | null,
   affiliateId: string,
   appUrl: string,
@@ -226,14 +229,22 @@ function internalNewMemberEmailHtml(
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td style="padding-bottom:14px;">
-          <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Afiliado</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#111827;">${nombre}</p>
+          <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Nombre y apellido</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#111827;">${nombre} ${apellido}</p>
           <p style="margin:2px 0 0;font-size:13px;color:#6b7280;">${email}</p>
         </td>
       </tr>
       <tr><td style="border-top:1px solid #e5e7eb;padding-top:14px;padding-bottom:14px;">
-        <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">N° de afiliado</p>
+        <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">DNI</p>
+        <p style="margin:0;font-size:15px;font-weight:700;color:#111827;font-family:monospace;">${dni}</p>
+      </td></tr>
+      <tr><td style="border-top:1px solid #e5e7eb;padding-top:14px;padding-bottom:14px;">
+        <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">N° de certificado</p>
         <p style="margin:0;font-size:18px;font-weight:700;color:#8660EF;font-family:monospace;">${affiliateNumber}</p>
+      </td></tr>
+      <tr><td style="border-top:1px solid #e5e7eb;padding-top:14px;padding-bottom:14px;">
+        <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">N° de farmacia</p>
+        <p style="margin:0;font-size:18px;font-weight:700;color:#111827;font-family:monospace;">${farmaciaNumber}</p>
       </td></tr>
       ${planName ? `<tr><td style="border-top:1px solid #e5e7eb;padding-top:14px;padding-bottom:14px;">
         <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Plan</p>
@@ -260,8 +271,11 @@ function internalNewMemberEmailHtml(
 export async function sendInternalNewMemberEmail(affiliate: {
   id: string
   nombre: string
+  apellido: string
+  dni: string
   email: string
   affiliate_number: string
+  farmacia_number: string
   plan?: { name: string } | null
 }): Promise<void> {
   if (!process.env.RESEND_API_KEY) return
@@ -278,8 +292,11 @@ export async function sendInternalNewMemberEmail(affiliate: {
     subject: `Nueva alta — ${affiliate.nombre} se suscribió a Nexo`,
     html: internalNewMemberEmailHtml(
       affiliate.nombre,
+      affiliate.apellido,
+      affiliate.dni,
       affiliate.email,
       affiliate.affiliate_number,
+      affiliate.farmacia_number,
       planName,
       affiliate.id,
       appUrl,
