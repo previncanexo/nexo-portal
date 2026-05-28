@@ -215,9 +215,9 @@ export default async function AdminDashboardPage() {
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
       .limit(5),
-    supabase.from('payments').select('amount').eq('status', 'approved').gte('created_at', startOfMonth),
+    supabase.from('payments').select('amount').eq('mp_status', 'approved').gte('created_at', startOfMonth),
     supabase.from('affiliates').select('created_at').gte('created_at', sixMonthsAgo),
-    supabase.from('payments').select('amount, created_at').eq('status', 'approved').gte('created_at', sixMonthsAgo),
+    supabase.from('payments').select('amount, created_at').eq('mp_status', 'approved').gte('created_at', sixMonthsAgo),
     supabase
       .from('affiliates')
       .select('id, nombre, apellido, status, created_at')
