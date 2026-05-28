@@ -36,11 +36,12 @@ export interface Payment {
   affiliate_id: string
   amount: number
   currency: string
-  status: string
-  payment_method: string | null
-  external_id: string | null
+  mp_status: string
+  mp_payment_id: string | null
+  paid_at: string | null
+  period_from: string | null
+  period_to: string | null
   created_at: string
-  updated_at: string
 }
 
 export interface ServiceConsumption {

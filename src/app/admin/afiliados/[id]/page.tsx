@@ -175,13 +175,13 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
                           {p.currency} {p.amount.toLocaleString('es-AR')}
                         </td>
                         <td className="py-2 pr-4 whitespace-nowrap" style={{ color: 'var(--gray-600)' }}>
-                          {p.payment_method ?? '—'}
+                          Mercado Pago
                         </td>
                         <td className="py-2 pr-4 whitespace-nowrap" style={{ color: 'var(--gray-600)' }}>
-                          {p.status}
+                          {p.mp_status}
                         </td>
                         <td className="py-2 pr-4 whitespace-nowrap font-mono text-xs" style={{ color: 'var(--gray-500)' }}>
-                          {p.external_id ?? '—'}
+                          {p.mp_payment_id ?? '—'}
                         </td>
                       </tr>
                     ))}

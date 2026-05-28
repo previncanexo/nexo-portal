@@ -173,9 +173,8 @@ export async function addPayment(affiliateId: string, formData: FormData) {
   }
 
   const currency = (formData.get('currency') as string) || 'ARS'
-  const payment_method = (formData.get('payment_method') as string) || 'transferencia'
   const paymentStatus = (formData.get('status') as string) || 'approved'
-  const external_id = (formData.get('external_id') as string)?.trim() || null
+  const mp_payment_id = (formData.get('external_id') as string)?.trim() || null
 
   const { data: affiliate } = await supabase
     .from('affiliates')
@@ -183,16 +182,19 @@ export async function addPayment(affiliateId: string, formData: FormData) {
     .eq('id', affiliateId)
     .single()
 
-  const { error } = await supabase.from('payments').insert({
+  const today = new Date()
+  const nextMonth = new Date(today)
+  nextMonth.setMonth(nextMonth.getMonth() + 1)
 
+  const { error } = await supabase.from('payments').insert({
     affiliate_id: affiliateId,
-    amount,
+    amount: Math.round(amount),
     currency,
-    payment_method,
-    status: paymentStatus,
-    external_id,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    mp_status: paymentStatus,
+    mp_payment_id,
+    paid_at: today.toISOString(),
+    period_from: today.toISOString().split('T')[0],
+    period_to: nextMonth.toISOString().split('T')[0],
   })
 
   if (error) {
@@ -203,7 +205,12 @@ export async function addPayment(affiliateId: string, formData: FormData) {
   if (paymentStatus === 'approved' && affiliate?.status === 'pending') {
     await supabase
       .from('affiliates')
-      .update({ status: 'active', updated_at: new Date().toISOString() })
+      .update({
+        status: 'active',
+        cobertura_desde: today.toISOString().split('T')[0],
+        cobertura_hasta: nextMonth.toISOString().split('T')[0],
+        updated_at: today.toISOString(),
+      })
       .eq('id', affiliateId)
 
     await sendActivationEmail({

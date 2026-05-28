@@ -57,7 +57,7 @@ export default function PaymentHistory({ payments }: { payments: Payment[] }) {
 
       {/* Rows */}
       {payments.map((p, idx) => {
-        const s = STATUS_LABEL[p.status] ?? { label: p.status, color: '#9ca3af', bg: 'rgba(156,163,175,0.10)', border: 'rgba(156,163,175,0.20)' }
+        const s = STATUS_LABEL[p.mp_status] ?? { label: p.mp_status, color: '#9ca3af', bg: 'rgba(156,163,175,0.10)', border: 'rgba(156,163,175,0.20)' }
         const isLast = idx === payments.length - 1
         return (
           <div
@@ -72,9 +72,9 @@ export default function PaymentHistory({ payments }: { payments: Payment[] }) {
               >
                 {formatAmount(p.amount, p.currency)}
               </p>
-              {p.payment_method && (
-                <p className="text-xs mt-0.5 capitalize" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
-                  {p.payment_method.replace(/_/g, ' ')}
+              {p.mp_payment_id && (
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
+                  Mercado Pago
                 </p>
               )}
             </div>
