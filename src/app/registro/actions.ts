@@ -118,7 +118,76 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     ? await planQuery.eq('id', input.plan_id).maybeSingle()
     : await planQuery.order('price', { ascending: true }).limit(1).maybeSingle()
 
-  // Create auth user
+  // Check if email already exists
+  const { data: existingAffiliate } = await supabase
+    .from('affiliates')
+    .select('id, affiliate_number, user_id, status')
+    .eq('email', email)
+    .maybeSingle()
+
+  if (existingAffiliate && existingAffiliate.status !== 'pending') {
+    return {
+      success: false,
+      error: 'Ya existe una cuenta activa con ese email. Iniciá sesión en el portal.',
+    }
+  }
+
+  // If pending account exists, resume payment flow instead of creating a new user
+  if (existingAffiliate && existingAffiliate.status === 'pending') {
+    await supabase
+      .from('affiliates')
+      .update({
+        nombre, apellido, dni,
+        ...(whatsapp ? { whatsapp } : {}),
+        ...(ciudad ? { ciudad } : {}),
+        ...(fecha_nacimiento ? { fecha_nacimiento } : {}),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existingAffiliate.id)
+
+    try {
+      const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
+      const preApprovalClient = new PreApproval(mpClient)
+
+      const mpResponse = await preApprovalClient.create({
+        body: {
+          reason: plan?.name ?? 'Nexo by Previnca',
+          payer_email: email,
+          back_url: `${appUrl}/registro/exito`,
+          auto_recurring: {
+            frequency: 1,
+            frequency_type: 'months',
+            transaction_amount: plan?.price ?? 19500,
+            currency_id: 'ARS',
+          },
+          external_reference: existingAffiliate.id,
+          status: 'pending',
+        },
+      })
+
+      if (!mpResponse.init_point) throw new Error('MP no devolvió URL de pago')
+
+      if (mpResponse.id) {
+        await supabase
+          .from('affiliates')
+          .update({ mp_subscription_id: String(mpResponse.id) })
+          .eq('id', existingAffiliate.id)
+      }
+
+      return { success: true, checkoutUrl: mpResponse.init_point }
+    } catch (err: any) {
+      const mpMessage = err?.message ?? String(err)
+      console.error('[mp] PreApproval resume error:', mpMessage, err)
+      return {
+        success: false,
+        error: `Error al iniciar el pago con Mercado Pago. Intentá de nuevo.${
+          process.env.NODE_ENV === 'development' ? ` (${mpMessage})` : ''
+        }`,
+      }
+    }
+  }
+
+  // New registration flow
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
     password: tempPassword,
@@ -126,14 +195,14 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
   })
 
   if (authError) {
-    return { success: false, error: authError.message.includes('already registered')
-      ? 'Ya existe una cuenta con ese email.'
-      : `Error al crear la cuenta: ${authError.message}` }
+    return {
+      success: false,
+      error: `Error al crear la cuenta: ${authError.message}`,
+    }
   }
 
   const userId = authData.user.id
 
-  // Create affiliate
   const affiliateData: Record<string, unknown> = {
     nombre, apellido, dni, email,
     user_id: userId,
