@@ -286,6 +286,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
   const [selectedPlan, setSelectedPlan] = useState<PlanInfo>(plans[0])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const hasMultiplePlans = plans.length > 1
 
   function setField(field: keyof FormData) {
     return (value: string) => setForm((prev) => ({ ...prev, [field]: value }))
@@ -332,7 +333,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
 
   return (
     <div
-      className="min-h-screen lg:grid lg:grid-cols-[1fr_1fr] relative overflow-hidden"
+      className="min-h-screen lg:grid lg:grid-cols-[1fr_1fr] xl:grid-cols-[1.1fr_0.9fr] relative overflow-hidden"
       style={{ background: 'linear-gradient(135deg, #12053d 0%, #2d1266 40%, #6535cc 100%)' }}
     >
       {/* ── PANEL IZQUIERDO — branding (solo desktop) ── */}
@@ -429,7 +430,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>Plan Base · Mensual</p>
+                <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>{selectedPlan.name} · Mensual</p>
                 <p className="text-white font-bold text-lg" style={{ fontFamily: 'var(--font-dm-sans)' }}>Nexo by Previnca</p>
               </div>
               <div className="text-right">
@@ -438,7 +439,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
                   className="font-bold leading-none"
                   style={{ fontFamily: "'DM Serif Display', serif", fontSize: 'clamp(28px, 3vw, 40px)', background: 'linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.75) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
                 >
-                  $19.500
+                  ${selectedPlan.price.toLocaleString('es-AR')}
                 </p>
               </div>
             </div>
@@ -461,7 +462,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
           }}
         />
 
-        <div className="w-full max-w-sm relative z-10">
+        <div className="w-full max-w-sm lg:max-w-[460px] relative z-10">
           {/* Logo — solo mobile */}
           <div className="text-center mb-8 lg:hidden">
             <a href="/login" className="inline-block">
@@ -503,6 +504,49 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
             >
               <Stepper step={1} />
 
+              {/* Plan selector — always visible in step 1 */}
+              <div className="mb-5">
+                <p className="text-xs font-semibold uppercase tracking-widest mb-2.5" style={{ color: 'rgba(255,255,255,0.42)', fontFamily: 'var(--font-dm-sans)' }}>
+                  Plan seleccionado
+                </p>
+                <div className={`grid gap-2 ${hasMultiplePlans ? 'grid-cols-1' : ''}`}>
+                  {plans.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setSelectedPlan(p)}
+                      className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-left transition-all"
+                      style={{
+                        background: selectedPlan.id === p.id ? 'rgba(134,96,239,0.18)' : 'rgba(255,255,255,0.06)',
+                        border: selectedPlan.id === p.id ? '1.5px solid rgba(134,96,239,0.65)' : '1px solid rgba(255,255,255,0.12)',
+                        cursor: hasMultiplePlans ? 'pointer' : 'default',
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
+                          style={{
+                            borderColor: selectedPlan.id === p.id ? 'var(--purple)' : 'rgba(255,255,255,0.25)',
+                            background: selectedPlan.id === p.id ? 'var(--purple)' : 'transparent',
+                          }}
+                        >
+                          {selectedPlan.id === p.id && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <span className="text-sm font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.name}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                          ${p.price.toLocaleString('es-AR')}
+                        </span>
+                        <span className="text-xs ml-1" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>/mes</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex flex-col gap-4">
                 <div className="grid grid-cols-2 gap-3">
                   <InputField id="nombre" label="Nombre" value={form.nombre} onChange={setField('nombre')} placeholder="Juan" required />
@@ -541,29 +585,23 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
             >
               <Stepper step={2} />
 
-              {plans.length > 1 && (
-                <div className="flex flex-col gap-2 mb-4">
-                  {plans.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => setSelectedPlan(p)}
-                      className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-left transition-all"
-                      style={{
-                        background: selectedPlan.id === p.id ? 'rgba(134,96,239,0.15)' : 'rgba(255,255,255,0.06)',
-                        border: selectedPlan.id === p.id ? '1.5px solid rgba(134,96,239,0.60)' : '1px solid rgba(255,255,255,0.12)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <span className="text-sm font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.name}</span>
-                      <span className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-                        ${p.price.toLocaleString('es-AR')}
-                        <span className="text-xs font-normal ml-1" style={{ color: 'rgba(255,255,255,0.50)' }}>/mes</span>
-                      </span>
-                    </button>
-                  ))}
+              {/* Datos ingresados — resumen compacto */}
+              <div className="rounded-xl px-4 py-3 mb-4 flex items-center justify-between gap-3" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                <div>
+                  <p className="text-xs font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                    {form.nombre} {form.apellido}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>{form.email}</p>
                 </div>
-              )}
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="text-xs underline flex-shrink-0 transition-opacity hover:opacity-70"
+                  style={{ color: 'rgba(255,255,255,0.50)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+                >
+                  Editar
+                </button>
+              </div>
 
               <div className="rounded-2xl p-5 mb-5" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
                 <div className="flex items-center justify-between mb-4">
