@@ -5,7 +5,7 @@ export const metadata = { title: 'Pago recibido · Nexo by Previnca' }
 
 export default function RegistroExitoPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
+    <div className="portal-dark min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
       {/* Orb purple */}
       <div
         className="absolute pointer-events-none"
