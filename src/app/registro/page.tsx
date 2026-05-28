@@ -1,6 +1,8 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import RegistroForm from './RegistroForm'
 
+export const dynamic = 'force-dynamic'
+
 export default async function RegistroPage() {
   const supabase = createAdminClient()
   const { data: plans } = await supabase
