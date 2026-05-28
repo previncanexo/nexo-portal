@@ -48,6 +48,7 @@ export default function AdminNav() {
               alt="Nexo by Previnca"
               width={100}
               height={44}
+              sizes="100px"
               style={{ objectFit: 'contain', height: '44px', width: 'auto' }}
               priority
             />

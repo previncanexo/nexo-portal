@@ -64,7 +64,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {/* Orbs — contenidos en fixed inset-0 para no causar scroll horizontal */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
           <div
-            className="-top-32 -right-32 absolute w-[400px] h-[400px] lg:w-[500px] lg:h-[500px] rounded-full opacity-25 blur-[100px]"
+            className="-top-32 -right-32 absolute w-[400px] h-[400px] lg:w-[500px] lg:h-[500px] rounded-full opacity-25 blur-[100px] hidden sm:block"
             style={{
               background: 'radial-gradient(circle, var(--purple) 0%, transparent 70%)',
               animation: 'orb-pulse-1 10s ease-in-out infinite',
@@ -78,7 +78,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             }}
           />
           <div
-            className="bottom-20 left-1/2 -translate-x-1/2 absolute w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] rounded-full opacity-15 blur-[100px]"
+            className="bottom-20 left-1/2 -translate-x-1/2 absolute w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] rounded-full opacity-15 blur-[100px] hidden sm:block"
             style={{
               background: 'radial-gradient(circle, var(--peach) 0%, transparent 70%)',
               animation: 'orb-pulse-2 14s ease-in-out 5s infinite',

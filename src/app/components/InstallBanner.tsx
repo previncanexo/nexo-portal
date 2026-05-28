@@ -68,7 +68,7 @@ export function InstallBanner() {
           className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
           style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))' }}
         >
-          <img src="/logo.png" alt="Nexo" className="w-10 h-10 object-contain" />
+          <img src="/logo.png" alt="Nexo" className="w-10 h-10 object-contain" loading="lazy" decoding="async" />
         </div>
 
         {/* Texto */}
