@@ -21,7 +21,7 @@ function verifyMpSignature(
   const { ts, v1 } = parts
   if (!ts || !v1) return false
 
-  const message = `id:${notificationId};request-id:${xRequestId};ts:${ts}`
+  const message = `id:${notificationId};request-id:${xRequestId};ts:${ts};`
   const expected = createHmac('sha256', secret).update(message).digest('hex')
 
   try {
