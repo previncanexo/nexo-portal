@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Affiliate, AffiliateStatus, Plan } from '@/lib/types'
 import CreateAfiliadoModal from './CreateAfiliadoModal'
+import { deleteAffiliate } from './[id]/actions'
 
 const PAGE_SIZE = 25
 
@@ -78,6 +79,23 @@ export default function AfiliadosClient({ affiliates, plans }: { affiliates: Aff
   const [search, setSearch] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [page, setPage] = useState(0)
+  const [deleteTarget, setDeleteTarget] = useState<Affiliate | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isPendingDelete, startDeleteTransition] = useTransition()
+
+  function handleDeleteConfirm() {
+    if (!deleteTarget) return
+    startDeleteTransition(async () => {
+      const result = await deleteAffiliate(deleteTarget.id)
+      if (result && !result.success) {
+        setDeleteError(result.message)
+      } else {
+        setDeleteTarget(null)
+        setDeleteError(null)
+        router.refresh()
+      }
+    })
+  }
 
   useEffect(() => { setPage(0) }, [search, statusFilter, period])
 
@@ -349,17 +367,31 @@ export default function AfiliadosClient({ affiliates, plans }: { affiliates: Aff
                     {formatDate(a.created_at)}
                   </td>
                   <td className="px-5 py-4 whitespace-nowrap">
-                    <Link
-                      href={`/admin/afiliados/${a.id}`}
-                      className="text-sm font-semibold px-3.5 py-1.5 rounded-full transition-all hover:opacity-80"
-                      style={{
-                        background: 'rgba(134,96,239,0.1)',
-                        color: 'var(--purple)',
-                        border: '1px solid rgba(134,96,239,0.25)',
-                      }}
-                    >
-                      Ver
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/admin/afiliados/${a.id}`}
+                        className="text-sm font-semibold px-3.5 py-1.5 rounded-full transition-all hover:opacity-80"
+                        style={{
+                          background: 'rgba(134,96,239,0.1)',
+                          color: 'var(--purple)',
+                          border: '1px solid rgba(134,96,239,0.25)',
+                        }}
+                      >
+                        Ver
+                      </Link>
+                      <button
+                        onClick={() => { setDeleteTarget(a); setDeleteError(null) }}
+                        className="text-sm font-semibold px-3.5 py-1.5 rounded-full transition-all hover:opacity-80"
+                        style={{
+                          background: 'rgba(220,38,38,0.08)',
+                          color: '#f87171',
+                          border: '1px solid rgba(220,38,38,0.22)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -413,6 +445,49 @@ export default function AfiliadosClient({ affiliates, plans }: { affiliates: Aff
           onClose={() => setShowCreateModal(false)}
           onCreated={() => router.refresh()}
         />
+      )}
+
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+          onClick={(e) => { if (e.target === e.currentTarget && !isPendingDelete) setDeleteTarget(null) }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-4"
+            style={{ background: '#1a1025', border: '1px solid rgba(255,255,255,0.10)' }}
+          >
+            <div className="flex flex-col gap-1">
+              <h2 className="text-base font-bold text-white">¿Eliminar afiliado?</h2>
+              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                Vas a eliminar a <strong className="text-white">{deleteTarget.nombre} {deleteTarget.apellido}</strong> permanentemente. Esta acción cancela su suscripción en Mercado Pago y no se puede deshacer.
+              </p>
+            </div>
+            {deleteError && (
+              <p className="text-xs font-medium px-3 py-2 rounded-lg" style={{ background: 'rgba(220,38,38,0.12)', color: '#f87171' }}>
+                {deleteError}
+              </p>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={isPendingDelete}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80 disabled:opacity-40"
+                style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.70)', border: '1px solid rgba(255,255,255,0.10)', cursor: 'pointer' }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={isPendingDelete}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
+                style={{ background: 'rgba(220,38,38,0.85)', color: 'white', cursor: 'pointer' }}
+              >
+                {isPendingDelete ? 'Eliminando...' : 'Sí, eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
