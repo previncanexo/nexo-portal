@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef } from 'react'
 import type { Plan } from '@/lib/types'
-import { createPlan, updatePlan, deletePlan } from './actions'
+import { createPlan, updatePlan, deletePlan, createMpPlan, unlinkMpPlan } from './actions'
 
 const inputStyle: React.CSSProperties = {
   border: '1px solid var(--gray-200)',
@@ -147,7 +147,9 @@ function PlanForm({
 function PlanRow({ plan, affiliateCount }: { plan: Plan; affiliateCount: number }) {
   const [editing, setEditing] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [isMpPending, startMpTransition] = useTransition()
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [mpMessage, setMpMessage] = useState<{ text: string; ok: boolean } | null>(null)
 
   function handleDelete() {
     if (!confirm(`¿Eliminar el plan "${plan.name}"? Esta acción no se puede deshacer.`)) return
@@ -155,6 +157,23 @@ function PlanRow({ plan, affiliateCount }: { plan: Plan; affiliateCount: number 
     startTransition(async () => {
       const result = await deletePlan(plan.id)
       if (!result.success) setDeleteError(result.message)
+    })
+  }
+
+  function handleCreateMpPlan() {
+    setMpMessage(null)
+    startMpTransition(async () => {
+      const result = await createMpPlan(plan.id)
+      setMpMessage({ text: result.message, ok: result.success })
+    })
+  }
+
+  function handleUnlinkMpPlan() {
+    if (!confirm('¿Desvincular este plan de Mercado Pago?')) return
+    setMpMessage(null)
+    startMpTransition(async () => {
+      const result = await unlinkMpPlan(plan.id)
+      setMpMessage({ text: result.message, ok: result.success })
     })
   }
 
@@ -168,47 +187,89 @@ function PlanRow({ plan, affiliateCount }: { plan: Plan; affiliateCount: number 
 
   return (
     <div
-      className="px-6 py-4 flex items-center gap-4 flex-wrap"
+      className="px-6 py-4 flex flex-col gap-3"
       style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}
     >
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
-          {plan.name}
-        </p>
-        {plan.description && (
-          <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
-            {plan.description}
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
+            {plan.name}
           </p>
+          {plan.description && (
+            <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
+              {plan.description}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-4 shrink-0 flex-wrap">
+          <span className="text-base font-bold" style={{ color: 'var(--purple)', fontFamily: 'var(--font-dm-sans)' }}>
+            ${plan.price.toLocaleString('es-AR')}
+          </span>
+          <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: 'rgba(134,96,239,0.08)', color: 'var(--purple)', border: '1px solid rgba(134,96,239,0.15)' }}>
+            {affiliateCount} afiliado{affiliateCount !== 1 ? 's' : ''}
+          </span>
+          <button
+            onClick={() => setEditing(true)}
+            className="text-xs font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-70"
+            style={{ background: 'var(--gray-100)', color: 'var(--gray-700)', border: '1px solid var(--gray-200)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+          >
+            Editar
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={isPending || affiliateCount > 0}
+            title={affiliateCount > 0 ? 'No se puede eliminar: tiene afiliados asignados' : 'Eliminar plan'}
+            className="text-xs font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-70 disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ background: 'rgba(220,38,38,0.08)', color: '#dc2626', border: '1px solid rgba(220,38,38,0.2)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+          >
+            {isPending ? '...' : 'Eliminar'}
+          </button>
+        </div>
+      </div>
+
+      {/* MP Plan status row */}
+      <div className="flex items-center gap-3 flex-wrap">
+        {plan.mp_plan_id ? (
+          <>
+            <span className="text-xs px-2.5 py-1 rounded-full font-mono" style={{ background: 'rgba(22,163,74,0.08)', color: '#16a34a', border: '1px solid rgba(22,163,74,0.2)', fontFamily: 'var(--font-dm-sans)' }}>
+              ✓ MP: {plan.mp_plan_id}
+            </span>
+            <button
+              onClick={handleUnlinkMpPlan}
+              disabled={isMpPending}
+              className="text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-70 disabled:opacity-40"
+              style={{ background: 'rgba(202,138,4,0.08)', color: '#ca8a04', border: '1px solid rgba(202,138,4,0.2)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+            >
+              {isMpPending ? '...' : 'Desvincular MP'}
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={handleCreateMpPlan}
+            disabled={isMpPending}
+            className="text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-80 disabled:opacity-40"
+            style={{ background: 'rgba(134,96,239,0.10)', color: 'var(--purple)', border: '1px solid rgba(134,96,239,0.25)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+          >
+            {isMpPending ? 'Creando en MP...' : '+ Crear plan en Mercado Pago'}
+          </button>
         )}
       </div>
 
-      <div className="flex items-center gap-4 shrink-0 flex-wrap">
-        <span className="text-base font-bold" style={{ color: 'var(--purple)', fontFamily: 'var(--font-dm-sans)' }}>
-          ${plan.price.toLocaleString('es-AR')}
-        </span>
-        <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: 'rgba(134,96,239,0.08)', color: 'var(--purple)', border: '1px solid rgba(134,96,239,0.15)' }}>
-          {affiliateCount} afiliado{affiliateCount !== 1 ? 's' : ''}
-        </span>
-        <button
-          onClick={() => setEditing(true)}
-          className="text-xs font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-70"
-          style={{ background: 'var(--gray-100)', color: 'var(--gray-700)', border: '1px solid var(--gray-200)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
-        >
-          Editar
-        </button>
-        <button
-          onClick={handleDelete}
-          disabled={isPending || affiliateCount > 0}
-          title={affiliateCount > 0 ? 'No se puede eliminar: tiene afiliados asignados' : 'Eliminar plan'}
-          className="text-xs font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-70 disabled:opacity-30 disabled:cursor-not-allowed"
-          style={{ background: 'rgba(220,38,38,0.08)', color: '#dc2626', border: '1px solid rgba(220,38,38,0.2)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
-        >
-          {isPending ? '...' : 'Eliminar'}
-        </button>
-      </div>
-
       {deleteError && (
-        <p className="w-full text-xs mt-1" style={{ color: '#dc2626' }}>{deleteError}</p>
+        <p className="text-xs" style={{ color: '#dc2626' }}>{deleteError}</p>
+      )}
+      {mpMessage && (
+        <p
+          className="text-xs px-3 py-2 rounded-lg"
+          style={{
+            background: mpMessage.ok ? 'rgba(22,163,74,0.08)' : 'rgba(220,38,38,0.08)',
+            color: mpMessage.ok ? '#16a34a' : '#dc2626',
+            border: `1px solid ${mpMessage.ok ? 'rgba(22,163,74,0.2)' : 'rgba(220,38,38,0.2)'}`,
+          }}
+        >
+          {mpMessage.text}
+        </p>
       )}
     </div>
   )

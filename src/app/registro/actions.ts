@@ -120,7 +120,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
   const tempPassword = generateTempPassword()
 
   // Fetch selected plan or default to cheapest
-  const planQuery = supabase.from('plans').select('id, name, price')
+  const planQuery = supabase.from('plans').select('id, name, price, mp_plan_id')
   const { data: plan } = input.plan_id
     ? await planQuery.eq('id', input.plan_id).maybeSingle()
     : await planQuery.order('price', { ascending: true }).limit(1).maybeSingle()
@@ -156,21 +156,29 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
       const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
       const preApprovalClient = new PreApproval(mpClient)
 
-      const mpResponse = await preApprovalClient.create({
-        body: {
-          reason: plan?.name ?? 'Nexo by Previnca',
-          payer_email: email,
-          back_url: `${appUrl}/registro/exito`,
-          auto_recurring: {
-            frequency: 1,
-            frequency_type: 'months',
-            transaction_amount: plan?.price ?? 19500,
-            currency_id: 'ARS',
-          },
-          external_reference: existingAffiliate.id,
-          status: 'pending',
-        },
-      })
+      const mpBody = plan?.mp_plan_id
+        ? {
+            preapproval_plan_id: plan.mp_plan_id,
+            reason: plan.name ?? 'Nexo by Previnca',
+            back_url: `${appUrl}/registro/exito`,
+            external_reference: existingAffiliate.id,
+            status: 'pending' as const,
+          }
+        : {
+            reason: plan?.name ?? 'Nexo by Previnca',
+            payer_email: email,
+            back_url: `${appUrl}/registro/exito`,
+            auto_recurring: {
+              frequency: 1,
+              frequency_type: 'months' as const,
+              transaction_amount: plan?.price ?? 19500,
+              currency_id: 'ARS',
+            },
+            external_reference: existingAffiliate.id,
+            status: 'pending' as const,
+          }
+
+      const mpResponse = await preApprovalClient.create({ body: mpBody })
 
       if (!mpResponse.init_point) throw new Error('MP no devolvió URL de pago')
 
@@ -241,21 +249,29 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
     const preApprovalClient = new PreApproval(mpClient)
 
-    const mpResponse = await preApprovalClient.create({
-      body: {
-        reason: plan?.name ?? 'Nexo by Previnca',
-        payer_email: email,
-        back_url: `${appUrl}/registro/exito`,
-        auto_recurring: {
-          frequency: 1,
-          frequency_type: 'months',
-          transaction_amount: plan?.price ?? 19500,
-          currency_id: 'ARS',
-        },
-        external_reference: affiliate.id,
-        status: 'pending',
-      },
-    })
+    const mpBody = plan?.mp_plan_id
+      ? {
+          preapproval_plan_id: plan.mp_plan_id,
+          reason: plan.name ?? 'Nexo by Previnca',
+          back_url: `${appUrl}/registro/exito`,
+          external_reference: affiliate.id,
+          status: 'pending' as const,
+        }
+      : {
+          reason: plan?.name ?? 'Nexo by Previnca',
+          payer_email: email,
+          back_url: `${appUrl}/registro/exito`,
+          auto_recurring: {
+            frequency: 1,
+            frequency_type: 'months' as const,
+            transaction_amount: plan?.price ?? 19500,
+            currency_id: 'ARS',
+          },
+          external_reference: affiliate.id,
+          status: 'pending' as const,
+        }
+
+    const mpResponse = await preApprovalClient.create({ body: mpBody })
 
     if (!mpResponse.init_point) {
       throw new Error('MP no devolvió URL de pago')

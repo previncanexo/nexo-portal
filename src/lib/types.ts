@@ -5,6 +5,7 @@ export interface Plan {
   name: string
   description: string | null
   price: number
+  mp_plan_id: string | null
   created_at: string
   updated_at: string
 }

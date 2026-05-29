@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { MercadoPagoConfig, PreApprovalPlan } from 'mercadopago'
 
 export async function createPlan(formData: FormData) {
   const name = (formData.get('name') as string)?.trim()
@@ -68,4 +69,59 @@ export async function deletePlan(planId: string) {
 
   revalidatePath('/admin/planes')
   return { success: true, message: 'Plan eliminado.' }
+}
+
+export async function createMpPlan(planId: string): Promise<{ success: boolean; message: string }> {
+  const mpToken = process.env.MP_ACCESS_TOKEN
+  if (!mpToken) return { success: false, message: 'MP_ACCESS_TOKEN no está configurado.' }
+
+  const supabase = createAdminClient()
+  const { data: plan } = await supabase.from('plans').select('*').eq('id', planId).single()
+  if (!plan) return { success: false, message: 'Plan no encontrado.' }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() ?? ''
+
+  try {
+    const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
+    const planClient = new PreApprovalPlan(mpClient)
+
+    const mpPlan = await planClient.create({
+      body: {
+        reason: plan.name,
+        auto_recurring: {
+          frequency: 1,
+          frequency_type: 'months',
+          transaction_amount: plan.price,
+          currency_id: 'ARS',
+        },
+        back_url: `${appUrl}/registro/exito`,
+      },
+    })
+
+    if (!mpPlan.id) return { success: false, message: 'MP no devolvió ID del plan.' }
+
+    const { error } = await supabase
+      .from('plans')
+      .update({ mp_plan_id: mpPlan.id, updated_at: new Date().toISOString() })
+      .eq('id', planId)
+
+    if (error) return { success: false, message: `DB error: ${error.message}` }
+
+    revalidatePath('/admin/planes')
+    return { success: true, message: `Plan vinculado con MP (ID: ${mpPlan.id})` }
+  } catch (err: any) {
+    return { success: false, message: err?.message ?? 'Error al crear el plan en Mercado Pago.' }
+  }
+}
+
+export async function unlinkMpPlan(planId: string): Promise<{ success: boolean; message: string }> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('plans')
+    .update({ mp_plan_id: null, updated_at: new Date().toISOString() })
+    .eq('id', planId)
+
+  if (error) return { success: false, message: error.message }
+  revalidatePath('/admin/planes')
+  return { success: true, message: 'Vínculo con MP eliminado.' }
 }
