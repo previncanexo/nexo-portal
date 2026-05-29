@@ -102,7 +102,7 @@ export async function createMpPlan(planId: string): Promise<{ success: boolean; 
 
     const { error } = await supabase
       .from('plans')
-      .update({ mp_plan_id: mpPlan.id, updated_at: new Date().toISOString() })
+      .update({ mp_plan_id: mpPlan.id })
       .eq('id', planId)
 
     if (error) return { success: false, message: `DB error: ${error.message}` }
@@ -118,7 +118,7 @@ export async function unlinkMpPlan(planId: string): Promise<{ success: boolean; 
   const supabase = createAdminClient()
   const { error } = await supabase
     .from('plans')
-    .update({ mp_plan_id: null, updated_at: new Date().toISOString() })
+    .update({ mp_plan_id: null })
     .eq('id', planId)
 
   if (error) return { success: false, message: error.message }
