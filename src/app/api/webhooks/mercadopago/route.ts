@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'crypto'
 import { after } from 'next/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
-import { MercadoPagoConfig, PreApproval, Payment } from 'mercadopago'
+import { MercadoPagoConfig, PreApproval, PreApprovalPlan, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendActivationEmail, sendInternalNewMemberEmail } from '@/lib/emails'
 
@@ -90,9 +90,24 @@ export async function POST(req: NextRequest) {
       const preApprovalClient = new PreApproval(mpClient)
       const preApproval = await preApprovalClient.get({ id: body.data.id })
 
-      if (!preApproval.external_reference) {
+      // external_reference may live on the subscription or on the per-affiliate plan
+      let affiliateId = preApproval.external_reference || null
+      if (!affiliateId && (preApproval as any).preapproval_plan_id) {
+        try {
+          const planClient = new PreApprovalPlan(mpClient)
+          const mpPlan = await planClient.get({ preApprovalPlanId: String((preApproval as any).preapproval_plan_id) })
+          affiliateId = (mpPlan as any).external_reference || null
+        } catch (planErr) {
+          console.error('[mp-webhook] Could not fetch plan for external_reference:', planErr)
+        }
+      }
+
+      if (!affiliateId) {
         return NextResponse.json({ ok: true })
       }
+
+      // Override preApproval.external_reference so the rest of the handler uses affiliateId
+      ;(preApproval as any).external_reference = affiliateId
 
       if (preApproval.status === 'authorized') {
         const { data: affiliate } = await supabase
@@ -127,7 +142,7 @@ export async function POST(req: NextRequest) {
           })
 
           await sendInternalNewMemberEmail({
-            id: preApproval.external_reference,
+            id: affiliateId,
             nombre: affiliate.nombre,
             apellido: affiliate.apellido,
             dni: affiliate.dni,
