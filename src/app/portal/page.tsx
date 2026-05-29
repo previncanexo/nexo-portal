@@ -80,7 +80,7 @@ export default async function PortalPage() {
           </p>
         </div>
 
-        <RetryPaymentButton />
+        <RetryPaymentButton email={affiliate.email} />
 
         <a
           href="/registro"
