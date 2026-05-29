@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from 'crypto'
 import { after } from 'next/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { MercadoPagoConfig, PreApproval, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendActivationEmail, sendInternalNewMemberEmail } from '@/lib/emails'
@@ -135,6 +136,10 @@ export async function POST(req: NextRequest) {
             farmacia_number: farmaciaNumber,
             plan: resolvedPlan,
           })
+
+          revalidatePath('/admin')
+          revalidatePath('/admin/afiliados')
+          revalidatePath(`/admin/afiliados/${preApproval.external_reference}`)
         }
       }
 
@@ -229,6 +234,10 @@ export async function POST(req: NextRequest) {
                 farmacia_number: farmaciaNumber,
                 plan: resolvedPlan,
               })
+
+              revalidatePath('/admin')
+              revalidatePath('/admin/afiliados')
+              revalidatePath(`/admin/afiliados/${preApproval.external_reference}`)
             } else {
               // Already active — just extend cobertura_hasta
               await supabase
