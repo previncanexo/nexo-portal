@@ -121,6 +121,7 @@ export async function POST(req: NextRequest) {
             nombre: affiliate.nombre,
             email: affiliate.email,
             affiliate_number: affiliate.affiliate_number,
+            farmacia_number: farmaciaNumber,
             plan: resolvedPlan,
           })
 
@@ -214,6 +215,7 @@ export async function POST(req: NextRequest) {
                 nombre: affiliateData.nombre,
                 email: affiliateData.email,
                 affiliate_number: affiliateData.affiliate_number,
+                farmacia_number: farmaciaNumber,
                 plan: resolvedPlan,
               })
 

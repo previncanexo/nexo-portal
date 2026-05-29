@@ -22,6 +22,9 @@ function credentialsEmailHtml(
   tempPassword: string,
   appUrl: string,
 ): string {
+  const certNum = parseInt(affiliateNumber ?? '0', 10)
+  const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
+
   return `<!DOCTYPE html>
 <html lang="es">
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:sans-serif;">
@@ -37,6 +40,10 @@ function credentialsEmailHtml(
       <tr><td style="padding-bottom:12px;">
         <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">N° de afiliado</p>
         <p style="margin:0;font-size:20px;font-weight:700;color:#8660EF;font-family:monospace;">${affiliateNumber}</p>
+      </td></tr>
+      <tr><td style="padding-bottom:12px;border-top:1px solid #e5e7eb;padding-top:12px;">
+        <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">N° farmacia</p>
+        <p style="margin:0;font-size:16px;font-weight:700;color:#374151;font-family:monospace;">${farmaciaNumber}</p>
       </td></tr>
       <tr><td style="padding-bottom:12px;border-top:1px solid #e5e7eb;padding-top:12px;">
         <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Email</p>

@@ -3,6 +3,7 @@ import { Resend } from 'resend'
 function activationEmailHtml(
   nombre: string,
   affiliateNumber: string,
+  farmaciaNumber: string | null,
   planName: string | null,
   appUrl: string,
 ): string {
@@ -23,6 +24,10 @@ function activationEmailHtml(
         <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">N° de afiliado</p>
         <p style="margin:0;font-size:20px;font-weight:700;color:#8660EF;font-family:monospace;">${affiliateNumber}</p>
       </td></tr>
+      ${farmaciaNumber ? `<tr><td style="border-top:1px solid #e5e7eb;padding-top:12px;padding-bottom:12px;">
+        <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">N° farmacia</p>
+        <p style="margin:0;font-size:16px;font-weight:700;color:#374151;font-family:monospace;">${farmaciaNumber}</p>
+      </td></tr>` : ''}
       ${planName ? `<tr><td style="border-top:1px solid #e5e7eb;padding-top:12px;">
         <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Plan contratado</p>
         <p style="margin:0;font-size:14px;font-weight:600;color:#374151;">${planName}</p>
@@ -308,6 +313,7 @@ export async function sendActivationEmail(affiliate: {
   nombre: string
   email: string
   affiliate_number: string
+  farmacia_number?: string | null
   plan?: { name: string } | null
 }): Promise<void> {
   if (!process.env.RESEND_API_KEY) return
@@ -320,7 +326,7 @@ export async function sendActivationEmail(affiliate: {
     to: affiliate.email,
     cc: ['cbanegas@previncaholding.com.ar', 'sistemas@previncaseguros.com.ar', 'sistemas@previncasalud.com.ar'],
     subject: '¡Bienvenido/a a Previnca Nexo!',
-    html: activationEmailHtml(affiliate.nombre, affiliate.affiliate_number, affiliate.plan?.name ?? null, appUrl),
+    html: activationEmailHtml(affiliate.nombre, affiliate.affiliate_number, affiliate.farmacia_number ?? null, affiliate.plan?.name ?? null, appUrl),
   }).catch((err) => {
     console.error('[activation-email] Resend error:', err)
   })
