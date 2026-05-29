@@ -1,5 +1,6 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { MercadoPagoConfig, PreApproval } from 'mercadopago'
@@ -31,7 +32,11 @@ export async function retryPayment(): Promise<RetryResult> {
 
   const rawPlan = affiliate.plan as any
   const plan = Array.isArray(rawPlan) ? rawPlan[0] : rawPlan
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+
+  const headersList = await headers()
+  const proto = headersList.get('x-forwarded-proto') ?? 'https'
+  const host = headersList.get('host') ?? ''
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || `${proto}://${host}`
 
   const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
   const preApprovalClient = new PreApproval(mpClient)
