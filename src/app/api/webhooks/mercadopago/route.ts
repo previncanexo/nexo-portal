@@ -1,8 +1,11 @@
 import { createHmac, timingSafeEqual } from 'crypto'
+import { after } from 'next/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, PreApproval, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendActivationEmail, sendInternalNewMemberEmail } from '@/lib/emails'
+
+const N8N_WEBHOOK_URL = 'https://n8n.previncasalud.com.ar/webhook/mercadopago-nexo-webhook'
 
 function verifyMpSignature(
   xSignature: string,
@@ -37,11 +40,32 @@ function addOneMonth(dateStr: string | null): string {
 export async function POST(req: NextRequest) {
   let body: { type?: string; action?: string; data?: { id?: string } }
 
+  // Capture headers before body parsing (needed for n8n forward)
+  const xSignature = req.headers.get('x-signature') ?? ''
+  const xRequestId = req.headers.get('x-request-id') ?? ''
+
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ ok: true })
   }
+
+  // Forward raw payload to n8n after response is sent — does not affect current circuit
+  after(async () => {
+    try {
+      await fetch(N8N_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...(xSignature && { 'x-signature': xSignature }),
+          ...(xRequestId && { 'x-request-id': xRequestId }),
+        },
+        body: JSON.stringify(body),
+      })
+    } catch (err) {
+      console.error('[mp-webhook] n8n forward error:', err)
+    }
+  })
 
   if (!process.env.MP_ACCESS_TOKEN) {
     return NextResponse.json({ ok: true })
