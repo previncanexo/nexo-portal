@@ -113,7 +113,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
             </h2>
 
             {/* Affiliate number */}
-            <div>
+            <div className="mb-3">
               <p className="text-xs uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
                 N° de afiliado
               </p>
@@ -124,6 +124,21 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
                 {affiliate?.affiliate_number ?? '—'}
               </p>
             </div>
+
+            {/* Farmacia number */}
+            {affiliate?.farmacia_number && (
+              <div>
+                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
+                  N° farmacia
+                </p>
+                <p
+                  className="text-sm font-semibold tracking-widest"
+                  style={{ fontFamily: 'monospace', color: 'rgba(255,255,255,0.90)', letterSpacing: '0.12em' }}
+                >
+                  {affiliate.farmacia_number}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Right: QR */}

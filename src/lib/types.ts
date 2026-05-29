@@ -26,6 +26,7 @@ export interface Affiliate {
   user_id: string | null
   notes: string | null
   mp_subscription_id: string | null
+  farmacia_number: string | null
   created_at: string
   updated_at: string
   plan?: Plan
