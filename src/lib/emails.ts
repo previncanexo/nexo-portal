@@ -292,8 +292,7 @@ export async function sendInternalNewMemberEmail(affiliate: {
 
   await resend.emails.send({
     from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
-    to: ['lgurini@previncasalud.com.ar', 'krodriguez@previncasalud.com.ar'],
-    cc: ['sistemas@previncasalud.com.ar'],
+    to: ['lgurini@previncasalud.com.ar', 'krodriguez@previncasalud.com.ar', 'sistemas@previncasalud.com.ar'],
     subject: `Nueva alta — ${affiliate.nombre} se suscribió a Nexo`,
     html: internalNewMemberEmailHtml(
       affiliate.nombre,

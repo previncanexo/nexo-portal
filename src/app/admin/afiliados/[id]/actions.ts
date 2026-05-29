@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendActivationEmail, sendPaymentConfirmedEmail, sendResubscribeEmail } from '@/lib/emails'
+import { sendActivationEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendResubscribeEmail } from '@/lib/emails'
 import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import type { AffiliateStatus } from '@/lib/types'
 
@@ -27,7 +27,7 @@ export async function updateAffiliateStatus(
 
   const { data: current } = await supabase
     .from('affiliates')
-    .select('status, nombre, email, affiliate_number, mp_subscription_id, plan:plans(id, name, price)')
+    .select('status, nombre, apellido, dni, email, affiliate_number, farmacia_number, mp_subscription_id, plan:plans(id, name, price)')
     .eq('id', affiliateId)
     .single()
 
@@ -54,11 +54,27 @@ export async function updateAffiliateStatus(
   }
 
   if (status === 'active' && current?.status !== 'active' && current) {
+    const resolvedPlan = Array.isArray(current.plan) ? (current.plan[0] ?? null) : current.plan
+    const farmaciaNumber = (current as any).farmacia_number
+      ?? `289${parseInt(current.affiliate_number ?? '0', 10).toString().padStart(8, '0')}0000`
+
     await sendActivationEmail({
       nombre: current.nombre,
       email: current.email,
       affiliate_number: current.affiliate_number,
-      plan: Array.isArray(current.plan) ? (current.plan[0] ?? null) : current.plan,
+      farmacia_number: farmaciaNumber,
+      plan: resolvedPlan,
+    })
+
+    await sendInternalNewMemberEmail({
+      id: affiliateId,
+      nombre: current.nombre,
+      apellido: (current as any).apellido ?? '',
+      dni: (current as any).dni ?? '',
+      email: current.email,
+      affiliate_number: current.affiliate_number,
+      farmacia_number: farmaciaNumber,
+      plan: resolvedPlan,
     })
   }
 
@@ -177,7 +193,7 @@ export async function addPayment(affiliateId: string, formData: FormData) {
 
   const { data: affiliate } = await supabase
     .from('affiliates')
-    .select('status, nombre, email, affiliate_number, plan:plans(name)')
+    .select('status, nombre, apellido, dni, email, affiliate_number, farmacia_number, plan:plans(name)')
     .eq('id', affiliateId)
     .single()
 
@@ -212,11 +228,27 @@ export async function addPayment(affiliateId: string, formData: FormData) {
       })
       .eq('id', affiliateId)
 
+    const resolvedPlan = Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan
+    const farmaciaNumber = (affiliate as any).farmacia_number
+      ?? `289${parseInt(affiliate.affiliate_number ?? '0', 10).toString().padStart(8, '0')}0000`
+
     await sendActivationEmail({
       nombre: affiliate.nombre,
       email: affiliate.email,
       affiliate_number: affiliate.affiliate_number,
-      plan: Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan,
+      farmacia_number: farmaciaNumber,
+      plan: resolvedPlan,
+    })
+
+    await sendInternalNewMemberEmail({
+      id: affiliateId,
+      nombre: affiliate.nombre,
+      apellido: (affiliate as any).apellido ?? '',
+      dni: (affiliate as any).dni ?? '',
+      email: affiliate.email,
+      affiliate_number: affiliate.affiliate_number,
+      farmacia_number: farmaciaNumber,
+      plan: resolvedPlan,
     })
 
     revalidatePath('/admin')
