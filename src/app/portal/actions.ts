@@ -79,8 +79,9 @@ export async function retryPayment(): Promise<RetryResult> {
     }
 
     return { success: true, checkoutUrl: mpResponse.init_point }
-  } catch (err) {
-    console.error('[retry-payment]', err)
-    return { success: false, error: 'No se pudo iniciar el pago. Intentá de nuevo.' }
+  } catch (err: any) {
+    const msg = err?.message ?? err?.cause?.message ?? JSON.stringify(err)
+    console.error('[retry-payment]', msg, err)
+    return { success: false, error: `Error MP: ${msg}` }
   }
 }
