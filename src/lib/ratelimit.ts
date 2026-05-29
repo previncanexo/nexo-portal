@@ -1,25 +1,40 @@
-import { Ratelimit } from '@upstash/ratelimit'
-import { Redis } from '@upstash/redis'
+class InMemoryRatelimit {
+  private store = new Map<string, { count: number; resetAt: number }>()
 
-// Returns null when Upstash env vars are not configured (e.g. local dev).
-// Callers must check for null and skip rate limiting gracefully.
-function createLimiter(
-  requests: number,
-  window: `${number} ${'ms' | 's' | 'm' | 'h' | 'd'}`,
-  prefix: string,
-): Ratelimit | null {
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    return null
+  constructor(
+    private max: number,
+    private windowMs: number,
+  ) {}
+
+  limit(key: string): Promise<{ success: boolean }> {
+    const now = Date.now()
+
+    if (Math.random() < 0.01) this.cleanup(now)
+
+    const entry = this.store.get(key)
+
+    if (!entry || now >= entry.resetAt) {
+      this.store.set(key, { count: 1, resetAt: now + this.windowMs })
+      return Promise.resolve({ success: true })
+    }
+
+    if (entry.count >= this.max) {
+      return Promise.resolve({ success: false })
+    }
+
+    entry.count++
+    return Promise.resolve({ success: true })
   }
-  return new Ratelimit({
-    redis: Redis.fromEnv(),
-    limiter: Ratelimit.slidingWindow(requests, window),
-    prefix,
-  })
+
+  private cleanup(now: number) {
+    for (const [key, entry] of this.store) {
+      if (now >= entry.resetAt) this.store.delete(key)
+    }
+  }
 }
 
-// Self-registration: 5 attempts per IP per hour
-export const registrationLimiter = createLimiter(5, '1 h', 'nexo:reg')
+// 5 intentos por IP por hora
+export const registrationLimiter = new InMemoryRatelimit(5, 60 * 60 * 1000)
 
-// Admin affiliate creation: 100 per admin email per hour
-export const adminAffiliateLimiter = createLimiter(100, '1 h', 'nexo:admin')
+// 100 creaciones por admin por hora
+export const adminAffiliateLimiter = new InMemoryRatelimit(100, 60 * 60 * 1000)
