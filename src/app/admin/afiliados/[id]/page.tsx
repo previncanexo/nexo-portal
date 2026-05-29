@@ -9,6 +9,7 @@ import PaymentForm from './PaymentForm'
 import EditAfiliadoForm from './EditAfiliadoForm'
 import NotesForm from './NotesForm'
 import CredentialDownload from './CredentialDownload'
+import DeleteAfiliadoButton from './DeleteAfiliadoButton'
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string }> = {
   active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.1)',  border: 'rgba(22,163,74,0.2)' },
@@ -225,6 +226,13 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
               Credencial
             </h2>
             <CredentialDownload affiliate={affiliate} />
+          </div>
+
+          <div className="glass-card px-6 py-6">
+            <h2 className="text-sm font-bold uppercase tracking-wider mb-5" style={{ color: '#f87171' }}>
+              Zona de peligro
+            </h2>
+            <DeleteAfiliadoButton affiliateId={affiliate.id} nombre={`${affiliate.nombre} ${affiliate.apellido}`} />
           </div>
         </div>
 

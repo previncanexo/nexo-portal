@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendActivationEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendResubscribeEmail } from '@/lib/emails'
 import { MercadoPagoConfig, PreApproval } from 'mercadopago'
@@ -266,4 +267,40 @@ export async function addPayment(affiliateId: string, formData: FormData) {
   revalidatePath(`/admin/afiliados/${affiliateId}`)
 
   return { success: true, message: 'Pago registrado correctamente.' }
+}
+
+export async function deleteAffiliate(affiliateId: string): Promise<{ success: false; message: string } | never> {
+  const supabase = createAdminClient()
+
+  const { data: affiliate } = await supabase
+    .from('affiliates')
+    .select('user_id, mp_subscription_id')
+    .eq('id', affiliateId)
+    .single()
+
+  if (!affiliate) return { success: false, message: 'Afiliado no encontrado.' }
+
+  // Cancel MP subscription if exists
+  if (affiliate.mp_subscription_id && process.env.MP_ACCESS_TOKEN) {
+    try {
+      const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
+      const preApprovalClient = new PreApproval(mpClient)
+      await preApprovalClient.update({ id: affiliate.mp_subscription_id, body: { status: 'cancelled' } })
+    } catch (err) {
+      console.error('[admin] MP cancel on delete error:', err)
+    }
+  }
+
+  // Delete affiliate record (payments cascade via FK)
+  const { error } = await supabase.from('affiliates').delete().eq('id', affiliateId)
+  if (error) return { success: false, message: error.message }
+
+  // Delete auth user
+  if (affiliate.user_id) {
+    await supabase.auth.admin.deleteUser(affiliate.user_id)
+  }
+
+  revalidatePath('/admin')
+  revalidatePath('/admin/afiliados')
+  redirect('/admin/afiliados')
 }
