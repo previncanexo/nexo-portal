@@ -9,6 +9,7 @@ interface FormData {
   apellido: string
   dni: string
   email: string
+  mp_email: string
   whatsapp: string
   ciudad: string
   fecha_nacimiento: string
@@ -19,6 +20,7 @@ const initialForm: FormData = {
   apellido: '',
   dni: '',
   email: '',
+  mp_email: '',
   whatsapp: '',
   ciudad: '',
   fecha_nacimiento: '',
@@ -315,6 +317,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
         apellido: form.apellido.trim(),
         dni: form.dni.trim(),
         email: form.email.trim().toLowerCase(),
+        mp_email: form.mp_email.trim().toLowerCase() || undefined,
         whatsapp: form.whatsapp.trim() || undefined,
         ciudad: form.ciudad.trim() || undefined,
         fecha_nacimiento: form.fecha_nacimiento || undefined,
@@ -333,7 +336,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
   }
 
   if (checkoutUrl) {
-    const registrationEmail = form.email.trim().toLowerCase()
+    const payerEmail = form.mp_email.trim().toLowerCase() || form.email.trim().toLowerCase()
     return (
       <div
         className="min-h-screen flex items-center justify-center px-4"
@@ -358,16 +361,16 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
               Antes de ir a Mercado Pago
             </p>
             <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
-              Debés pagar con el mismo email con el que te registraste en Nexo:
+              Vas a pagar con la cuenta de MercadoPago:
             </p>
             <span
               className="text-xs font-bold px-3 py-1.5 rounded-full self-start mt-1"
               style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', fontFamily: 'var(--font-dm-sans)' }}
             >
-              {registrationEmail}
+              {payerEmail}
             </span>
             <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
-              Si ya estás logueado en Mercado Pago con otra cuenta, cerrá sesión allí primero y volvé a intentarlo.
+              Si ya estás logueado en Mercado Pago con otra cuenta, cerrá sesión allí primero.
             </p>
           </div>
 
@@ -605,6 +608,12 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
                 </div>
                 <InputField id="dni" label="DNI" value={form.dni} onChange={setField('dni')} placeholder="12345678" required />
                 <InputField id="email" label="Email" type="email" value={form.email} onChange={setField('email')} placeholder="tu@email.com" required />
+                <div className="flex flex-col gap-1">
+                  <InputField id="mp_email" label="Email de MercadoPago (si es diferente)" type="email" value={form.mp_email} onChange={setField('mp_email')} placeholder="tu@mercadopago.com" />
+                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>
+                    Solo si tu cuenta de MercadoPago usa otro email. Opcional.
+                  </p>
+                </div>
                 <InputField id="whatsapp" label="WhatsApp" type="tel" value={form.whatsapp} onChange={setField('whatsapp')} placeholder="+54 9 11 1234-5678" />
                 <InputField id="ciudad" label="Ciudad" value={form.ciudad} onChange={setField('ciudad')} placeholder="Rosario" />
                 <DateField id="fecha_nacimiento" label="Fecha de nacimiento" value={form.fecha_nacimiento} onChange={setField('fecha_nacimiento')} />
