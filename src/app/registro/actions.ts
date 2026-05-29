@@ -180,9 +180,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
       console.error('[mp] PreApproval resume error:', mpMessage, err)
       return {
         success: false,
-        error: `Error al iniciar el pago con Mercado Pago. Intentá de nuevo.${
-          process.env.NODE_ENV === 'development' ? ` (${mpMessage})` : ''
-        }`,
+        error: `Error MP (resume): ${mpMessage}`,
       }
     }
   }
@@ -287,9 +285,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     }
     return {
       success: false,
-      error: `Error al iniciar el pago con Mercado Pago. Intentá de nuevo.${
-        process.env.NODE_ENV === 'development' ? ` (${mpMessage})` : ''
-      }`,
+      error: `Error MP (new): ${mpMessage}`,
     }
   }
 }
