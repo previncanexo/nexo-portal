@@ -286,6 +286,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
   const [selectedPlan, setSelectedPlan] = useState<PlanInfo>(plans[0])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [checkoutUrl, setCheckoutUrl] = useState('')
   const hasMultiplePlans = plans.length > 1
 
   function setField(field: keyof FormData) {
@@ -323,12 +324,75 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
         setError(data.error)
         return
       }
-      window.location.href = data.checkoutUrl
+      setCheckoutUrl(data.checkoutUrl)
     } catch {
       setError('Error inesperado. Intentá de nuevo.')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (checkoutUrl) {
+    const registrationEmail = form.email.trim().toLowerCase()
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: 'linear-gradient(135deg, #12053d 0%, #2d1266 40%, #6535cc 100%)' }}
+      >
+        <div
+          className="flex flex-col gap-5 rounded-3xl p-7 max-w-sm w-full text-left"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(251,191,36,0.25)' }}
+        >
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center"
+            style={{ background: 'rgba(251,191,36,0.12)' }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <p className="text-base font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+              Antes de ir a Mercado Pago
+            </p>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
+              Debés pagar con el mismo email con el que te registraste en Nexo:
+            </p>
+            <span
+              className="text-xs font-bold px-3 py-1.5 rounded-full self-start mt-1"
+              style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', fontFamily: 'var(--font-dm-sans)' }}
+            >
+              {registrationEmail}
+            </span>
+            <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
+              Si ya estás logueado en Mercado Pago con otra cuenta, cerrá sesión allí primero y volvé a intentarlo.
+            </p>
+          </div>
+
+          <a
+            href={checkoutUrl}
+            className="inline-flex items-center justify-center px-5 py-3 rounded-full text-sm font-bold text-white text-center"
+            style={{
+              background: 'linear-gradient(to right, var(--purple), var(--pink))',
+              fontFamily: 'var(--font-dm-sans)',
+              boxShadow: '0 4px 16px rgba(134,96,239,0.30)',
+              textDecoration: 'none',
+            }}
+          >
+            Entendido, ir a Mercado Pago →
+          </a>
+          <button
+            onClick={() => setCheckoutUrl('')}
+            className="text-xs text-center"
+            style={{ color: 'rgba(255,255,255,0.30)', fontFamily: 'var(--font-dm-sans)', background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            Volver al registro
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
