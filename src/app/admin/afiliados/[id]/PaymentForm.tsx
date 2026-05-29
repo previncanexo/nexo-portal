@@ -86,29 +86,6 @@ export default function PaymentForm({ affiliateId }: PaymentFormProps) {
         </div>
       </div>
 
-      {/* Payment method */}
-      <div>
-        <label
-          htmlFor="payment-method"
-          className="block text-xs font-semibold uppercase tracking-wider mb-2"
-          style={labelStyle}
-        >
-          Medio de pago
-        </label>
-        <select
-          id="payment-method"
-          name="payment_method"
-          defaultValue="transferencia"
-          className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all cursor-pointer"
-          style={inputStyle}
-        >
-          <option value="transferencia">Transferencia</option>
-          <option value="efectivo">Efectivo</option>
-          <option value="mercado_pago">Mercado Pago</option>
-          <option value="otro">Otro</option>
-        </select>
-      </div>
-
       {/* Status */}
       <div>
         <label

@@ -175,7 +175,7 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
                           {p.currency} {p.amount.toLocaleString('es-AR')}
                         </td>
                         <td className="py-2 pr-4 whitespace-nowrap" style={{ color: 'var(--gray-600)' }}>
-                          Mercado Pago
+                          {p.mp_payment_id ? 'Mercado Pago' : 'Manual'}
                         </td>
                         <td className="py-2 pr-4 whitespace-nowrap" style={{ color: 'var(--gray-600)' }}>
                           {p.mp_status}
