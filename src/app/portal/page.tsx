@@ -58,6 +58,41 @@ export default async function PortalPage() {
     payments = (data ?? []) as Payment[]
   }
 
+  // Pending: show focused payment screen instead of locked portal
+  if (isPending) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 px-4 text-center">
+        <div
+          className="w-16 h-16 rounded-3xl flex items-center justify-center"
+          style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)' }}
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+            Completá tu pago
+          </h1>
+          <p className="text-sm sm:text-base max-w-sm" style={{ color: 'rgba(255,255,255,0.60)', fontFamily: 'var(--font-dm-sans)' }}>
+            Tu cuenta está registrada pero el pago no fue confirmado todavía. Completá el pago para activar todos tus beneficios.
+          </p>
+        </div>
+
+        <RetryPaymentButton />
+
+        <a
+          href="/registro"
+          className="text-sm"
+          style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)', textDecoration: 'underline', textUnderlineOffset: '3px' }}
+        >
+          Volver a registrarse con otros datos
+        </a>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-7 pb-10">
 
@@ -80,26 +115,6 @@ export default async function PortalPage() {
         </p>
       </div>
 
-      {/* Banner estado no activo */}
-      {isPending && (
-        <div
-          className="rounded-2xl px-4 py-4 flex items-start gap-3"
-          style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.30)' }}
-        >
-          <svg className="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          <div>
-            <p className="text-sm font-semibold" style={{ color: '#fbbf24' }}>
-              Tu pago está siendo procesado
-            </p>
-            <p className="text-sm mt-0.5" style={{ color: 'rgba(251,191,36,0.80)' }}>
-              Tu cuenta se activará automáticamente en cuanto confirmemos el pago. Si no completaste el pago, podés hacerlo ahora.
-            </p>
-            <RetryPaymentButton />
-          </div>
-        </div>
-      )}
       {isSuspended && (
         <div
           className="rounded-2xl px-4 py-4 flex items-start gap-3"
@@ -219,9 +234,6 @@ export default async function PortalPage() {
 
       {/* Cancelar suscripción */}
       <CancelSection status={status} />
-
-      {/* Realtime: auto-refresh when pending → active */}
-      {isPending && <ActiveWatcher affiliateId={affiliate.id} />}
 
     </div>
   )
