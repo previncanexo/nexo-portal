@@ -73,7 +73,6 @@ interface RegisterInput {
   apellido: string
   dni: string
   email: string
-  mp_email?: string
   whatsapp?: string
   ciudad?: string
   fecha_nacimiento?: string
@@ -245,7 +244,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     const mpResponse = await preApprovalClient.create({
       body: {
         reason: plan?.name ?? 'Nexo by Previnca',
-        payer_email: input.mp_email?.trim() || email,
+        payer_email: email,
         back_url: `${appUrl}/registro/exito`,
         auto_recurring: {
           frequency: 1,
