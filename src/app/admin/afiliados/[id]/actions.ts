@@ -18,6 +18,12 @@ async function cancelMpSubscription(subscriptionId: string): Promise<void> {
   }
 }
 
+function addOneMonth(dateStr: string | null): string {
+  const base = dateStr ? new Date(dateStr) : new Date()
+  base.setMonth(base.getMonth() + 1)
+  return base.toISOString().split('T')[0]
+}
+
 export async function updateAffiliateStatus(
   affiliateId: string,
   status: AffiliateStatus,
@@ -89,6 +95,7 @@ export async function updateAffiliateStatus(
 
   // Reactivating a previously suspended affiliate: create a new MP subscription
   // so they can resume monthly charges, and notify them via email
+  let mpReactivationWarning: string | null = null
   if (status === 'active' && current?.status === 'suspended' && process.env.MP_ACCESS_TOKEN) {
     const rawPlan = (current as any).plan
     const plan = Array.isArray(rawPlan) ? rawPlan[0] : rawPlan
@@ -121,13 +128,14 @@ export async function updateAffiliateStatus(
       }
     } catch (err) {
       console.error('[admin] MP reactivation preapproval error:', err)
+      mpReactivationWarning = 'Estado actualizado, pero no se pudo crear la nueva suscripción en Mercado Pago. Revisá manualmente.'
     }
   }
 
   revalidatePath(`/admin/afiliados/${affiliateId}`)
   revalidatePath('/admin/afiliados')
 
-  return { success: true, message: 'Estado actualizado correctamente.' }
+  return { success: true, message: mpReactivationWarning ?? 'Estado actualizado correctamente.' }
 }
 
 export async function updateAffiliateData(affiliateId: string, formData: FormData) {
@@ -194,7 +202,7 @@ export async function addPayment(affiliateId: string, formData: FormData) {
 
   const { data: affiliate } = await supabase
     .from('affiliates')
-    .select('status, nombre, apellido, dni, email, affiliate_number, farmacia_number, plan:plans(name)')
+    .select('status, nombre, apellido, dni, email, affiliate_number, farmacia_number, cobertura_hasta, plan:plans(name)')
     .eq('id', affiliateId)
     .single()
 
@@ -219,19 +227,24 @@ export async function addPayment(affiliateId: string, formData: FormData) {
 
   // Si el pago es aprobado y el afiliado está pendiente → activar automáticamente
   if (paymentStatus === 'approved' && affiliate?.status === 'pending') {
-    await supabase
+    const resolvedPlan = Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan
+    const farmaciaNumber = (affiliate as any).farmacia_number
+      ?? `289${parseInt(affiliate.affiliate_number ?? '0', 10).toString().padStart(8, '0')}0000`
+
+    const { error: activationError } = await supabase
       .from('affiliates')
       .update({
         status: 'active',
+        farmacia_number: farmaciaNumber,
         cobertura_desde: today.toISOString().split('T')[0],
         cobertura_hasta: nextMonth.toISOString().split('T')[0],
         updated_at: today.toISOString(),
       })
       .eq('id', affiliateId)
 
-    const resolvedPlan = Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan
-    const farmaciaNumber = (affiliate as any).farmacia_number
-      ?? `289${parseInt(affiliate.affiliate_number ?? '0', 10).toString().padStart(8, '0')}0000`
+    if (activationError) {
+      return { success: false, message: `Pago registrado pero error al activar al afiliado: ${activationError.message}` }
+    }
 
     await sendActivationEmail({
       nombre: affiliate.nombre,
@@ -257,6 +270,27 @@ export async function addPayment(affiliateId: string, formData: FormData) {
     revalidatePath(`/admin/afiliados/${affiliateId}`)
 
     return { success: true, message: 'Pago registrado. Afiliado activado automáticamente.' }
+  }
+
+  // Afiliado ya activo → extender cobertura_hasta un mes
+  if (paymentStatus === 'approved' && affiliate?.status === 'active') {
+    const newCobertura = addOneMonth((affiliate as any).cobertura_hasta ?? null)
+
+    await supabase
+      .from('affiliates')
+      .update({
+        cobertura_hasta: newCobertura,
+        updated_at: today.toISOString(),
+      })
+      .eq('id', affiliateId)
+
+    await sendPaymentConfirmedEmail(affiliate.nombre, affiliate.email, amount, currency)
+
+    revalidatePath('/admin')
+    revalidatePath('/admin/afiliados')
+    revalidatePath(`/admin/afiliados/${affiliateId}`)
+
+    return { success: true, message: `Pago registrado. Cobertura extendida hasta ${newCobertura}.` }
   }
 
   // Notificar al afiliado si el pago fue aprobado

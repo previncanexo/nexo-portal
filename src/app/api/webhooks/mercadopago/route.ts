@@ -118,6 +118,9 @@ export async function POST(req: NextRequest) {
 
         if (affiliate && affiliate.status === 'pending') {
           const today = new Date().toISOString().split('T')[0]
+          const certNum = parseInt(affiliate.affiliate_number ?? '0', 10)
+          const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
+
           await supabase
             .from('affiliates')
             .update({
@@ -125,13 +128,12 @@ export async function POST(req: NextRequest) {
               mp_subscription_id: body.data.id,
               cobertura_desde: today,
               cobertura_hasta: addOneMonth(today),
+              farmacia_number: farmaciaNumber,
               updated_at: new Date().toISOString(),
             })
             .eq('id', preApproval.external_reference)
 
           const resolvedPlan = Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan
-          const certNum = parseInt(affiliate.affiliate_number ?? '0', 10)
-          const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
 
           await sendActivationEmail({
             nombre: affiliate.nombre,
@@ -214,6 +216,9 @@ export async function POST(req: NextRequest) {
             // Activate pending affiliate when first payment is approved
             if (affiliateData?.status === 'pending') {
               const today = new Date().toISOString().split('T')[0]
+              const certNum = parseInt(affiliateData.affiliate_number ?? '0', 10)
+              const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
+
               await supabase
                 .from('affiliates')
                 .update({
@@ -221,6 +226,7 @@ export async function POST(req: NextRequest) {
                   mp_subscription_id: String((payment as any).subscription_id),
                   cobertura_desde: today,
                   cobertura_hasta: addOneMonth(today),
+                  farmacia_number: farmaciaNumber,
                   updated_at: new Date().toISOString(),
                 })
                 .eq('id', preApproval.external_reference)
@@ -228,8 +234,6 @@ export async function POST(req: NextRequest) {
               const resolvedPlan = Array.isArray(affiliateData.plan)
                 ? (affiliateData.plan[0] ?? null)
                 : affiliateData.plan
-              const certNum = parseInt(affiliateData.affiliate_number ?? '0', 10)
-              const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
 
               await sendActivationEmail({
                 nombre: affiliateData.nombre,
