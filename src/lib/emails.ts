@@ -323,7 +323,7 @@ export async function sendActivationEmail(affiliate: {
   await resend.emails.send({
     from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
     to: affiliate.email,
-    cc: ['cbanegas@previncaholding.com.ar', 'sistemas@previncaseguros.com.ar', 'sistemas@previncasalud.com.ar'],
+    bcc: ['cbanegas@previncaholding.com.ar', 'sistemas@previncaseguros.com.ar', 'sistemas@previncasalud.com.ar'],
     subject: '¡Bienvenido/a a Previnca Nexo!',
     html: activationEmailHtml(affiliate.nombre, affiliate.affiliate_number, affiliate.farmacia_number ?? null, affiliate.plan?.name ?? null, appUrl),
   }).catch((err) => {

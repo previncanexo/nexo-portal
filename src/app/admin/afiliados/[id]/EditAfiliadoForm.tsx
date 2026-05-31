@@ -91,18 +91,17 @@ export default function EditAfiliadoForm({ affiliate, plans }: Props) {
 
       <div>
         <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={labelStyle}>
-          DNI *
+          DNI
         </label>
-        <input
-          name="dni"
-          type="text"
-          required
-          defaultValue={affiliate.dni}
+        <div
           className="w-full px-4 py-2.5 rounded-xl text-sm"
-          style={getStyle('dni')}
-          onFocus={() => setFocused('dni')}
-          onBlur={() => setFocused(null)}
-        />
+          style={{ ...inputStyle, color: 'var(--gray-500)', cursor: 'not-allowed' }}
+        >
+          {affiliate.dni}
+        </div>
+        <p className="mt-1.5 text-xs" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
+          El DNI no puede modificarse. Para corregirlo, eliminá el afiliado y volvé a cargarlo.
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -135,6 +134,22 @@ export default function EditAfiliadoForm({ affiliate, plans }: Props) {
             onBlur={() => setFocused(null)}
           />
         </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={labelStyle}>
+          Domicilio
+        </label>
+        <input
+          name="domicilio"
+          type="text"
+          defaultValue={(affiliate as any).domicilio ?? ''}
+          placeholder="Calle y número"
+          className="w-full px-4 py-2.5 rounded-xl text-sm"
+          style={getStyle('domicilio')}
+          onFocus={() => setFocused('domicilio')}
+          onBlur={() => setFocused(null)}
+        />
       </div>
 
       <div>

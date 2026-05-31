@@ -137,7 +137,7 @@ export async function updateAffiliateData(affiliateId: string, formData: FormDat
     updated_at: new Date().toISOString(),
   }
 
-  const textFields = ['nombre', 'apellido', 'dni', 'whatsapp', 'ciudad'] as const
+  const textFields = ['nombre', 'apellido', 'whatsapp', 'ciudad', 'domicilio'] as const
   for (const field of textFields) {
     const value = (formData.get(field) as string | null)?.trim() ?? ''
     payload[field] = value || null

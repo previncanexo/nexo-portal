@@ -18,6 +18,7 @@ export interface Affiliate {
   email: string
   whatsapp: string | null
   ciudad: string | null
+  domicilio: string | null
   fecha_nacimiento: string | null
   plan_id: string | null
   affiliate_number: string

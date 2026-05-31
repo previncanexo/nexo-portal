@@ -3,7 +3,7 @@
 import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { registrationLimiter } from '@/lib/ratelimit'
-import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from 'mercadopago'
+import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import { Resend } from 'resend'
 
 function generateTempPassword(): string {
@@ -75,6 +75,7 @@ interface RegisterInput {
   email: string
   whatsapp?: string
   ciudad?: string
+  domicilio?: string
   fecha_nacimiento?: string
   plan_id?: string
 }
@@ -103,7 +104,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     }
   }
 
-  const { nombre, apellido, dni, email, whatsapp, ciudad, fecha_nacimiento } = input
+  const { nombre, apellido, dni, email, whatsapp, ciudad, domicilio, fecha_nacimiento } = input
 
   if (!nombre || !apellido || !dni || !email) {
     return { success: false, error: 'Faltan campos obligatorios: nombre, apellido, DNI y email.' }
@@ -147,6 +148,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
         nombre, apellido, dni,
         ...(whatsapp ? { whatsapp } : {}),
         ...(ciudad ? { ciudad } : {}),
+        ...(domicilio ? { domicilio } : {}),
         ...(fecha_nacimiento ? { fecha_nacimiento } : {}),
         updated_at: new Date().toISOString(),
       })
@@ -154,31 +156,24 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
 
     try {
       const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
+      const preApprovalClient = new PreApproval(mpClient)
       let checkoutUrl: string
       let mpId: string | undefined
 
       if (plan?.mp_plan_id) {
-        // Per-affiliate plan: any MP account can subscribe, no payer_email restriction
-        const planClient = new PreApprovalPlan(mpClient)
-        const mpPlan = await planClient.create({
+        // Subscribe under the existing MP plan — no new plan created per user
+        const mpResponse = await preApprovalClient.create({
           body: {
-            reason: plan.name ?? 'Nexo by Previnca',
-            auto_recurring: {
-              frequency: 1,
-              frequency_type: 'months',
-              transaction_amount: plan.price ?? 19500,
-              currency_id: 'ARS',
-            },
-            back_url: `${appUrl}/registro/exito`,
+            preapproval_plan_id: plan.mp_plan_id,
             external_reference: existingAffiliate.id,
+            back_url: `${appUrl}/registro/exito`,
           } as any,
         })
-        if (!mpPlan.init_point) throw new Error('MP no devolvió URL de pago')
-        checkoutUrl = mpPlan.init_point
-        mpId = mpPlan.id ? String(mpPlan.id) : undefined
+        if (!mpResponse.init_point) throw new Error('MP no devolvió URL de pago')
+        checkoutUrl = mpResponse.init_point
+        mpId = mpResponse.id ? String(mpResponse.id) : undefined
       } else {
-        // Legacy: payer_email required
-        const preApprovalClient = new PreApproval(mpClient)
+        // Legacy fallback: no plan configured, create standalone pre-approval
         const mpResponse = await preApprovalClient.create({
           body: {
             reason: plan?.name ?? 'Nexo by Previnca',
@@ -241,6 +236,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
   }
   if (whatsapp) affiliateData.whatsapp = whatsapp
   if (ciudad) affiliateData.ciudad = ciudad
+  if (domicilio) affiliateData.domicilio = domicilio
   if (fecha_nacimiento) affiliateData.fecha_nacimiento = fecha_nacimiento
 
   const { data: affiliate, error: affiliateError } = await supabase
@@ -264,31 +260,24 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
   // Create MP checkout — email is sent AFTER this succeeds to avoid orphan credentials
   try {
     const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
+    const preApprovalClient = new PreApproval(mpClient)
     let checkoutUrl: string
     let mpId: string | undefined
 
     if (plan?.mp_plan_id) {
-      // Per-affiliate plan: any MP account can subscribe, no payer_email restriction
-      const planClient = new PreApprovalPlan(mpClient)
-      const mpPlan = await planClient.create({
+      // Subscribe under the existing MP plan — no new plan created per user
+      const mpResponse = await preApprovalClient.create({
         body: {
-          reason: plan.name ?? 'Nexo by Previnca',
-          auto_recurring: {
-            frequency: 1,
-            frequency_type: 'months',
-            transaction_amount: plan.price ?? 19500,
-            currency_id: 'ARS',
-          },
-          back_url: `${appUrl}/registro/exito`,
+          preapproval_plan_id: plan.mp_plan_id,
           external_reference: affiliate.id,
+          back_url: `${appUrl}/registro/exito`,
         } as any,
       })
-      if (!mpPlan.init_point) throw new Error('MP no devolvió URL de pago')
-      checkoutUrl = mpPlan.init_point
-      mpId = mpPlan.id ? String(mpPlan.id) : undefined
+      if (!mpResponse.init_point) throw new Error('MP no devolvió URL de pago')
+      checkoutUrl = mpResponse.init_point
+      mpId = mpResponse.id ? String(mpResponse.id) : undefined
     } else {
-      // Legacy: payer_email required
-      const preApprovalClient = new PreApproval(mpClient)
+      // Legacy fallback: no plan configured, create standalone pre-approval
       const mpResponse = await preApprovalClient.create({
         body: {
           reason: plan?.name ?? 'Nexo by Previnca',
