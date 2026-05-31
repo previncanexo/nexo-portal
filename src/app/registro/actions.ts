@@ -165,6 +165,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
         const mpResponse = await preApprovalClient.create({
           body: {
             preapproval_plan_id: plan.mp_plan_id,
+            payer_email: email,
             external_reference: existingAffiliate.id,
             back_url: `${appUrl}/registro/exito`,
           } as any,
@@ -269,6 +270,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
       const mpResponse = await preApprovalClient.create({
         body: {
           preapproval_plan_id: plan.mp_plan_id,
+          payer_email: email,
           external_reference: affiliate.id,
           back_url: `${appUrl}/registro/exito`,
         } as any,
