@@ -162,15 +162,15 @@ export async function POST(req: NextRequest) {
               temp_password: tempPassword,
               plan: resolvedPlan,
             })
-          } else {
-            await sendActivationEmail({
-              nombre: affiliate.nombre,
-              email: affiliate.email,
-              affiliate_number: affiliate.affiliate_number,
-              farmacia_number: farmaciaNumber,
-              plan: resolvedPlan,
-            })
           }
+
+          await sendActivationEmail({
+            nombre: affiliate.nombre,
+            email: affiliate.email,
+            affiliate_number: affiliate.affiliate_number,
+            farmacia_number: farmaciaNumber,
+            plan: resolvedPlan,
+          })
 
           await sendInternalNewMemberEmail({
             id: affiliateId,
@@ -306,15 +306,15 @@ export async function POST(req: NextRequest) {
                   temp_password: tempPassword,
                   plan: resolvedPlan,
                 })
-              } else {
-                await sendActivationEmail({
-                  nombre: affiliateData.nombre,
-                  email: affiliateData.email,
-                  affiliate_number: affiliateData.affiliate_number,
-                  farmacia_number: farmaciaNumber,
-                  plan: resolvedPlan,
-                })
               }
+
+              await sendActivationEmail({
+                nombre: affiliateData.nombre,
+                email: affiliateData.email,
+                affiliate_number: affiliateData.affiliate_number,
+                farmacia_number: farmaciaNumber,
+                plan: resolvedPlan,
+              })
 
               await sendInternalNewMemberEmail({
                 id: preApproval.external_reference,
