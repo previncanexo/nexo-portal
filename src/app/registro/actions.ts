@@ -205,10 +205,11 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
       return { success: true, checkoutUrl }
     } catch (err: any) {
       const mpMessage = err?.message ?? String(err)
-      console.error('[mp] resume error:', mpMessage, err)
+      const mpCause = JSON.stringify(err?.cause ?? err?.error ?? '')
+      console.error('[mp] resume error:', mpMessage, mpCause, err)
       return {
         success: false,
-        error: 'Error al iniciar el pago con Mercado Pago. Intentá de nuevo.',
+        error: `[DEBUG MP] ${mpMessage} | ${mpCause}`,
       }
     }
   }
@@ -321,7 +322,8 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     return { success: true, checkoutUrl }
   } catch (err: any) {
     const mpMessage = err?.message ?? String(err)
-    console.error('[mp] checkout error:', mpMessage, err)
+    const mpCause = JSON.stringify(err?.cause ?? err?.error ?? '')
+    console.error('[mp] checkout error:', mpMessage, mpCause, err)
     // Rollback: no email was sent yet, so this is a clean undo
     try {
       await supabase.from('affiliates').delete().eq('id', affiliate.id)
@@ -331,7 +333,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     }
     return {
       success: false,
-      error: 'Error al iniciar el pago con Mercado Pago. Intentá de nuevo.',
+      error: `[DEBUG MP] ${mpMessage} | ${mpCause}`,
     }
   }
 }
