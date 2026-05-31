@@ -72,10 +72,13 @@ function exportCSV(list: Affiliate[]) {
   URL.revokeObjectURL(url)
 }
 
-export default function AfiliadosClient({ affiliates, plans }: { affiliates: Affiliate[]; plans: Plan[] }) {
+export default function AfiliadosClient({ affiliates, plans, initialStatus }: { affiliates: Affiliate[]; plans: Plan[]; initialStatus?: string }) {
   const router = useRouter()
   const [period, setPeriod] = useState<PeriodFilter>('all')
-  const [statusFilter, setStatusFilter] = useState<AffiliateStatus | 'all'>('all')
+  const [statusFilter, setStatusFilter] = useState<AffiliateStatus | 'all'>(
+    (initialStatus as AffiliateStatus) ?? 'all'
+  )
+  const [planFilter, setPlanFilter] = useState<string>('all')
   const [search, setSearch] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [page, setPage] = useState(0)
@@ -97,13 +100,14 @@ export default function AfiliadosClient({ affiliates, plans }: { affiliates: Aff
     })
   }
 
-  useEffect(() => { setPage(0) }, [search, statusFilter, period])
+  useEffect(() => { setPage(0) }, [search, statusFilter, planFilter, period])
 
   const filtered = useMemo(() => {
     const start = getStartOf(period)
     const q = search.trim().toLowerCase()
     return affiliates.filter((a) => {
       if (statusFilter !== 'all' && a.status !== statusFilter) return false
+      if (planFilter !== 'all' && a.plan_id !== planFilter) return false
       if (start && new Date(a.created_at) < start) return false
       if (q) {
         const haystack = [a.nombre, a.apellido, a.dni, a.email]
@@ -254,6 +258,29 @@ export default function AfiliadosClient({ affiliates, plans }: { affiliates: Aff
             </option>
           ))}
         </select>
+
+        {/* Plan filter */}
+        {plans.length > 0 && (
+          <select
+            value={planFilter}
+            onChange={(e) => setPlanFilter(e.target.value)}
+            className="px-4 py-2.5 rounded-xl text-sm font-semibold outline-none"
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              color: 'rgba(255,255,255,0.85)',
+              fontFamily: 'var(--font-dm-sans)',
+              cursor: 'pointer',
+            }}
+          >
+            <option value="all" style={{ background: '#0f1623', color: 'white' }}>Todos los planes</option>
+            {plans.map((p) => (
+              <option key={p.id} value={p.id} style={{ background: '#0f1623', color: 'white' }}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Stats */}

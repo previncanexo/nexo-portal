@@ -10,6 +10,8 @@ import EditAfiliadoForm from './EditAfiliadoForm'
 import NotesForm from './NotesForm'
 import CredentialDownload from './CredentialDownload'
 import DeleteAfiliadoButton from './DeleteAfiliadoButton'
+import DeletePaymentButton from './DeletePaymentButton'
+import ResetPasswordButton from './ResetPasswordButton'
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string }> = {
   active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.1)',  border: 'rgba(22,163,74,0.2)' },
@@ -120,6 +122,7 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
               <DataRow label="Email"            value={affiliate.email} />
               <DataRow label="WhatsApp"         value={affiliate.whatsapp} />
               <DataRow label="Ciudad"           value={affiliate.ciudad} />
+              <DataRow label="Domicilio"        value={(affiliate as any).domicilio} />
               <DataRow label="Fecha nacimiento" value={formatDate(affiliate.fecha_nacimiento)} />
               <DataRow label="Registro"         value={formatDate(affiliate.created_at)} />
             </div>
@@ -155,7 +158,7 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-                      {['Fecha', 'Monto', 'Método', 'Estado', 'ID externo'].map((col) => (
+                      {['Fecha', 'Monto', 'Método', 'Estado', 'ID externo', ''].map((col) => (
                         <th
                           key={col}
                           className="pb-2 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap pr-4"
@@ -170,7 +173,7 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
                     {payments.map((p) => (
                       <tr key={p.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
                         <td className="py-2 pr-4 whitespace-nowrap" style={{ color: 'var(--gray-700)' }}>
-                          {formatDate(p.created_at)}
+                          {formatDate(p.paid_at ?? p.created_at)}
                         </td>
                         <td className="py-2 pr-4 whitespace-nowrap font-semibold" style={{ color: 'var(--gray-900)' }}>
                           {p.currency} {p.amount.toLocaleString('es-AR')}
@@ -183,6 +186,9 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
                         </td>
                         <td className="py-2 pr-4 whitespace-nowrap font-mono text-xs" style={{ color: 'var(--gray-500)' }}>
                           {p.mp_payment_id ?? '—'}
+                        </td>
+                        <td className="py-2">
+                          <DeletePaymentButton paymentId={p.id} />
                         </td>
                       </tr>
                     ))}
@@ -226,6 +232,13 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
               Credencial
             </h2>
             <CredentialDownload affiliate={affiliate} />
+          </div>
+
+          <div className="glass-card px-6 py-6">
+            <h2 className="text-sm font-bold uppercase tracking-wider mb-5" style={{ color: 'var(--gray-700)' }}>
+              Contraseña
+            </h2>
+            <ResetPasswordButton affiliateId={affiliate.id} />
           </div>
 
           <div className="glass-card px-6 py-6">

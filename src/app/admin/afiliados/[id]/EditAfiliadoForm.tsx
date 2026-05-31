@@ -91,6 +91,22 @@ export default function EditAfiliadoForm({ affiliate, plans }: Props) {
 
       <div>
         <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={labelStyle}>
+          Email *
+        </label>
+        <input
+          name="email"
+          type="email"
+          required
+          defaultValue={affiliate.email}
+          className="w-full px-4 py-2.5 rounded-xl text-sm"
+          style={getStyle('email')}
+          onFocus={() => setFocused('email')}
+          onBlur={() => setFocused(null)}
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={labelStyle}>
           DNI
         </label>
         <div

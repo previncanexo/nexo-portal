@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 
 interface PaymentRow {
@@ -18,6 +18,8 @@ interface PaymentRow {
     affiliate_number: string
   } | null
 }
+
+const PAGE_SIZE = 50
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
   approved: { label: 'Aprobado',  color: '#16a34a', bg: 'rgba(22,163,74,0.1)',  border: 'rgba(22,163,74,0.2)' },
@@ -48,6 +50,9 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
   const [search, setSearch] = useState<string>('')
   const [monthFilter, setMonthFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [page, setPage] = useState(0)
+
+  useEffect(() => { setPage(0) }, [search, monthFilter, statusFilter])
 
   const monthKeys = useMemo(() => {
     const keys = [...new Set(payments.map((p) => getMonthKey(p.created_at)))].sort().reverse()
@@ -71,6 +76,9 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
       return true
     })
   }, [payments, search, monthFilter, statusFilter])
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   const totalApproved = useMemo(
     () => filtered.filter((p) => p.mp_status === 'approved').reduce((sum, p) => sum + p.amount, 0),
@@ -214,12 +222,12 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
                   </td>
                 </tr>
               )}
-              {filtered.map((p, i) => {
+              {paged.map((p, i) => {
                 const statusCfg = STATUS_CONFIG[p.mp_status] ?? STATUS_CONFIG.pending
                 return (
                   <tr
                     key={p.id}
-                    style={{ borderBottom: i < filtered.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none' }}
+                    style={{ borderBottom: i < paged.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none' }}
                     className="hover:bg-black/[0.025] transition-colors"
                   >
                     <td className="px-5 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--gray-700)' }}>
@@ -271,6 +279,44 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
           </table>
         </div>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between gap-4 pt-2">
+          <span className="text-sm" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
+            {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)} de {filtered.length}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className="px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-30"
+              style={{
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                color: 'rgba(255,255,255,0.85)',
+                cursor: page === 0 ? 'not-allowed' : 'pointer',
+                fontFamily: 'var(--font-dm-sans)',
+              }}
+            >
+              ← Anterior
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+              className="px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-30"
+              style={{
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                color: 'rgba(255,255,255,0.85)',
+                cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer',
+                fontFamily: 'var(--font-dm-sans)',
+              }}
+            >
+              Siguiente →
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

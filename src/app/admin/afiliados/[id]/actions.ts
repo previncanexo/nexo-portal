@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendActivationEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendResubscribeEmail } from '@/lib/emails'
+import { sendActivationEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendResubscribeEmail, sendSuspensionEmail, sendCancellationEmail, sendPasswordResetEmail } from '@/lib/emails'
 import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import type { AffiliateStatus } from '@/lib/types'
 
@@ -93,6 +93,14 @@ export async function updateAffiliateStatus(
     await cancelMpSubscription((current as any).mp_subscription_id)
   }
 
+  if ((status === 'suspended' || status === 'cancelled') && current?.status !== status && current) {
+    if (status === 'suspended') {
+      await sendSuspensionEmail(current.nombre, current.email)
+    } else {
+      await sendCancellationEmail(current.nombre, current.email)
+    }
+  }
+
   // Reactivating a previously suspended affiliate: create a new MP subscription
   // so they can resume monthly charges, and notify them via email
   let mpReactivationWarning: string | null = null
@@ -157,6 +165,28 @@ export async function updateAffiliateData(affiliateId: string, formData: FormDat
   const planId = (formData.get('plan_id') as string | null)?.trim() ?? ''
   payload.plan_id = planId || null
 
+  const newEmail = (formData.get('email') as string | null)?.trim().toLowerCase() ?? ''
+  if (newEmail) {
+    const { data: currentAffiliate } = await supabase
+      .from('affiliates')
+      .select('email, user_id')
+      .eq('id', affiliateId)
+      .single()
+
+    if (currentAffiliate && currentAffiliate.email !== newEmail) {
+      if (currentAffiliate.user_id) {
+        const { error: authError } = await supabase.auth.admin.updateUserById(
+          currentAffiliate.user_id,
+          { email: newEmail, email_confirm: true },
+        )
+        if (authError) {
+          return { success: false, message: `Error al actualizar email: ${authError.message}` }
+        }
+      }
+      payload.email = newEmail
+    }
+  }
+
   const { error } = await supabase
     .from('affiliates')
     .update(payload)
@@ -206,7 +236,8 @@ export async function addPayment(affiliateId: string, formData: FormData) {
     .eq('id', affiliateId)
     .single()
 
-  const today = new Date()
+  const paidAtRaw = (formData.get('paid_at') as string | null)?.trim()
+  const today = paidAtRaw ? new Date(paidAtRaw) : new Date()
   const nextMonth = new Date(today)
   nextMonth.setMonth(nextMonth.getMonth() + 1)
 
@@ -337,4 +368,44 @@ export async function deleteAffiliate(affiliateId: string): Promise<{ success: f
   revalidatePath('/admin')
   revalidatePath('/admin/afiliados')
   redirect('/admin/afiliados')
+}
+
+export async function deletePayment(paymentId: string): Promise<{ success: boolean; message: string }> {
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('payments')
+    .delete()
+    .eq('id', paymentId)
+
+  if (error) return { success: false, message: error.message }
+  return { success: true, message: 'Pago eliminado.' }
+}
+
+export async function sendAffiliatePasswordReset(affiliateId: string): Promise<{ success: boolean; message: string }> {
+  const supabase = createAdminClient()
+
+  const { data: affiliate } = await supabase
+    .from('affiliates')
+    .select('nombre, email')
+    .eq('id', affiliateId)
+    .single()
+
+  if (!affiliate) return { success: false, message: 'Afiliado no encontrado.' }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+
+  const { data, error } = await supabase.auth.admin.generateLink({
+    type: 'recovery',
+    email: affiliate.email,
+    options: { redirectTo: `${appUrl}/portal` },
+  })
+
+  if (error || !data?.properties?.action_link) {
+    return { success: false, message: error?.message ?? 'No se pudo generar el link de recuperación.' }
+  }
+
+  await sendPasswordResetEmail(affiliate.nombre, affiliate.email, data.properties.action_link)
+
+  return { success: true, message: `Email de restablecimiento enviado a ${affiliate.email}.` }
 }

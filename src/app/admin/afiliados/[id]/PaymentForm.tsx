@@ -86,6 +86,25 @@ export default function PaymentForm({ affiliateId }: PaymentFormProps) {
         </div>
       </div>
 
+      {/* Date */}
+      <div>
+        <label
+          htmlFor="payment-date"
+          className="block text-xs font-semibold uppercase tracking-wider mb-2"
+          style={labelStyle}
+        >
+          Fecha del pago
+        </label>
+        <input
+          id="payment-date"
+          name="paid_at"
+          type="date"
+          defaultValue={new Date().toISOString().split('T')[0]}
+          className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all"
+          style={{ ...inputStyle, colorScheme: 'dark' }}
+        />
+      </div>
+
       {/* Status */}
       <div>
         <label

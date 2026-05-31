@@ -4,8 +4,9 @@ import AfiliadosClient from './AfiliadosClient'
 
 export const dynamic = 'force-dynamic'
 
-export default async function AfiliadosPage() {
+export default async function AfiliadosPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const supabase = createAdminClient()
+  const { status } = await searchParams
 
   const [{ data, error }, { data: plansData }] = await Promise.all([
     supabase.from('affiliates').select('*').order('created_at', { ascending: false }),
@@ -24,6 +25,7 @@ export default async function AfiliadosPage() {
     <AfiliadosClient
       affiliates={(data ?? []) as Affiliate[]}
       plans={(plansData ?? []) as Plan[]}
+      initialStatus={status}
     />
   )
 }

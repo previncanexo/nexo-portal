@@ -308,6 +308,105 @@ export async function sendInternalNewMemberEmail(affiliate: {
   }).catch((err) => console.error('[internal-new-member-email]', err))
 }
 
+function suspensionEmailHtml(nombre: string, appUrl: string): string {
+  return `<!DOCTYPE html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+<tr><td align="center">
+<table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+<tr><td style="height:6px;background:linear-gradient(90deg,#8660EF,#E879A0);"></td></tr>
+<tr><td style="padding:36px 36px 32px;">
+  <h1 style="margin:0 0 8px;font-size:22px;color:#ea580c;">Tu cuenta fue suspendida</h1>
+  <p style="margin:0 0 20px;color:#374151;font-size:15px;">Hola <strong>${nombre}</strong>, tu cuenta Nexo fue suspendida temporalmente.</p>
+  <p style="margin:0 0 20px;font-size:14px;color:#6b7280;">Si creés que esto es un error o querés regularizar tu situación, contactanos a través del portal.</p>
+  <a href="${appUrl}/portal" style="display:inline-block;background:#8660EF;color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Ir al portal →</a>
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Nexo by Previnca · Este correo fue generado automáticamente.</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`
+}
+
+function cancellationEmailHtml(nombre: string): string {
+  return `<!DOCTYPE html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+<tr><td align="center">
+<table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+<tr><td style="height:6px;background:linear-gradient(90deg,#8660EF,#E879A0);"></td></tr>
+<tr><td style="padding:36px 36px 32px;">
+  <h1 style="margin:0 0 8px;font-size:22px;color:#dc2626;">Tu cuenta fue cancelada</h1>
+  <p style="margin:0 0 20px;color:#374151;font-size:15px;">Hola <strong>${nombre}</strong>, tu cuenta Nexo fue cancelada.</p>
+  <p style="margin:0 0 20px;font-size:14px;color:#6b7280;">Lamentamos que hayas dejado de ser parte de Nexo. Si querés volver a sumarte en el futuro, no dudes en contactarnos.</p>
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Nexo by Previnca · Este correo fue generado automáticamente.</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`
+}
+
+function passwordResetEmailHtml(nombre: string, recoveryUrl: string): string {
+  return `<!DOCTYPE html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+<tr><td align="center">
+<table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+<tr><td style="height:6px;background:linear-gradient(90deg,#8660EF,#E879A0);"></td></tr>
+<tr><td style="padding:36px 36px 32px;">
+  <h1 style="margin:0 0 8px;font-size:22px;color:#8660EF;">Restablecé tu contraseña</h1>
+  <p style="margin:0 0 20px;color:#374151;font-size:15px;">Hola <strong>${nombre}</strong>, un administrador solicitó el restablecimiento de tu contraseña en Nexo.</p>
+  <p style="margin:0 0 24px;font-size:14px;color:#6b7280;">Hacé clic en el botón para crear una nueva contraseña. El link es válido por 24 horas.</p>
+  <a href="${recoveryUrl}" style="display:inline-block;background:#8660EF;color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Restablecer contraseña →</a>
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Nexo by Previnca · Si no solicitaste este cambio, podés ignorar este mail.</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`
+}
+
+export async function sendSuspensionEmail(nombre: string, email: string): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  await resend.emails.send({
+    from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+    to: email,
+    subject: 'Tu cuenta Nexo fue suspendida',
+    html: suspensionEmailHtml(nombre, appUrl),
+  }).catch((err) => console.error('[suspension-email]', err))
+}
+
+export async function sendCancellationEmail(nombre: string, email: string): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+    to: email,
+    subject: 'Tu cuenta Nexo fue cancelada',
+    html: cancellationEmailHtml(nombre),
+  }).catch((err) => console.error('[cancellation-email]', err))
+}
+
+export async function sendPasswordResetEmail(nombre: string, email: string, recoveryUrl: string): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+    to: email,
+    subject: 'Restablecé tu contraseña de Nexo',
+    html: passwordResetEmailHtml(nombre, recoveryUrl),
+  }).catch((err) => console.error('[password-reset-email]', err))
+}
+
 export async function sendActivationEmail(affiliate: {
   nombre: string
   email: string
