@@ -3,6 +3,7 @@ import type { Affiliate, Plan } from '@/lib/types'
 import AfiliadosClient from './AfiliadosClient'
 
 export const dynamic = 'force-dynamic'
+export const metadata = { title: 'Afiliados — Admin Nexo' }
 
 export default async function AfiliadosPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const supabase = createAdminClient()

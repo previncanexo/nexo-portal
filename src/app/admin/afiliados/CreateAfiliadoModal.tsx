@@ -16,6 +16,7 @@ type FormFields = {
   email: string
   whatsapp: string
   ciudad: string
+  domicilio: string
   fecha_nacimiento: string
   plan_id: string
 }
@@ -62,6 +63,7 @@ export default function CreateAfiliadoModal({ plans, onClose, onCreated }: Props
     email: '',
     whatsapp: '',
     ciudad: '',
+    domicilio: '',
     fecha_nacimiento: '',
     plan_id: '',
   })
@@ -101,6 +103,7 @@ export default function CreateAfiliadoModal({ plans, onClose, onCreated }: Props
 
     if (form.whatsapp.trim()) payload.whatsapp = form.whatsapp.trim()
     if (form.ciudad.trim()) payload.ciudad = form.ciudad.trim()
+    if (form.domicilio.trim()) (payload as any).domicilio = form.domicilio.trim()
     if (form.fecha_nacimiento) payload.fecha_nacimiento = form.fecha_nacimiento
     if (form.plan_id.trim()) payload.plan_id = form.plan_id.trim()
 
@@ -158,7 +161,7 @@ export default function CreateAfiliadoModal({ plans, onClose, onCreated }: Props
             </div>
 
             <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>
-              Compartí las siguientes credenciales con el afiliado. La contrasena es temporal y debera cambiarla en el primer ingreso.
+              Compartí las siguientes credenciales con el afiliado. La contraseña es temporal y deberá cambiarla en el primer ingreso.
             </p>
 
             <div
@@ -167,7 +170,7 @@ export default function CreateAfiliadoModal({ plans, onClose, onCreated }: Props
             >
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider mb-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                  N de afiliado
+                  N° de afiliado
                 </p>
                 <p className="text-xl font-bold font-mono" style={{ color: 'var(--purple)' }}>
                   {success.affiliate_number}
@@ -181,7 +184,7 @@ export default function CreateAfiliadoModal({ plans, onClose, onCreated }: Props
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider mb-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                  Contrasena temporal
+                  Contraseña temporal
                 </p>
                 <p className="text-lg font-bold font-mono text-white">{success.temp_password}</p>
               </div>
@@ -207,7 +210,7 @@ export default function CreateAfiliadoModal({ plans, onClose, onCreated }: Props
                 className="text-sm font-semibold uppercase tracking-widest mb-1"
                 style={{ color: 'rgba(255,255,255,0.45)' }}
               >
-                Administracion
+                Administración
               </p>
               <h2 className="text-2xl font-bold text-white">Nuevo afiliado</h2>
             </div>
@@ -303,6 +306,20 @@ export default function CreateAfiliadoModal({ plans, onClose, onCreated }: Props
                 />
               </Field>
             </div>
+
+            <Field label="Domicilio">
+              <input
+                type="text"
+                name="domicilio"
+                value={form.domicilio}
+                onChange={handleChange}
+                onFocus={() => setFocusedField('domicilio')}
+                onBlur={() => setFocusedField(null)}
+                placeholder="Av. Corrientes 1234"
+                className="w-full px-4 py-2.5 rounded-xl text-white text-sm"
+                style={getInputStyle('domicilio')}
+              />
+            </Field>
 
             <Field label="Fecha de nacimiento">
               <input

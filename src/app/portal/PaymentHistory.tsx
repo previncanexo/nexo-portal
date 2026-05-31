@@ -41,7 +41,7 @@ export default function PaymentHistory({ payments }: { payments: Payment[] }) {
         </span>
         <div className="flex items-center gap-6">
           <span
-            className="text-xs uppercase tracking-[0.14em] font-semibold hidden sm:block"
+            className="text-xs uppercase tracking-[0.14em] font-semibold"
             style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}
           >
             Fecha
@@ -80,7 +80,7 @@ export default function PaymentHistory({ payments }: { payments: Payment[] }) {
             </div>
 
             <div className="flex items-center gap-3 shrink-0">
-              <span className="text-xs hidden sm:block" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
+              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
                 {formatDate(p.created_at)}
               </span>
               <span

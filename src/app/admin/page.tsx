@@ -369,7 +369,7 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="flex flex-col divide-y" style={{ borderColor: 'rgba(251,191,36,0.1)' }}>
             {expiringAffiliates.map((a) => (
-              <a
+              <Link
                 key={a.id}
                 href={`/admin/afiliados/${a.id}`}
                 className="flex items-center justify-between py-2.5 gap-4 hover:opacity-80 transition-opacity"
@@ -380,7 +380,7 @@ export default async function AdminDashboardPage() {
                 <span className="text-sm font-mono shrink-0" style={{ color: 'rgb(251,191,36)' }}>
                   {formatDate(a.cobertura_hasta)}
                 </span>
-              </a>
+              </Link>
             ))}
           </div>
         </div>

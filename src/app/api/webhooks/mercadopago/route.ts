@@ -6,7 +6,7 @@ import { MercadoPagoConfig, PreApproval, PreApprovalPlan, Payment } from 'mercad
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendActivationEmail, sendInternalNewMemberEmail } from '@/lib/emails'
 
-const N8N_WEBHOOK_URL = 'https://n8n.previncasalud.com.ar/webhook/mercadopago-nexo-webhook'
+const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL ?? 'https://n8n.previncasalud.com.ar/webhook/mercadopago-nexo-webhook'
 
 function verifyMpSignature(
   xSignature: string,

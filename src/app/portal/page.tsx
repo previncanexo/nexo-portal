@@ -9,6 +9,8 @@ import PaymentHistory from './PaymentHistory'
 import RetryPaymentButton from './RetryPaymentButton'
 import ActiveWatcher from './ActiveWatcher'
 
+const WA_NUMBER = process.env.NEXT_PUBLIC_WA_SUPPORT ?? '5493415056130'
+
 function getGreeting(): string {
   const hour = new Date(Date.now() - 3 * 60 * 60 * 1000).getUTCHours()
   if (hour >= 6 && hour < 13) return 'Buenos días'
@@ -131,7 +133,7 @@ export default async function PortalPage() {
               Tu acceso a los servicios está temporalmente suspendido. Contactate con Nexo para regularizar tu situación.
             </p>
             <a
-              href="https://wa.me/5493415056130?text=Hola%2C%20mi%20cuenta%20est%C3%A1%20suspendida%20y%20necesito%20ayuda"
+              href={`https://wa.me/${WA_NUMBER}?text=Hola%2C%20mi%20cuenta%20est%C3%A1%20suspendida%20y%20necesito%20ayuda`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold"
@@ -161,7 +163,7 @@ export default async function PortalPage() {
               Tu afiliación a Nexo está cancelada. Si querés reactivarla, contactate con nosotros.
             </p>
             <a
-              href="https://wa.me/5493415056130?text=Hola%2C%20quiero%20reactivar%20mi%20afiliaci%C3%B3n%20a%20Nexo"
+              href={`https://wa.me/${WA_NUMBER}?text=Hola%2C%20quiero%20reactivar%20mi%20afiliaci%C3%B3n%20a%20Nexo`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold"
@@ -177,15 +179,17 @@ export default async function PortalPage() {
       )}
 
       {/* Credencial */}
-      <section>
-        <p
-          className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
-          style={{ color: 'rgba(255,255,255,0.70)' }}
-        >
-          Tu credencial
-        </p>
-        <CredentialWithDownload affiliate={affiliate as Affiliate} />
-      </section>
+      {isActive && (
+        <section>
+          <p
+            className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
+            style={{ color: 'rgba(255,255,255,0.70)' }}
+          >
+            Tu credencial
+          </p>
+          <CredentialWithDownload affiliate={affiliate as Affiliate} />
+        </section>
+      )}
 
       {/* Servicios */}
       <section>

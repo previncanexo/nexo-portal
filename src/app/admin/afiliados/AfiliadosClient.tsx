@@ -332,7 +332,7 @@ export default function AfiliadosClient({ affiliates, plans, initialStatus }: { 
           <table className="w-full" style={{ fontFamily: 'var(--font-dm-sans)' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid rgba(0,0,0,0.08)', background: 'rgba(0,0,0,0.03)' }}>
-                {['N° afiliado', 'Nombre completo', 'Email', 'WhatsApp', 'Estado', 'Cobertura hasta', 'Registro', ''].map((col) => (
+                {['N° afiliado', 'Nombre completo', 'Email', 'WhatsApp', 'Plan', 'Estado', 'Cobertura hasta', 'Registro', ''].map((col) => (
                   <th
                     key={col}
                     className="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap"
@@ -347,7 +347,7 @@ export default function AfiliadosClient({ affiliates, plans, initialStatus }: { 
               {paged.length === 0 && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-5 py-12 text-center text-sm"
                     style={{ color: 'var(--gray-500)' }}
                   >
@@ -374,6 +374,9 @@ export default function AfiliadosClient({ affiliates, plans, initialStatus }: { 
                   </td>
                   <td className="px-5 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--gray-700)' }}>
                     {a.whatsapp ?? '—'}
+                  </td>
+                  <td className="px-5 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--gray-700)' }}>
+                    {a.plan_id ? (plans.find((p) => p.id === a.plan_id)?.name ?? '—') : '—'}
                   </td>
                   <td className="px-5 py-4 whitespace-nowrap">
                     <span
