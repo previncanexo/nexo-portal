@@ -3,7 +3,7 @@
 import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { registrationLimiter } from '@/lib/ratelimit'
-import { MercadoPagoConfig, PreApproval } from 'mercadopago'
+import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from 'mercadopago'
 
 interface RegisterInput {
   nombre: string
@@ -92,36 +92,23 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
 
     try {
       const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
-      const preApprovalClient = new PreApproval(mpClient)
-
-      // Cancel old pending subscription to avoid conflicts
-      const oldSubId = (existingAffiliate as any).mp_subscription_id as string | null
-      if (oldSubId) {
-        try {
-          await preApprovalClient.update({ id: oldSubId, body: { status: 'cancelled' } })
-        } catch (cancelErr) {
-          console.error('[mp] cancel old subscription error:', cancelErr)
-        }
-      }
-
-      const mpResponse = await preApprovalClient.create({
+      const planClient = new PreApprovalPlan(mpClient)
+      const mpPlan = await planClient.create({
         body: {
           reason: plan?.name ?? 'Nexo by Previnca',
-          payer_email: `pago${existingAffiliate.id.replace(/-/g, '')}@previncasalud.com.ar`,
-          back_url: `${appUrl}/registro/exito`,
           auto_recurring: {
             frequency: 1,
             frequency_type: 'months',
             transaction_amount: plan?.price ?? 19500,
             currency_id: 'ARS',
           },
+          back_url: `${appUrl}/registro/exito`,
           external_reference: existingAffiliate.id,
-          status: 'pending',
-        },
+        } as any,
       })
-      if (!mpResponse.init_point) throw new Error('MP no devolvió URL de pago')
-      const checkoutUrl = mpResponse.init_point
-      const mpId = mpResponse.id ? String(mpResponse.id) : undefined
+      if (!mpPlan.init_point) throw new Error('MP no devolvió URL de pago')
+      const checkoutUrl = mpPlan.init_point
+      const mpId = mpPlan.id ? String(mpPlan.id) : undefined
 
       if (mpId) {
         await supabase
@@ -171,29 +158,27 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     }
   }
 
-  // Create MP checkout
+  // Create MP checkout — PreApprovalPlan has no payer_email restriction
   try {
     const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
-    const preApprovalClient = new PreApproval(mpClient)
+    const planClient = new PreApprovalPlan(mpClient)
 
-    const mpResponse = await preApprovalClient.create({
+    const mpPlan = await planClient.create({
       body: {
         reason: plan?.name ?? 'Nexo by Previnca',
-        payer_email: `pago${affiliate.id.replace(/-/g, '')}@previncasalud.com.ar`,
-        back_url: `${appUrl}/registro/exito`,
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',
           transaction_amount: plan?.price ?? 19500,
           currency_id: 'ARS',
         },
+        back_url: `${appUrl}/registro/exito`,
         external_reference: affiliate.id,
-        status: 'pending',
-      },
+      } as any,
     })
-    if (!mpResponse.init_point) throw new Error('MP no devolvió URL de pago')
-    const checkoutUrl = mpResponse.init_point
-    const mpId = mpResponse.id ? String(mpResponse.id) : undefined
+    if (!mpPlan.init_point) throw new Error('MP no devolvió URL de pago')
+    const checkoutUrl = mpPlan.init_point
+    const mpId = mpPlan.id ? String(mpPlan.id) : undefined
 
     if (mpId) {
       await supabase

@@ -3,7 +3,7 @@
 import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { MercadoPagoConfig, PreApproval } from 'mercadopago'
+import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from 'mercadopago'
 
 type RetryResult =
   | { success: true; checkoutUrl: string }
@@ -39,47 +39,35 @@ export async function retryPayment(): Promise<RetryResult> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || `${proto}://${host}`
 
   const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
-  const preApprovalClient = new PreApproval(mpClient)
-
-  // Cancel previous pending subscription to avoid orphaned preapprovals in MP
-  const oldSubscriptionId = (affiliate as any).mp_subscription_id as string | null | undefined
-  if (oldSubscriptionId) {
-    try {
-      await preApprovalClient.update({ id: oldSubscriptionId, body: { status: 'cancelled' } })
-    } catch (err) {
-      console.error('[retry-payment] Cancel old preapproval error:', err)
-    }
-  }
 
   try {
-    const mpResponse = await preApprovalClient.create({
+    const planClient = new PreApprovalPlan(mpClient)
+    const mpPlan = await planClient.create({
       body: {
         reason: plan?.name ?? 'Nexo by Previnca',
-        payer_email: `pago${affiliate.id.replace(/-/g, '')}@previncasalud.com.ar`,
-        back_url: `${appUrl}/registro/exito`,
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',
           transaction_amount: plan?.price ?? 19500,
           currency_id: 'ARS',
         },
+        back_url: `${appUrl}/registro/exito`,
         external_reference: affiliate.id,
-        status: 'pending',
-      },
+      } as any,
     })
 
-    if (!mpResponse.init_point) {
+    if (!mpPlan.init_point) {
       throw new Error('MP no devolvió URL de pago')
     }
 
-    if (mpResponse.id) {
+    if (mpPlan.id) {
       await admin
         .from('affiliates')
-        .update({ mp_subscription_id: String(mpResponse.id) })
+        .update({ mp_subscription_id: String(mpPlan.id) })
         .eq('id', affiliate.id)
     }
 
-    return { success: true, checkoutUrl: mpResponse.init_point }
+    return { success: true, checkoutUrl: mpPlan.init_point }
   } catch (err: any) {
     const msg = err?.message ?? err?.cause?.message ?? JSON.stringify(err)
     console.error('[retry-payment]', msg, err)
