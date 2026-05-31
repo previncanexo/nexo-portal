@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendActivationEmail, sendInternalNewMemberEmail } from '@/lib/emails'
+import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail } from '@/lib/emails'
 
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL ?? 'https://n8n.previncasalud.com.ar/webhook/mercadopago-nexo-webhook'
 
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
       if (preApproval.status === 'authorized') {
         const { data: affiliate } = await supabase
           .from('affiliates')
-          .select('status, nombre, apellido, dni, email, affiliate_number, plan:plans(name)')
+          .select('status, user_id, nombre, apellido, dni, email, affiliate_number, plan:plans(name)')
           .eq('id', preApproval.external_reference)
           .single()
 
@@ -120,6 +120,23 @@ export async function POST(req: NextRequest) {
           const today = new Date().toISOString().split('T')[0]
           const certNum = parseInt(affiliate.affiliate_number ?? '0', 10)
           const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
+
+          let userId = affiliate.user_id as string | null | undefined
+          let tempPassword: string | undefined
+          if (!userId) {
+            const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+            tempPassword = Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+            const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+              email: affiliate.email,
+              password: tempPassword,
+              email_confirm: true,
+            })
+            if (!authError && authData?.user) {
+              userId = authData.user.id
+            } else {
+              console.error('[mp-webhook] createUser error:', authError)
+            }
+          }
 
           await supabase
             .from('affiliates')
@@ -130,18 +147,30 @@ export async function POST(req: NextRequest) {
               cobertura_hasta: addOneMonth(today),
               farmacia_number: farmaciaNumber,
               updated_at: new Date().toISOString(),
+              ...(userId ? { user_id: userId } : {}),
             })
             .eq('id', preApproval.external_reference)
 
           const resolvedPlan = Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan
 
-          await sendActivationEmail({
-            nombre: affiliate.nombre,
-            email: affiliate.email,
-            affiliate_number: affiliate.affiliate_number,
-            farmacia_number: farmaciaNumber,
-            plan: resolvedPlan,
-          })
+          if (tempPassword) {
+            await sendCredentialsEmail({
+              nombre: affiliate.nombre,
+              email: affiliate.email,
+              affiliate_number: affiliate.affiliate_number,
+              farmacia_number: farmaciaNumber,
+              temp_password: tempPassword,
+              plan: resolvedPlan,
+            })
+          } else {
+            await sendActivationEmail({
+              nombre: affiliate.nombre,
+              email: affiliate.email,
+              affiliate_number: affiliate.affiliate_number,
+              farmacia_number: farmaciaNumber,
+              plan: resolvedPlan,
+            })
+          }
 
           await sendInternalNewMemberEmail({
             id: affiliateId,
@@ -209,7 +238,7 @@ export async function POST(req: NextRequest) {
 
             const { data: affiliateData } = await supabase
               .from('affiliates')
-              .select('status, nombre, apellido, dni, email, affiliate_number, plan:plans(name), cobertura_hasta')
+              .select('status, user_id, nombre, apellido, dni, email, affiliate_number, plan:plans(name), cobertura_hasta')
               .eq('id', preApproval.external_reference)
               .single()
 
@@ -218,6 +247,23 @@ export async function POST(req: NextRequest) {
               const today = new Date().toISOString().split('T')[0]
               const certNum = parseInt(affiliateData.affiliate_number ?? '0', 10)
               const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
+
+              let userId = affiliateData.user_id as string | null | undefined
+              let tempPassword: string | undefined
+              if (!userId) {
+                const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+                tempPassword = Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+                const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+                  email: affiliateData.email,
+                  password: tempPassword,
+                  email_confirm: true,
+                })
+                if (!authError && authData?.user) {
+                  userId = authData.user.id
+                } else {
+                  console.error('[mp-webhook] createUser error:', authError)
+                }
+              }
 
               await supabase
                 .from('affiliates')
@@ -228,6 +274,7 @@ export async function POST(req: NextRequest) {
                   cobertura_hasta: addOneMonth(today),
                   farmacia_number: farmaciaNumber,
                   updated_at: new Date().toISOString(),
+                  ...(userId ? { user_id: userId } : {}),
                 })
                 .eq('id', preApproval.external_reference)
 
@@ -235,13 +282,24 @@ export async function POST(req: NextRequest) {
                 ? (affiliateData.plan[0] ?? null)
                 : affiliateData.plan
 
-              await sendActivationEmail({
-                nombre: affiliateData.nombre,
-                email: affiliateData.email,
-                affiliate_number: affiliateData.affiliate_number,
-                farmacia_number: farmaciaNumber,
-                plan: resolvedPlan,
-              })
+              if (tempPassword) {
+                await sendCredentialsEmail({
+                  nombre: affiliateData.nombre,
+                  email: affiliateData.email,
+                  affiliate_number: affiliateData.affiliate_number,
+                  farmacia_number: farmaciaNumber,
+                  temp_password: tempPassword,
+                  plan: resolvedPlan,
+                })
+              } else {
+                await sendActivationEmail({
+                  nombre: affiliateData.nombre,
+                  email: affiliateData.email,
+                  affiliate_number: affiliateData.affiliate_number,
+                  farmacia_number: farmaciaNumber,
+                  plan: resolvedPlan,
+                })
+              }
 
               await sendInternalNewMemberEmail({
                 id: preApproval.external_reference,
