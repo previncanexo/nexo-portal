@@ -97,6 +97,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
       const mpResponse = await preApprovalClient.create({
         body: {
           reason: plan?.name ?? 'Nexo by Previnca',
+          payer_email: `pago+${existingAffiliate.id}@previncasalud.com.ar`,
           back_url: `${appUrl}/registro/exito`,
           auto_recurring: {
             frequency: 1,
@@ -168,6 +169,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     const mpResponse = await preApprovalClient.create({
       body: {
         reason: plan?.name ?? 'Nexo by Previnca',
+        payer_email: `pago+${affiliate.id}@previncasalud.com.ar`,
         back_url: `${appUrl}/registro/exito`,
         auto_recurring: {
           frequency: 1,
