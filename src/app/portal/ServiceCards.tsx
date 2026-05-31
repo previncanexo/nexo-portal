@@ -388,7 +388,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     {
       id: 'farmacias',
       title: 'Descuentos en Farmacias',
-      subtitle: 'Red de farmacias adheridas',
+      subtitle: 'Farmacias en Rosario y la región',
       badge: '50% descuento',
       badgeColor: '#059669',
       badgeBg: 'rgba(5,150,105,0.08)',
@@ -398,11 +398,11 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       accentBg: 'rgba(134,96,239,0.10)',
       glowColor: 'rgba(16,185,129,0.12)',
       Icon: IconFarmacias,
-      description: 'Cuidar tu salud también puede ser más accesible. Con Nexo accedés a descuentos exclusivos en medicamentos y productos de farmacia en todo el país.',
+      description: 'Cuidar tu salud también puede ser más accesible. Con Nexo accedés a descuentos exclusivos en medicamentos y productos de farmacia en farmacias adheridas en Rosario y la región.',
       descriptionExtra: 'Porque el bienestar también es ahorrar en lo que necesitás todos los días, de forma simple y sin complicaciones.',
       bullets: [
         'Hasta 50% OFF en farmacias adheridas',
-        'Red nacional de farmacias',
+        'Farmacias en Rosario y la región',
         'Más ahorro en medicamentos y productos esenciales',
         'Todo al alcance desde tu credencial digital',
       ],

@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     default: 'Nexo by Previnca — Portal de Afiliados',
     template: '%s | Nexo by Previnca',
   },
-  description: 'Accedé a tus teleconsultas DOC24, urgencias 24/7, descuentos en farmacias y atención odontológica desde un solo lugar.',
+  description: 'Accedé a tus teleconsultas DOC24, emergencias 24/7, descuentos en farmacias y atención odontológica desde un solo lugar.',
   keywords: ['nexo', 'previnca', 'salud', 'teleconsulta', 'doc24', 'urgencias', 'farmacia', 'odontología', 'afiliados'],
   authors: [{ name: 'Previnca' }],
   manifest: '/manifest.json',
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     locale: 'es_AR',
     siteName: 'Nexo by Previnca',
     title: 'Nexo by Previnca — Portal de Afiliados',
-    description: 'Accedé a tus teleconsultas DOC24, urgencias 24/7, descuentos en farmacias y atención odontológica desde un solo lugar.',
+    description: 'Accedé a tus teleconsultas DOC24, emergencias 24/7, descuentos en farmacias y atención odontológica desde un solo lugar.',
   },
   icons: {
     icon: [
