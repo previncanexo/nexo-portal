@@ -65,7 +65,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
   // Check if email already exists
   const { data: existingAffiliate } = await supabase
     .from('affiliates')
-    .select('id, affiliate_number, user_id, status')
+    .select('id, affiliate_number, user_id, status, mp_subscription_id')
     .eq('email', email)
     .maybeSingle()
 
@@ -93,6 +93,16 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     try {
       const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
       const preApprovalClient = new PreApproval(mpClient)
+
+      // Cancel old pending subscription to avoid conflicts
+      const oldSubId = (existingAffiliate as any).mp_subscription_id as string | null
+      if (oldSubId) {
+        try {
+          await preApprovalClient.update({ id: oldSubId, body: { status: 'cancelled' } })
+        } catch (cancelErr) {
+          console.error('[mp] cancel old subscription error:', cancelErr)
+        }
+      }
 
       const mpResponse = await preApprovalClient.create({
         body: {
@@ -123,11 +133,11 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
       return { success: true, checkoutUrl }
     } catch (err: any) {
       const mpMessage = err?.message ?? String(err)
-      const mpCause = JSON.stringify(err?.cause ?? err?.error ?? '')
-      console.error('[mp] resume error:', mpMessage, mpCause, err)
+      const mpCause = JSON.stringify(err?.cause ?? err?.error ?? err?.apiResponse ?? '')
+      console.error('[mp] resume error:', mpMessage, mpCause, JSON.stringify(err))
       return {
         success: false,
-        error: 'Error al iniciar el pago con Mercado Pago. Intentá de nuevo.',
+        error: `[DEBUG MP resume] ${mpMessage} | ${mpCause}`,
       }
     }
   }
