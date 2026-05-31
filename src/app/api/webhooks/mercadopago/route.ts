@@ -220,6 +220,21 @@ export async function POST(req: NextRequest) {
           const preApprovalClient = new PreApproval(mpClient)
           const preApproval = await preApprovalClient.get({ id: (payment as any).subscription_id })
 
+          // external_reference may be on the subscription or on the plan (PreApprovalPlan flow)
+          let paymentAffiliateId = preApproval.external_reference || null
+          if (!paymentAffiliateId && (preApproval as any).preapproval_plan_id) {
+            try {
+              const planClient = new PreApprovalPlan(mpClient)
+              const mpPlan = await planClient.get({ preApprovalPlanId: String((preApproval as any).preapproval_plan_id) })
+              paymentAffiliateId = (mpPlan as any).external_reference || null
+            } catch (planErr) {
+              console.error('[mp-webhook] payment: could not fetch plan for external_reference:', planErr)
+            }
+          }
+          if (paymentAffiliateId) {
+            ;(preApproval as any).external_reference = paymentAffiliateId
+          }
+
           if (preApproval.external_reference) {
             const today = new Date()
             const nextMonth = new Date(today)
