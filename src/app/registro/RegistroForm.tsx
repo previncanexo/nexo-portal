@@ -827,66 +827,87 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
               <Stepper step={2} />
 
               {/* Datos ingresados — resumen compacto */}
-              <div className="rounded-xl px-4 py-3 mb-4 flex items-center justify-between gap-3" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
-                <div>
-                  <p className="text-xs font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-                    {form.nombre} {form.apellido}
-                  </p>
-                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>{form.email}</p>
+              <div className="rounded-2xl px-4 py-3 mb-4 flex items-center justify-between gap-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white"
+                    style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))' }}
+                  >
+                    {form.nombre.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-white truncate" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                      {form.nombre} {form.apellido}
+                    </p>
+                    <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.42)', fontFamily: 'var(--font-dm-sans)' }}>{form.email}</p>
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="text-xs underline flex-shrink-0 transition-opacity hover:opacity-70"
-                  style={{ color: 'rgba(255,255,255,0.50)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+                  className="text-xs font-semibold flex-shrink-0 transition-opacity hover:opacity-70 px-2.5 py-1 rounded-full"
+                  style={{ color: 'rgba(255,255,255,0.55)', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
                 >
                   Editar
                 </button>
               </div>
 
-              <div className="rounded-2xl p-5 mb-5" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-base font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>Nexo by Previnca</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>por mes</p>
-                    <p className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>${selectedPlan.price.toLocaleString('es-AR')}</p>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2.5">
-                  {PLAN_BENEFITS.map((b) => (
-                    <div key={b.label} className="flex items-center gap-2.5">
-                      <div
-                        className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))' }}
-                      >
-                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      </div>
-                      <span className="text-xs" style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'var(--font-dm-sans)' }}>{b.label}</span>
+              {/* Plan card */}
+              <div className="rounded-2xl overflow-hidden mb-4" style={{ border: '1px solid rgba(255,255,255,0.13)' }}>
+                <div className="h-1" style={{ background: 'linear-gradient(90deg, var(--purple), var(--pink))' }} />
+                <div className="p-5" style={{ background: 'rgba(255,255,255,0.07)' }}>
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>Plan seleccionado</p>
+                      <p className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>{selectedPlan.name}</p>
                     </div>
-                  ))}
+                    <div className="text-right shrink-0 ml-4">
+                      <p className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>por mes</p>
+                      <p
+                        className="text-2xl font-bold leading-none"
+                        style={{ fontFamily: 'var(--font-dm-sans)', background: 'linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.75) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                      >
+                        ${selectedPlan.price.toLocaleString('es-AR')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '14px' }}>
+                    {PLAN_BENEFITS.map((b) => (
+                      <div key={b.label} className="flex items-center gap-2.5">
+                        <div
+                          className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
+                          style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))' }}
+                        >
+                          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        </div>
+                        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{b.label}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
               {/* T&C */}
-              <label className="flex items-start gap-3 cursor-pointer select-none">
+              <label
+                className="flex items-start gap-3 cursor-pointer select-none rounded-xl px-3.5 py-3 mb-1"
+                style={{ background: tycAccepted ? 'rgba(134,96,239,0.10)' : 'rgba(255,255,255,0.04)', border: `1px solid ${tycAccepted ? 'rgba(134,96,239,0.35)' : 'rgba(255,255,255,0.08)'}`, transition: 'background 0.2s, border-color 0.2s' }}
+              >
                 <input
                   type="checkbox"
                   checked={tycAccepted}
                   onChange={(e) => setTycAccepted(e.target.checked)}
                   className="mt-0.5 shrink-0"
-                  style={{ accentColor: 'var(--purple)', width: '16px', height: '16px', cursor: 'pointer' }}
+                  style={{ accentColor: 'var(--purple)', width: '15px', height: '15px', cursor: 'pointer' }}
                 />
-                <span className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.60)', fontFamily: 'var(--font-dm-sans)' }}>
+                <span className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.58)', fontFamily: 'var(--font-dm-sans)' }}>
                   He leído y acepto los{' '}
                   <button
                     type="button"
                     onClick={() => setTycModalOpen(true)}
                     className="underline transition-opacity hover:opacity-80"
-                    style={{ color: 'rgba(255,255,255,0.85)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', fontSize: 'inherit' }}
+                    style={{ color: 'rgba(255,255,255,0.88)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', fontSize: 'inherit' }}
                   >
                     Términos y Condiciones
                   </button>
@@ -894,22 +915,28 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
                 </span>
               </label>
 
+              {/* Pay button */}
               <button
                 type="button"
                 onClick={handlePagar}
                 disabled={loading || !tycAccepted}
-                className="w-full py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2.5 transition-all"
+                className="w-full py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2.5 transition-all mt-3"
                 style={{
-                  background: (loading || !tycAccepted) ? 'rgba(0,158,227,0.50)' : '#009ee3',
-                  color: 'white',
+                  background: (loading || !tycAccepted) ? 'rgba(0,158,227,0.40)' : '#009ee3',
+                  color: (loading || !tycAccepted) ? 'rgba(255,255,255,0.45)' : 'white',
                   cursor: (loading || !tycAccepted) ? 'not-allowed' : 'pointer',
                   fontFamily: 'var(--font-dm-sans)',
                   border: 'none',
-                  boxShadow: (loading || !tycAccepted) ? 'none' : '0 4px 16px rgba(0,158,227,0.35)',
+                  boxShadow: (loading || !tycAccepted) ? 'none' : '0 6px 20px rgba(0,158,227,0.40)',
                 }}
               >
                 {loading ? (
-                  'Procesando...'
+                  <>
+                    <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="10" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round"/>
+                    </svg>
+                    Procesando...
+                  </>
                 ) : (
                   <>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -920,18 +947,21 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
                 )}
               </button>
 
-              <div className="flex items-center justify-center gap-1.5 mt-3">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <div className="flex items-center justify-center gap-1.5 mt-2.5">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>Pago seguro · Mercado Pago</span>
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.28)', fontFamily: 'var(--font-dm-sans)' }}>Pago seguro · Mercado Pago</span>
               </div>
 
               {error && (
                 <div
-                  className="text-sm px-4 py-3 rounded-xl mt-4"
-                  style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.30)', color: '#fca5a5', fontFamily: 'var(--font-dm-sans)' }}
+                  className="text-sm px-4 py-3 rounded-xl mt-3 flex items-start gap-2.5"
+                  style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5', fontFamily: 'var(--font-dm-sans)' }}
                 >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
                   {error}
                 </div>
               )}
