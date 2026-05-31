@@ -420,8 +420,8 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       accentBg: 'rgba(134,96,239,0.10)',
       glowColor: 'rgba(139,92,246,0.12)',
       Icon: IconOdontologia,
-      description: 'Un dolor de muela o una urgencia pueden aparecer cuando menos lo esperás. Con Nexo accedés a atención odontológica rápida y práctica para resolverlo de manera simple y con respaldo profesional.',
-      descriptionExtra: 'Una solución pensada para acompañarte cuando realmente lo necesitás, cuidando tu bienestar y tu tranquilidad.',
+      description: 'Enviá un mensaje al WhatsApp del prestador al 341 3077912 para informar que vas a concurrir a la atención. Luego, podés acercarte a España 729, Rosario.',
+      descriptionExtra: 'Horarios de atención: lunes a viernes de 8 a 20 hs y sábados de 8 a 12 hs.',
       bullets: [
         'Atención odontológica de urgencia',
         'Acceso digital simple',
