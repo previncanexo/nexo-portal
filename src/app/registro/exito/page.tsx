@@ -252,12 +252,14 @@ export default async function ExitoPage({
 
   const isApproved =
     params.collection_status === 'approved' ||
-    params.status === 'approved'
+    params.status === 'approved' ||
+    params.status === 'authorized' // preapproval/subscription success state
 
   const isPending =
     params.collection_status === 'pending' ||
     params.status === 'pending' ||
-    params.collection_status === 'in_process'
+    params.collection_status === 'in_process' ||
+    params.status === 'in_process'
 
   return (
     <PageShell>
