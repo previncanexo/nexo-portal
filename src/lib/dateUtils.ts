@@ -1,3 +1,8 @@
+// Argentina is always UTC-3 (no DST since 2000)
+export function todayAR(): string {
+  return new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().split('T')[0]
+}
+
 export function addOneMonth(dateStr: string | null): string {
   const base = dateStr ? new Date(dateStr + 'T12:00:00') : new Date()
   const year = base.getFullYear()

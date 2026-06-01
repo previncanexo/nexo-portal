@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail } from '@/lib/emails'
-import { addOneMonth } from '@/lib/dateUtils'
+import { addOneMonth, todayAR } from '@/lib/dateUtils'
 
 async function requireAdmin(): Promise<{ authorized: true } | { authorized: false; error: { success: false; message: string } }> {
   const supabase = await createClient()
@@ -31,7 +31,7 @@ export async function quickApproveAffiliate(affiliateId: string) {
 
   if (!affiliate) return { success: false, message: 'Afiliado no encontrado.' }
 
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = todayAR()
 
   const certNum = parseInt(affiliate.affiliate_number ?? '0', 10)
   const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`

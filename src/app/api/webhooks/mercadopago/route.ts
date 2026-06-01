@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendSuspensionEmail } from '@/lib/emails'
-import { addOneMonth } from '@/lib/dateUtils'
+import { addOneMonth, todayAR } from '@/lib/dateUtils'
 
 // MP SDK types are incomplete — these interfaces cover the fields we actually use
 interface MPPreApprovalExt {
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
           .single()
 
         if (affiliate && affiliate.status === 'pending') {
-          const today = new Date().toISOString().split('T')[0]
+          const today = todayAR()
           const certNum = parseInt(affiliate.affiliate_number ?? '0', 10)
           const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
 
@@ -274,7 +274,7 @@ export async function POST(req: NextRequest) {
           }
 
           if (ppa.external_reference) {
-            const todayStr = new Date().toISOString().split('T')[0]
+            const todayStr = todayAR()
 
             // Remove the preapproval placeholder if it exists, then insert the real payment
             await supabase
@@ -302,7 +302,7 @@ export async function POST(req: NextRequest) {
 
             // Activate pending affiliate when first payment is approved
             if (affiliateData?.status === 'pending') {
-              const today = new Date().toISOString().split('T')[0]
+              const today = todayAR()
               const certNum = parseInt(affiliateData.affiliate_number ?? '0', 10)
               const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
 
@@ -378,7 +378,7 @@ export async function POST(req: NextRequest) {
               revalidatePath(`/admin/afiliados/${ppa.external_reference}`)
             } else {
               // Already active — extend cobertura_hasta from the later of today or current cobertura_hasta
-              const hoy = new Date().toISOString().split('T')[0]
+              const hoy = todayAR()
               const baseDate = affiliateData?.cobertura_hasta && affiliateData.cobertura_hasta > hoy
                 ? affiliateData.cobertura_hasta
                 : hoy

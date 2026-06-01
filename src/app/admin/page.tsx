@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 import PendingApprovalSection from './PendingApprovalSection'
+import { todayAR } from '@/lib/dateUtils'
 
 export const dynamic = 'force-dynamic'
 
@@ -192,8 +193,8 @@ export default async function AdminDashboardPage() {
 
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const today = now.toISOString().split('T')[0]
-  const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const today = todayAR()
+  const in30Days = new Date(Date.now() - 3 * 60 * 60 * 1000 + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
   const [
     totalRes,

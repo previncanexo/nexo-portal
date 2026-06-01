@@ -312,9 +312,6 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
           >
             {affiliateNumber}
           </div>
-          <p className="text-sm mb-4 text-center" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
-            Mostrá este número en la farmacia y la receta para aprovechar hasta el 50% de descuento.
-          </p>
         </div>
 
         <a
@@ -411,8 +408,8 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       accentBg: 'rgba(134,96,239,0.10)',
       glowColor: 'rgba(16,185,129,0.12)',
       Icon: IconFarmacias,
-      description: 'Cuidar tu salud también puede ser más accesible. Con Previnca Nexo accedés a descuentos exclusivos en medicamentos presentando receta en farmacias adheridas en Rosario y la región.',
-      descriptionExtra: 'Porque el bienestar también es ahorrar en lo que necesitás todos los días, de forma simple y sin complicaciones.',
+      description: '',
+      descriptionExtra: '',
       bullets: [
         'Hasta 50% OFF en farmacias adheridas',
         'Farmacias en Rosario y la región',
