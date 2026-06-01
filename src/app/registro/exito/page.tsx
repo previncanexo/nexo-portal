@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
-export const metadata = { title: 'Pago recibido · Nexo by Previnca' }
+export const metadata = { title: 'Pago recibido · Previnca Nexo' }
 
 export default function RegistroExitoPage() {
   return (
@@ -49,7 +49,7 @@ export default function RegistroExitoPage() {
           <Link href="/login" className="inline-block">
             <Image
               src="/logo.png"
-              alt="Nexo by Previnca"
+              alt="Previnca Nexo"
               width={220}
               height={88}
               style={{ objectFit: 'contain', height: '88px', width: 'auto' }}

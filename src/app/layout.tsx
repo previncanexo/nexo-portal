@@ -18,8 +18,8 @@ const dmSerifDisplay = DM_Serif_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Nexo by Previnca — Portal de Afiliados',
-    template: '%s | Nexo by Previnca',
+    default: 'Previnca Nexo — Portal de Afiliados',
+    template: '%s | Previnca Nexo',
   },
   description: 'Accedé a tus teleconsultas DOC24, emergencias 24/7, descuentos en farmacias y atención odontológica desde un solo lugar.',
   keywords: ['nexo', 'previnca', 'salud', 'teleconsulta', 'doc24', 'urgencias', 'farmacia', 'odontología', 'afiliados'],
@@ -33,8 +33,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'es_AR',
-    siteName: 'Nexo by Previnca',
-    title: 'Nexo by Previnca — Portal de Afiliados',
+    siteName: 'Previnca Nexo',
+    title: 'Previnca Nexo — Portal de Afiliados',
     description: 'Accedé a tus teleconsultas DOC24, emergencias 24/7, descuentos en farmacias y atención odontológica desde un solo lugar.',
   },
   icons: {
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Nexo by Previnca — Portal de Afiliados',
+    title: 'Previnca Nexo — Portal de Afiliados',
     description: 'Accedé a todos tus beneficios de salud desde un solo lugar.',
   },
   robots: {

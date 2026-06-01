@@ -67,7 +67,7 @@ export default function VademecumPage() {
       <div className="sticky top-0 z-20 border-b" style={{ background: 'rgba(18,5,61,0.90)', backdropFilter: 'blur(20px)', borderColor: 'rgba(255,255,255,0.08)' }}>
         <div className="max-w-4xl mx-auto px-5 py-4 flex items-center gap-4">
           <a href="/" className="flex-shrink-0">
-            <Image src="/logo.png" alt="Nexo by Previnca" width={120} height={40} sizes="120px" style={{ objectFit: 'contain', height: '36px', width: 'auto' }} />
+            <Image src="/logo.png" alt="Previnca Nexo" width={120} height={40} sizes="120px" style={{ objectFit: 'contain', height: '36px', width: 'auto' }} />
           </a>
           <div className="w-px self-stretch" style={{ background: 'rgba(255,255,255,0.12)' }} />
           <span className="text-sm font-semibold text-white/70" style={{ fontFamily: 'var(--font-dm-sans)' }}>Vademécum de cobertura</span>
@@ -81,7 +81,7 @@ export default function VademecumPage() {
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-white mb-5"
             style={{ background: 'linear-gradient(to right, #8660EF, #E879A0)' }}
           >
-            Nexo by Previnca · 50% de descuento
+            Previnca Nexo · 50% de descuento
           </div>
           <h1
             className="text-white mb-3 leading-tight"

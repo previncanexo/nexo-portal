@@ -45,7 +45,7 @@ export default function AdminNav() {
           <div className="flex items-center gap-3">
             <Image
               src="/logo.png"
-              alt="Nexo by Previnca"
+              alt="Previnca Nexo"
               width={100}
               height={44}
               sizes="100px"

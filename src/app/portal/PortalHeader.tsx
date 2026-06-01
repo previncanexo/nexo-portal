@@ -49,7 +49,7 @@ export default function PortalHeader({ affiliate }: PortalHeaderProps) {
         {/* Logo */}
         <Image
           src="/logo.png"
-          alt="Nexo by Previnca"
+          alt="Previnca Nexo"
           width={100}
           height={44}
           style={{ objectFit: 'contain', height: '44px', width: 'auto' }}

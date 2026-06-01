@@ -108,7 +108,7 @@ export default function LoginPage() {
         <div className="text-center mb-10">
           <Image
             src="/logo.png"
-            alt="Nexo by Previnca"
+            alt="Previnca Nexo"
             width={220}
             height={88}
             style={{ objectFit: 'contain', height: '88px', width: 'auto', margin: '0 auto' }}

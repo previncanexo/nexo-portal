@@ -101,7 +101,7 @@ export default async function VerificarPage({ params }: { params: Promise<{ nume
         <div className="text-center mb-8">
           <Image
             src="/logo.png"
-            alt="Nexo by Previnca"
+            alt="Previnca Nexo"
             width={220}
             height={88}
             style={{ objectFit: 'contain', height: '72px', width: 'auto', margin: '0 auto' }}
@@ -170,7 +170,7 @@ export default async function VerificarPage({ params }: { params: Promise<{ nume
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
-                    Nexo by Previnca
+                    Previnca Nexo
                   </p>
                   {planName && (
                     <span
@@ -239,7 +239,7 @@ export default async function VerificarPage({ params }: { params: Promise<{ nume
                     {statusCfg.label}
                   </p>
                   <p className="text-sm mt-0.5" style={{ color: statusCfg.color, opacity: 0.80, fontFamily: 'var(--font-dm-sans)' }}>
-                    Verificación oficial · Nexo by Previnca
+                    Verificación oficial · Previnca Nexo
                   </p>
                 </div>
               </div>

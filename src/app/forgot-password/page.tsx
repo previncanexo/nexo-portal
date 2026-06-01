@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-10">
           <Link href="/login">
-            <Image src="/logo.png" alt="Nexo by Previnca" width={220} height={88} style={{ objectFit: 'contain', height: '88px', width: 'auto', margin: '0 auto' }} priority />
+            <Image src="/logo.png" alt="Previnca Nexo" width={220} height={88} style={{ objectFit: 'contain', height: '88px', width: 'auto', margin: '0 auto' }} priority />
           </Link>
         </div>
 

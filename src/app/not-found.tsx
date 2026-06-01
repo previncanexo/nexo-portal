@@ -11,7 +11,7 @@ export default function NotFound() {
       <div className="w-full max-w-sm relative z-10 text-center">
         <div className="mb-8">
           <Link href="/login">
-            <Image src="/logo.png" alt="Nexo by Previnca" width={180} height={72} style={{ objectFit: 'contain', height: '72px', width: 'auto', margin: '0 auto' }} priority />
+            <Image src="/logo.png" alt="Previnca Nexo" width={180} height={72} style={{ objectFit: 'contain', height: '72px', width: 'auto', margin: '0 auto' }} priority />
           </Link>
         </div>
 

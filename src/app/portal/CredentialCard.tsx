@@ -81,7 +81,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
             className="text-xs font-bold uppercase tracking-widest"
             style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}
           >
-            Nexo by Previnca
+            Previnca Nexo
           </p>
           <span
             className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shrink-0"
@@ -100,7 +100,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
                 className="text-xs font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full"
                 style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.92)', border: '1px solid rgba(255,255,255,0.25)', fontFamily: 'var(--font-dm-sans)' }}
               >
-                {affiliate?.plan?.name ?? 'Nexo by Previnca'}
+                {affiliate?.plan?.name ?? 'Previnca Nexo'}
               </span>
             </div>
 
@@ -168,7 +168,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
             </>
           ) : (
             <p className="text-xs" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
-              Nexo by Previnca
+              Previnca Nexo
             </p>
           )}
         </div>

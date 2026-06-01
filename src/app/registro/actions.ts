@@ -95,7 +95,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
       const planClient = new PreApprovalPlan(mpClient)
       const mpPlan = await planClient.create({
         body: {
-          reason: plan?.name ?? 'Nexo by Previnca',
+          reason: plan?.name ?? 'Previnca Nexo',
           auto_recurring: {
             frequency: 1,
             frequency_type: 'months',
@@ -165,7 +165,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
 
     const mpPlan = await planClient.create({
       body: {
-        reason: plan?.name ?? 'Nexo by Previnca',
+        reason: plan?.name ?? 'Previnca Nexo',
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',

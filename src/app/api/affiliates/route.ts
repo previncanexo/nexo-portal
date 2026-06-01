@@ -43,7 +43,7 @@ function credentialsEmailHtml(
   <a href="${appUrl}/login" style="display:inline-block;background:#8660EF;color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Ingresar al Portal →</a>
 </td></tr>
 <tr><td style="padding:24px 36px 36px;">
-  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Nexo by Previnca · Este correo fue generado automáticamente.</p>
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Previnca Nexo · Este correo fue generado automáticamente.</p>
 </td></tr>
 </table>
 </td></tr>
@@ -182,7 +182,7 @@ export async function POST(request: Request) {
       const resend = new Resend(process.env.RESEND_API_KEY)
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
       await resend.emails.send({
-        from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+        from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
         to: email,
         subject: `Bienvenido a Nexo — tus credenciales de acceso`,
         html: credentialsEmailHtml(nombre, affiliate.affiliate_number, email, tempPassword, appUrl),

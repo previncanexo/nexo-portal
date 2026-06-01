@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
-export const alt = 'Nexo by Previnca — Portal de Afiliados'
+export const alt = 'Previnca Nexo — Portal de Afiliados'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -82,7 +82,7 @@ export default function OgImage() {
             flexDirection: 'column',
           }}>
             <span>Portal de Afiliados</span>
-            <span style={{ fontSize: '42px', opacity: 0.68, marginTop: '8px', letterSpacing: '-1px' }}>Nexo by Previnca</span>
+            <span style={{ fontSize: '42px', opacity: 0.68, marginTop: '8px', letterSpacing: '-1px' }}>Previnca Nexo</span>
           </div>
 
           {/* Description */}

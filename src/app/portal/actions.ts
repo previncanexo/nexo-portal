@@ -44,7 +44,7 @@ export async function retryPayment(): Promise<RetryResult> {
     const planClient = new PreApprovalPlan(mpClient)
     const mpPlan = await planClient.create({
       body: {
-        reason: plan?.name ?? 'Nexo by Previnca',
+        reason: plan?.name ?? 'Previnca Nexo',
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',

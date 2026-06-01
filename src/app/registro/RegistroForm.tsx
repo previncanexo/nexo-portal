@@ -626,7 +626,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
             <a href="/" className="inline-block">
               <Image
                 src="/logo.png"
-                alt="Nexo by Previnca"
+                alt="Previnca Nexo"
                 width={180}
                 height={72}
                 style={{ objectFit: 'contain', height: '64px', width: 'auto' }}
@@ -677,7 +677,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>{selectedPlan.name} · Mensual</p>
-                <p className="text-white font-bold text-lg" style={{ fontFamily: 'var(--font-dm-sans)' }}>Nexo by Previnca</p>
+                <p className="text-white font-bold text-lg" style={{ fontFamily: 'var(--font-dm-sans)' }}>Previnca Nexo</p>
               </div>
               <div className="text-right">
                 <p className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>por mes</p>
@@ -714,7 +714,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
             <a href="/login" className="inline-block">
               <Image
                 src="/logo.png"
-                alt="Nexo by Previnca"
+                alt="Previnca Nexo"
                 width={200}
                 height={80}
                 style={{ objectFit: 'contain', height: '80px', width: 'auto' }}
@@ -911,7 +911,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
                   >
                     Términos y Condiciones
                   </button>
-                  {' '}de Nexo by Previnca
+                  {' '}de Previnca Nexo
                 </span>
               </label>
 

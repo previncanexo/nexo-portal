@@ -63,7 +63,7 @@ function passwordChangedEmailHtml(nombre: string, appUrl: string): string {
   <p style="margin:0 0 20px;color:#374151;font-size:15px;">Hola <strong>${nombre}</strong>, te avisamos que tu contraseña de Nexo fue actualizada correctamente.</p>
   <p style="margin:0 0 20px;font-size:14px;color:#6b7280;">Si no realizaste este cambio, contactanos de inmediato para proteger tu cuenta.</p>
   <a href="${appUrl}/forgot-password" style="display:inline-block;background:#8660EF;color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Restablecer contraseña →</a>
-  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Nexo by Previnca · Este correo fue generado automáticamente.</p>
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Previnca Nexo · Este correo fue generado automáticamente.</p>
 </td></tr>
 </table>
 </td></tr>
@@ -87,7 +87,7 @@ function coverageReminderEmailHtml(nombre: string, coverageDate: string, daysLef
   <a href="${appUrl}/portal" style="display:inline-block;background:#8660EF;color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Ir al portal →</a>
 </td></tr>
 <tr><td style="padding:24px 36px 36px;">
-  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Nexo by Previnca · Este correo fue generado automáticamente.</p>
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Previnca Nexo · Este correo fue generado automáticamente.</p>
 </td></tr>
 </table>
 </td></tr>
@@ -116,7 +116,7 @@ function paymentConfirmedEmailHtml(nombre: string, amount: number, currency: str
   <a href="${appUrl}/portal" style="display:inline-block;background:#8660EF;color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Ver mi portal →</a>
 </td></tr>
 <tr><td style="padding:24px 36px 36px;">
-  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Nexo by Previnca · Este correo fue generado automáticamente.</p>
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Previnca Nexo · Este correo fue generado automáticamente.</p>
 </td></tr>
 </table>
 </td></tr>
@@ -135,7 +135,7 @@ export async function sendPaymentConfirmedEmail(
   const resend = new Resend(process.env.RESEND_API_KEY)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
     to: email,
     subject: 'Pago registrado en tu cuenta Nexo',
     html: paymentConfirmedEmailHtml(nombre, amount, currency, appUrl),
@@ -147,7 +147,7 @@ export async function sendPasswordChangedEmail(nombre: string, email: string): P
   const resend = new Resend(process.env.RESEND_API_KEY)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
     to: email,
     subject: 'Tu contraseña de Nexo fue cambiada',
     html: passwordChangedEmailHtml(nombre, appUrl),
@@ -164,7 +164,7 @@ export async function sendCoverageReminderEmail(
   const resend = new Resend(process.env.RESEND_API_KEY)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
     to: email,
     subject: `Tu cobertura Nexo vence en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}`,
     html: coverageReminderEmailHtml(nombre, coverageDate, daysLeft, appUrl),
@@ -185,7 +185,7 @@ function resubscribeEmailHtml(nombre: string, checkoutUrl: string): string {
   <a href="${checkoutUrl}" style="display:inline-block;background:#8660EF;color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Autorizar suscripción →</a>
 </td></tr>
 <tr><td style="padding:24px 36px 36px;">
-  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Nexo by Previnca · Este correo fue generado automáticamente.</p>
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Previnca Nexo · Este correo fue generado automáticamente.</p>
 </td></tr>
 </table>
 </td></tr>
@@ -198,7 +198,7 @@ export async function sendResubscribeEmail(nombre: string, email: string, checko
   if (!process.env.RESEND_API_KEY) return
   const resend = new Resend(process.env.RESEND_API_KEY)
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
     to: email,
     subject: 'Tu cuenta Nexo fue reactivada — autorizá tu suscripción',
     html: resubscribeEmailHtml(nombre, checkoutUrl),
@@ -264,7 +264,7 @@ function internalNewMemberEmailHtml(
   <a href="${appUrl}/admin/afiliados/${affiliateId}" style="display:inline-block;background:#8660EF;color:#ffffff;padding:12px 24px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Ver en el admin →</a>
 </td></tr>
 <tr><td style="padding:24px 36px 32px;">
-  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Este mail es solo para uso interno. · Nexo by Previnca · Generado automáticamente.</p>
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Este mail es solo para uso interno. · Previnca Nexo · Generado automáticamente.</p>
 </td></tr>
 </table>
 </td></tr>
@@ -291,7 +291,7 @@ export async function sendInternalNewMemberEmail(affiliate: {
     : (affiliate.plan?.name ?? null)
 
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
     to: ['lgurini@previncasalud.com.ar', 'krodriguez@previncasalud.com.ar', 'sistemas@previncasalud.com.ar'],
     subject: `Nueva alta — ${affiliate.nombre} se suscribió a Nexo`,
     html: internalNewMemberEmailHtml(
@@ -321,7 +321,7 @@ function suspensionEmailHtml(nombre: string, appUrl: string): string {
   <p style="margin:0 0 20px;color:#374151;font-size:15px;">Hola <strong>${nombre}</strong>, tu cuenta Nexo fue suspendida temporalmente.</p>
   <p style="margin:0 0 20px;font-size:14px;color:#6b7280;">Si creés que esto es un error o querés regularizar tu situación, contactanos a través del portal.</p>
   <a href="${appUrl}/portal" style="display:inline-block;background:#8660EF;color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Ir al portal →</a>
-  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Nexo by Previnca · Este correo fue generado automáticamente.</p>
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Previnca Nexo · Este correo fue generado automáticamente.</p>
 </td></tr>
 </table>
 </td></tr>
@@ -342,7 +342,7 @@ function cancellationEmailHtml(nombre: string): string {
   <h1 style="margin:0 0 8px;font-size:22px;color:#dc2626;">Tu cuenta fue cancelada</h1>
   <p style="margin:0 0 20px;color:#374151;font-size:15px;">Hola <strong>${nombre}</strong>, tu cuenta Nexo fue cancelada.</p>
   <p style="margin:0 0 20px;font-size:14px;color:#6b7280;">Lamentamos que hayas dejado de ser parte de Nexo. Si querés volver a sumarte en el futuro, no dudes en contactarnos.</p>
-  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Nexo by Previnca · Este correo fue generado automáticamente.</p>
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Previnca Nexo · Este correo fue generado automáticamente.</p>
 </td></tr>
 </table>
 </td></tr>
@@ -364,7 +364,7 @@ function passwordResetEmailHtml(nombre: string, recoveryUrl: string): string {
   <p style="margin:0 0 20px;color:#374151;font-size:15px;">Hola <strong>${nombre}</strong>, un administrador solicitó el restablecimiento de tu contraseña en Nexo.</p>
   <p style="margin:0 0 24px;font-size:14px;color:#6b7280;">Hacé clic en el botón para crear una nueva contraseña. El link es válido por 24 horas.</p>
   <a href="${recoveryUrl}" style="display:inline-block;background:#8660EF;color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Restablecer contraseña →</a>
-  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Nexo by Previnca · Si no solicitaste este cambio, podés ignorar este mail.</p>
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Previnca Nexo · Si no solicitaste este cambio, podés ignorar este mail.</p>
 </td></tr>
 </table>
 </td></tr>
@@ -378,7 +378,7 @@ export async function sendSuspensionEmail(nombre: string, email: string): Promis
   const resend = new Resend(process.env.RESEND_API_KEY)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
     to: email,
     subject: 'Tu cuenta Nexo fue suspendida',
     html: suspensionEmailHtml(nombre, appUrl),
@@ -389,7 +389,7 @@ export async function sendCancellationEmail(nombre: string, email: string): Prom
   if (!process.env.RESEND_API_KEY) return
   const resend = new Resend(process.env.RESEND_API_KEY)
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
     to: email,
     subject: 'Tu cuenta Nexo fue cancelada',
     html: cancellationEmailHtml(nombre),
@@ -400,7 +400,7 @@ export async function sendPasswordResetEmail(nombre: string, email: string, reco
   if (!process.env.RESEND_API_KEY) return
   const resend = new Resend(process.env.RESEND_API_KEY)
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
     to: email,
     subject: 'Restablecé tu contraseña de Nexo',
     html: passwordResetEmailHtml(nombre, recoveryUrl),
@@ -420,7 +420,7 @@ export async function sendActivationEmail(affiliate: {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
 
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
     to: affiliate.email,
     bcc: ['cbanegas@previncaholding.com.ar', 'sistemas@previncaseguros.com.ar', 'sistemas@previncasalud.com.ar'],
     subject: '¡Bienvenido/a a Previnca Nexo!',
@@ -477,7 +477,7 @@ function credentialsEmailHtml(
   <a href="${appUrl}/login" style="display:inline-block;background:#8660EF;color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Ingresar al Portal →</a>
 </td></tr>
 <tr><td style="padding:24px 36px 36px;">
-  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Nexo by Previnca · Este correo fue generado automáticamente.</p>
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Previnca Nexo · Este correo fue generado automáticamente.</p>
 </td></tr>
 </table>
 </td></tr>
@@ -503,7 +503,7 @@ export async function sendCredentialsEmail(affiliate: {
     : (affiliate.plan?.name ?? null)
 
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Nexo by Previnca <onboarding@resend.dev>',
+    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
     to: affiliate.email,
     bcc: ['cbanegas@previncaholding.com.ar', 'sistemas@previncaseguros.com.ar', 'sistemas@previncasalud.com.ar'],
     subject: 'Tus credenciales de acceso a Nexo',
