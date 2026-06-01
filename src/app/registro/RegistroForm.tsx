@@ -798,7 +798,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
                 </div>
                 <InputField id="dni" label="DNI" value={form.dni} onChange={setField('dni')} placeholder="12345678" required />
                 <InputField id="email" label="Email" type="email" value={form.email} onChange={setField('email')} placeholder="tu@email.com" required />
-                <InputField id="whatsapp" label="WhatsApp" type="tel" value={form.whatsapp} onChange={setField('whatsapp')} placeholder="+54 9 11 1234-5678" required />
+                <InputField id="whatsapp" label="WhatsApp" type="tel" value={form.whatsapp} onChange={setField('whatsapp')} placeholder="+54 9 341 1234-5678" required />
                 <div>
                   <label
                     htmlFor="ciudad"
