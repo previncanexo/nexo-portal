@@ -250,26 +250,29 @@ export default async function ExitoPage({
 }) {
   const params = await searchParams
 
-  const isApproved =
-    params.collection_status === 'approved' ||
-    params.status === 'approved' ||
-    params.status === 'authorized' ||
-    !!params.preapproval_id // suscripción autorizada — MP solo envía preapproval_id
+  // MP puede redirigir con distintos params según el flujo (pago único vs suscripción)
+  // o incluso sin params. Invertimos la lógica: solo mostramos error cuando MP
+  // manda explícitamente un estado de fallo — cualquier otro caso es éxito/proceso.
+  const isFailed =
+    params.collection_status === 'rejected' ||
+    params.collection_status === 'cancelled' ||
+    params.status === 'rejected' ||
+    params.status === 'cancelled'
 
   const isPending =
     params.collection_status === 'pending' ||
-    params.status === 'pending' ||
     params.collection_status === 'in_process' ||
+    params.status === 'pending' ||
     params.status === 'in_process'
 
   return (
     <PageShell>
-      {isApproved ? (
-        <ApprovedState />
+      {isFailed ? (
+        <FailedState />
       ) : isPending ? (
         <PendingState />
       ) : (
-        <FailedState />
+        <ApprovedState />
       )}
     </PageShell>
   )
