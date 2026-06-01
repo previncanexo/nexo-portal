@@ -215,6 +215,8 @@ function internalNewMemberEmailHtml(
   planName: string | null,
   affiliateId: string,
   appUrl: string,
+  fechaNacimiento: string | null,
+  domicilio: string | null,
 ): string {
   const now = new Date(Date.now() - 3 * 60 * 60 * 1000)
   const dateStr = now.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
@@ -243,6 +245,14 @@ function internalNewMemberEmailHtml(
         <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">DNI</p>
         <p style="margin:0;font-size:15px;font-weight:700;color:#111827;font-family:monospace;">${dni}</p>
       </td></tr>
+      ${fechaNacimiento ? `<tr><td style="border-top:1px solid #e5e7eb;padding-top:14px;padding-bottom:14px;">
+        <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Fecha de nacimiento</p>
+        <p style="margin:0;font-size:14px;font-weight:600;color:#374151;">${fechaNacimiento}</p>
+      </td></tr>` : ''}
+      ${domicilio ? `<tr><td style="border-top:1px solid #e5e7eb;padding-top:14px;padding-bottom:14px;">
+        <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Domicilio</p>
+        <p style="margin:0;font-size:14px;font-weight:600;color:#374151;">${domicilio}</p>
+      </td></tr>` : ''}
       <tr><td style="border-top:1px solid #e5e7eb;padding-top:14px;padding-bottom:14px;">
         <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">N° de certificado</p>
         <p style="margin:0;font-size:18px;font-weight:700;color:#8660EF;font-family:monospace;">${affiliateNumber}</p>
@@ -282,6 +292,8 @@ export async function sendInternalNewMemberEmail(affiliate: {
   affiliate_number: string
   farmacia_number: string
   plan?: { name: string } | null
+  fecha_nacimiento?: string | null
+  domicilio?: string | null
 }): Promise<void> {
   if (!process.env.RESEND_API_KEY) return
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -304,6 +316,8 @@ export async function sendInternalNewMemberEmail(affiliate: {
       planName,
       affiliate.id,
       appUrl,
+      affiliate.fecha_nacimiento ?? null,
+      affiliate.domicilio ?? null,
     ),
   }).catch((err) => console.error('[internal-new-member-email]', err))
 }

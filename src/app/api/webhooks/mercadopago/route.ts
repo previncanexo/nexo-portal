@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
       if (preApproval.status === 'authorized') {
         const { data: affiliate } = await supabase
           .from('affiliates')
-          .select('status, user_id, nombre, apellido, dni, email, affiliate_number, plan:plans(name)')
+          .select('status, user_id, nombre, apellido, dni, email, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name)')
           .eq('id', preApproval.external_reference)
           .single()
 
@@ -210,6 +210,8 @@ export async function POST(req: NextRequest) {
             affiliate_number: affiliate.affiliate_number,
             farmacia_number: farmaciaNumber,
             plan: resolvedPlan,
+            fecha_nacimiento: affiliate.fecha_nacimiento ?? null,
+            domicilio: affiliate.domicilio ?? null,
           })
 
           revalidatePath('/admin')
@@ -287,7 +289,7 @@ export async function POST(req: NextRequest) {
 
             const { data: affiliateData } = await supabase
               .from('affiliates')
-              .select('status, user_id, nombre, apellido, dni, email, affiliate_number, plan:plans(name), cobertura_hasta')
+              .select('status, user_id, nombre, apellido, dni, email, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name), cobertura_hasta')
               .eq('id', preApproval.external_reference)
               .single()
 
@@ -359,6 +361,8 @@ export async function POST(req: NextRequest) {
                 affiliate_number: affiliateData.affiliate_number,
                 farmacia_number: farmaciaNumber,
                 plan: resolvedPlan,
+                fecha_nacimiento: affiliateData.fecha_nacimiento ?? null,
+                domicilio: affiliateData.domicilio ?? null,
               })
 
               revalidatePath('/admin')
