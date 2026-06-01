@@ -10,7 +10,7 @@ export async function createPlan(formData: FormData) {
   const price = parseFloat(formData.get('price') as string)
 
   if (!name) return { success: false, message: 'El nombre es obligatorio.' }
-  if (isNaN(price) || price < 0) return { success: false, message: 'El precio debe ser un número válido.' }
+  if (isNaN(price) || price <= 0) return { success: false, message: 'El precio debe ser un número mayor a 0.' }
 
   const supabase = createAdminClient()
   const { error } = await supabase.from('plans').insert({
@@ -33,7 +33,7 @@ export async function updatePlan(planId: string, formData: FormData) {
   const price = parseFloat(formData.get('price') as string)
 
   if (!name) return { success: false, message: 'El nombre es obligatorio.' }
-  if (isNaN(price) || price < 0) return { success: false, message: 'El precio debe ser un número válido.' }
+  if (isNaN(price) || price <= 0) return { success: false, message: 'El precio debe ser un número mayor a 0.' }
 
   const supabase = createAdminClient()
   const { error } = await supabase

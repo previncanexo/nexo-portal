@@ -18,15 +18,13 @@ async function cancelMpSubscription(subscriptionId: string): Promise<void> {
 }
 
 function addOneMonth(dateStr: string | null): string {
-  const base = dateStr ? new Date(dateStr) : new Date()
+  const base = dateStr ? new Date(dateStr + 'T12:00:00') : new Date()
   const year = base.getFullYear()
-  const month = base.getMonth() + 1 // destination month (0-indexed + 1)
+  const month = base.getMonth() + 1
   const day = base.getDate()
-  // Last day of the destination month
   const lastDay = new Date(year, month + 1, 0).getDate()
   const clampedDay = Math.min(day, lastDay)
-  const result = new Date(year, month, clampedDay)
-  return result.toISOString().split('T')[0]
+  return `${year}-${String(month).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`
 }
 
 export async function updateAffiliateStatus(
@@ -42,6 +40,10 @@ export async function updateAffiliateStatus(
     .select('status, nombre, apellido, dni, email, affiliate_number, farmacia_number, mp_subscription_id, fecha_nacimiento, domicilio, plan:plans(id, name, price)')
     .eq('id', affiliateId)
     .single()
+
+  if (coberturaDesde && coberturaHasta && coberturaDesde >= coberturaHasta) {
+    return { success: false, message: 'La fecha de inicio debe ser anterior a la fecha de fin.' }
+  }
 
   const payload: Record<string, unknown> = {
     status,
@@ -140,6 +142,8 @@ export async function updateAffiliateStatus(
       }
       if (mpResponse.init_point) {
         await sendResubscribeEmail(current.nombre, current.email, mpResponse.init_point)
+      } else {
+        mpReactivationWarning = 'Estado actualizado, pero MercadoPago no devolvió el link de pago. El afiliado deberá suscribirse manualmente.'
       }
     } catch (err) {
       console.error('[admin] MP reactivation preapproval error:', err)
@@ -164,6 +168,10 @@ export async function updateAffiliateData(affiliateId: string, formData: FormDat
   for (const field of textFields) {
     const value = (formData.get(field) as string | null)?.trim() ?? ''
     payload[field] = value || null
+  }
+
+  if (!payload.nombre || !payload.apellido) {
+    return { success: false, message: 'El nombre y apellido son obligatorios.' }
   }
 
   const fechaNacimiento = (formData.get('fecha_nacimiento') as string | null)?.trim() ?? ''
@@ -333,6 +341,41 @@ export async function addPayment(affiliateId: string, formData: FormData) {
     revalidatePath(`/admin/afiliados/${affiliateId}`)
 
     return { success: true, message: `Pago registrado. Cobertura extendida hasta ${newCobertura}.` }
+  }
+
+  // Afiliado suspendido o cancelado → reactivar automáticamente
+  if (paymentStatus === 'approved' && (affiliate?.status === 'suspended' || affiliate?.status === 'cancelled')) {
+    const hoy = todayDateStr
+    const base = (affiliate as any).cobertura_hasta && (affiliate as any).cobertura_hasta > hoy
+      ? (affiliate as any).cobertura_hasta
+      : hoy
+    const newCobertura = addOneMonth(base)
+    const resolvedPlan = Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan
+    const farmaciaNumber = (affiliate as any).farmacia_number
+      ?? `289${parseInt(affiliate.affiliate_number ?? '0', 10).toString().padStart(8, '0')}0000`
+
+    await supabase
+      .from('affiliates')
+      .update({
+        status: 'active',
+        cobertura_hasta: newCobertura,
+        updated_at: today.toISOString(),
+      })
+      .eq('id', affiliateId)
+
+    await sendActivationEmail({
+      nombre: affiliate.nombre,
+      email: affiliate.email,
+      affiliate_number: affiliate.affiliate_number,
+      farmacia_number: farmaciaNumber,
+      plan: resolvedPlan,
+    })
+
+    revalidatePath('/admin')
+    revalidatePath('/admin/afiliados')
+    revalidatePath(`/admin/afiliados/${affiliateId}`)
+
+    return { success: true, message: 'Pago registrado. Afiliado reactivado automáticamente.' }
   }
 
   // Notificar al afiliado si el pago fue aprobado

@@ -62,12 +62,10 @@ function lastNMonths(n: number): string[] {
   return months
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso)
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const yyyy = d.getFullYear()
-  return `${dd}/${mm}/${yyyy}`
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return '—'
+  const [year, month, day] = dateStr.split('T')[0].split('-')
+  return `${day}/${month}/${year}`
 }
 
 function statusLabel(status: string): string {
@@ -293,7 +291,7 @@ export default async function AdminDashboardPage() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <main
+    <div
       className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10"
       style={{ fontFamily: 'var(--font-dm-sans)' }}
     >
@@ -431,6 +429,6 @@ export default async function AdminDashboardPage() {
           </div>
         )}
       </div>
-    </main>
+    </div>
   )
 }

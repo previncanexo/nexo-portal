@@ -118,6 +118,11 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
 
   return (
     <div className="flex flex-col gap-6">
+      {payments.length === 500 && (
+        <div style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', color: 'rgba(245,158,11,0.9)' }}>
+          Mostrando los últimos 500 pagos. Es posible que registros más antiguos no aparezcan.
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
@@ -193,9 +198,13 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-dm-sans)', cursor: 'pointer' }}
         >
           <option value="all" style={{ background: '#0f1623' }}>Todos los estados</option>
-          <option value="approved" style={{ background: '#0f1623' }}>Aprobados</option>
-          <option value="pending" style={{ background: '#0f1623' }}>Pendientes</option>
-          <option value="rejected" style={{ background: '#0f1623' }}>Rechazados</option>
+          <option value="approved" style={{ background: '#0f1623' }}>{STATUS_CONFIG.approved.label}</option>
+          <option value="pending" style={{ background: '#0f1623' }}>{STATUS_CONFIG.pending.label}</option>
+          <option value="rejected" style={{ background: '#0f1623' }}>{STATUS_CONFIG.rejected.label}</option>
+          <option value="in_process" style={{ background: '#0f1623' }}>{STATUS_CONFIG.in_process.label}</option>
+          <option value="cancelled" style={{ background: '#0f1623' }}>{STATUS_CONFIG.cancelled.label}</option>
+          <option value="refunded" style={{ background: '#0f1623' }}>{STATUS_CONFIG.refunded.label}</option>
+          <option value="charged_back" style={{ background: '#0f1623' }}>{STATUS_CONFIG.charged_back.label}</option>
         </select>
       </div>
 
@@ -221,7 +230,7 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
             <tbody>
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center text-sm" style={{ color: 'var(--gray-500)' }}>
+                  <td colSpan={6} className="px-5 py-12 text-center text-sm" style={{ color: 'var(--gray-500)' }}>
                     No hay pagos para los filtros seleccionados.
                   </td>
                 </tr>

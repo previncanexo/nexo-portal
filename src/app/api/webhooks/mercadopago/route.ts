@@ -1,10 +1,10 @@
-import { createHmac, timingSafeEqual } from 'crypto'
+import { createHmac, timingSafeEqual, randomBytes } from 'crypto'
 import { after } from 'next/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail } from '@/lib/emails'
+import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, sendSuspensionEmail } from '@/lib/emails'
 
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL ?? 'https://n8n.previncasalud.com.ar/webhook/mercadopago-nexo-webhook'
 
@@ -33,15 +33,13 @@ function verifyMpSignature(
 }
 
 function addOneMonth(dateStr: string | null): string {
-  const base = dateStr ? new Date(dateStr) : new Date()
+  const base = dateStr ? new Date(dateStr + 'T12:00:00') : new Date()
   const year = base.getFullYear()
-  const month = base.getMonth() + 1 // destination month (0-indexed + 1)
+  const month = base.getMonth() + 1
   const day = base.getDate()
-  // Last day of the destination month
   const lastDay = new Date(year, month + 1, 0).getDate()
   const clampedDay = Math.min(day, lastDay)
-  const result = new Date(year, month, clampedDay)
-  return result.toISOString().split('T')[0]
+  return `${year}-${String(month).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`
 }
 
 export async function POST(req: NextRequest) {
@@ -129,7 +127,8 @@ export async function POST(req: NextRequest) {
           let tempPassword: string | undefined
           if (!userId) {
             const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
-            tempPassword = Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+            const bytes = randomBytes(12)
+            tempPassword = Array.from(bytes).map(b => chars[b % chars.length]).join('')
             const { data: authData, error: authError } = await supabase.auth.admin.createUser({
               email: affiliate.email,
               password: tempPassword,
@@ -224,7 +223,7 @@ export async function POST(req: NextRequest) {
       if (preApproval.status === 'cancelled' || preApproval.status === 'paused') {
         const { data: affiliate } = await supabase
           .from('affiliates')
-          .select('status')
+          .select('status, nombre, email')
           .eq('id', preApproval.external_reference)
           .single()
 
@@ -233,6 +232,7 @@ export async function POST(req: NextRequest) {
             .from('affiliates')
             .update({ status: 'suspended', updated_at: new Date().toISOString() })
             .eq('id', preApproval.external_reference)
+          await sendSuspensionEmail(affiliate.nombre, affiliate.email)
         }
       }
     }
@@ -303,7 +303,8 @@ export async function POST(req: NextRequest) {
               let tempPassword: string | undefined
               if (!userId) {
                 const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
-                tempPassword = Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+                const bytes = randomBytes(12)
+                tempPassword = Array.from(bytes).map(b => chars[b % chars.length]).join('')
                 const { data: authData, error: authError } = await supabase.auth.admin.createUser({
                   email: affiliateData.email,
                   password: tempPassword,

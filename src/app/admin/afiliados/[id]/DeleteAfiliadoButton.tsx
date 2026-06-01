@@ -1,17 +1,23 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { deleteAffiliate } from './actions'
 
 export default function DeleteAfiliadoButton({ affiliateId, nombre }: { affiliateId: string; nombre: string }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   function handleDelete() {
     startTransition(async () => {
       const result = await deleteAffiliate(affiliateId)
-      if (result && !result.success) setError(result.message)
+      if (result && !result.success) {
+        setError(result.message)
+      } else {
+        router.push('/admin/afiliados')
+      }
     })
   }
 

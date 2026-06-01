@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { quickApproveAffiliate } from './actions'
 
@@ -19,12 +20,16 @@ function formatDate(iso: string): string {
 function ApproveButton({ affiliateId }: { affiliateId: string }) {
   const [isPending, startTransition] = useTransition()
   const [done, setDone] = useState(false)
+  const router = useRouter()
 
   function handleApprove() {
     if (!confirm('¿Confirmar activación del afiliado? Esta acción se puede revertir desde el perfil.')) return
     startTransition(async () => {
       const result = await quickApproveAffiliate(affiliateId)
-      if (result.success) setDone(true)
+      if (result.success) {
+        setDone(true)
+        router.refresh()
+      }
     })
   }
 

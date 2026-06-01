@@ -5,14 +5,14 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail } from '@/lib/emails'
 
-function addOneMonth(dateStr: string): string {
-  const base = new Date(dateStr)
+function addOneMonth(dateStr: string | null): string {
+  const base = dateStr ? new Date(dateStr + 'T12:00:00') : new Date()
   const year = base.getFullYear()
   const month = base.getMonth() + 1
   const day = base.getDate()
   const lastDay = new Date(year, month + 1, 0).getDate()
-  const result = new Date(year, month, Math.min(day, lastDay))
-  return result.toISOString().split('T')[0]
+  const clampedDay = Math.min(day, lastDay)
+  return `${year}-${String(month).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`
 }
 
 export async function quickApproveAffiliate(affiliateId: string) {
@@ -45,6 +45,18 @@ export async function quickApproveAffiliate(affiliateId: string) {
     })
     if (authError) {
       console.error('[quickApproveAffiliate] createUser error:', authError)
+      const isAlreadyExists = (authError as any).code === 'email_exists' || authError.message?.toLowerCase().includes('already') || authError.message?.toLowerCase().includes('exist')
+      if (isAlreadyExists) {
+        // Look up the existing user by email and link them
+        const { data: { users } } = await supabase.auth.admin.listUsers()
+        const existingUser = users.find(u => u.email?.toLowerCase() === affiliate.email.toLowerCase())
+        if (existingUser) {
+          userId = existingUser.id
+          await supabase.from('affiliates').update({ user_id: userId }).eq('id', affiliateId)
+        }
+      } else {
+        return { success: false, message: 'No se pudo crear el acceso al portal. Intentá nuevamente.' }
+      }
     } else if (authData?.user) {
       userId = authData.user.id
       // Link user_id immediately so subsequent queries can find it
