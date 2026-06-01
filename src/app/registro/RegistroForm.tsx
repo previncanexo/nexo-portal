@@ -197,7 +197,8 @@ interface FormData {
   email: string
   whatsapp: string
   ciudad: string
-  domicilio: string
+  calle: string
+  numero: string
   fecha_nacimiento: string
 }
 
@@ -208,7 +209,8 @@ const initialForm: FormData = {
   email: '',
   whatsapp: '',
   ciudad: '',
-  domicilio: '',
+  calle: '',
+  numero: '',
   fecha_nacimiento: '',
 }
 
@@ -495,7 +497,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
   function handleNext() {
     setError('')
     if (!form.nombre || !form.apellido || !form.dni || !form.email ||
-        !form.whatsapp || !form.ciudad || !form.domicilio || !form.fecha_nacimiento) {
+        !form.whatsapp || !form.ciudad || !form.calle || !form.numero || !form.fecha_nacimiento) {
       setError('Completá todos los campos obligatorios.')
       return
     }
@@ -524,7 +526,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
         email: form.email.trim().toLowerCase(),
         whatsapp: form.whatsapp.trim() || undefined,
         ciudad: form.ciudad.trim() || undefined,
-        domicilio: form.domicilio.trim() || undefined,
+        domicilio: [form.calle.trim(), form.numero.trim()].filter(Boolean).join(' ') || undefined,
         fecha_nacimiento: form.fecha_nacimiento || undefined,
         plan_id: selectedPlan.id || undefined,
       })
@@ -795,8 +797,38 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
                 <InputField id="dni" label="DNI" value={form.dni} onChange={setField('dni')} placeholder="12345678" required />
                 <InputField id="email" label="Email" type="email" value={form.email} onChange={setField('email')} placeholder="tu@email.com" required />
                 <InputField id="whatsapp" label="WhatsApp" type="tel" value={form.whatsapp} onChange={setField('whatsapp')} placeholder="+54 9 11 1234-5678" required />
-                <InputField id="ciudad" label="Ciudad" value={form.ciudad} onChange={setField('ciudad')} placeholder="Rosario" required />
-                <InputField id="domicilio" label="Domicilio" value={form.domicilio} onChange={setField('domicilio')} placeholder="Calle y número" required />
+                <div>
+                  <label
+                    htmlFor="ciudad"
+                    className="block text-sm font-medium mb-1.5"
+                    style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}
+                  >
+                    Localidad<span style={{ color: 'var(--pink)', marginLeft: 2 }}>*</span>
+                  </label>
+                  <select
+                    id="ciudad"
+                    value={form.ciudad}
+                    onChange={(e) => setField('ciudad')(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all"
+                    style={{ ...fieldBase, colorScheme: 'dark' }}
+                    onFocus={(e) => {
+                      e.target.style.border = '1px solid rgba(134,96,239,0.70)'
+                      e.target.style.background = 'rgba(255,255,255,0.10)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.border = '1px solid rgba(255,255,255,0.15)'
+                      e.target.style.background = 'rgba(255,255,255,0.07)'
+                    }}
+                  >
+                    <option value="" disabled>Seleccioná tu localidad</option>
+                    <option value="Rosario">Rosario</option>
+                    <option value="Granadero Baigorria">Granadero Baigorria</option>
+                    <option value="Villa Gobernador Gálvez">Villa Gobernador Gálvez</option>
+                  </select>
+                </div>
+                <InputField id="calle" label="Domicilio" value={form.calle} onChange={setField('calle')} placeholder="Nombre de la calle" required />
+                <InputField id="numero" label="Número" value={form.numero} onChange={setField('numero')} placeholder="1234" required />
                 <DateField id="fecha_nacimiento" label="Fecha de nacimiento" value={form.fecha_nacimiento} onChange={setField('fecha_nacimiento')} required max={maxBirthDate} />
 
                 {error && (
