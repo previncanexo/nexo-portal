@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { registrationLimiter } from '@/lib/ratelimit'
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from 'mercadopago'
+import { sendPendingConfirmationEmail } from '@/lib/emails'
 
 interface RegisterInput {
   nombre: string
@@ -117,6 +118,13 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
           .eq('id', existingAffiliate.id)
       }
 
+      // Fire-and-forget — don't block the response
+      sendPendingConfirmationEmail({
+        nombre,
+        email,
+        checkoutUrl,
+      }).catch(() => {})
+
       return { success: true, checkoutUrl }
     } catch (err: any) {
       const mpMessage = err?.message ?? String(err)
@@ -186,6 +194,13 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
         .update({ mp_subscription_id: mpId })
         .eq('id', affiliate.id)
     }
+
+    // Fire-and-forget — don't block the response
+    sendPendingConfirmationEmail({
+      nombre,
+      email,
+      checkoutUrl,
+    }).catch(() => {})
 
     return { success: true, checkoutUrl }
   } catch (err: any) {

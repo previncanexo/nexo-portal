@@ -421,6 +421,49 @@ export async function sendPasswordResetEmail(nombre: string, email: string, reco
   }).catch((err) => console.error('[password-reset-email]', err))
 }
 
+function pendingConfirmationEmailHtml(nombre: string, checkoutUrl: string, appUrl: string): string {
+  return `<!DOCTYPE html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+<tr><td align="center">
+<table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+<tr><td style="height:6px;background:linear-gradient(90deg,#8660EF,#E879A0);"></td></tr>
+<tr><td style="padding:36px 36px 0;">
+  <h1 style="margin:0 0 16px;font-size:24px;color:#8660EF;">¡Ya casi estás!</h1>
+  <p style="margin:0 0 12px;color:#374151;font-size:15px;">Hola <strong>${nombre}</strong>, recibimos tu solicitud de afiliación a Previnca Nexo.</p>
+  <p style="margin:0 0 24px;color:#374151;font-size:15px;">Solo falta completar el pago para activar tu cobertura. Si no lo hiciste todavía, usá el botón de abajo para continuar.</p>
+  <a href="${checkoutUrl}" style="display:inline-block;background:linear-gradient(135deg,#8660EF,#E879A0);color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Completar pago →</a>
+  <p style="margin:24px 0 0;font-size:13px;color:#6b7280;">Una vez confirmado el pago, recibirás tus credenciales de acceso y todos los detalles de tu cobertura por este mismo medio.</p>
+</td></tr>
+<tr><td style="padding:24px 36px 36px;">
+  <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#374151;">¿Tenés alguna duda?</p>
+  <p style="margin:0;font-size:13px;color:#6b7280;">Escribinos por WhatsApp al 341 505-6130 y te ayudamos.</p>
+  <p style="margin:20px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Este correo fue generado automáticamente · Previnca Nexo</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`
+}
+
+export async function sendPendingConfirmationEmail(affiliate: {
+  nombre: string
+  email: string
+  checkoutUrl: string
+}): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  await resend.emails.send({
+    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
+    to: affiliate.email,
+    subject: '¡Ya casi! Completá tu pago para activar Previnca Nexo',
+    html: pendingConfirmationEmailHtml(affiliate.nombre, affiliate.checkoutUrl, appUrl),
+  }).catch((err) => console.error('[pending-confirmation-email]', err))
+}
+
 export async function sendActivationEmail(affiliate: {
   nombre: string
   email: string

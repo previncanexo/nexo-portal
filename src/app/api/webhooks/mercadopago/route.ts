@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, sendSuspensionEmail } from '@/lib/emails'
+import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendSuspensionEmail } from '@/lib/emails'
 
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL ?? 'https://n8n.previncasalud.com.ar/webhook/mercadopago-nexo-webhook'
 
@@ -382,6 +382,16 @@ export async function POST(req: NextRequest) {
                   updated_at: new Date().toISOString(),
                 })
                 .eq('id', preApproval.external_reference)
+
+              // Notify user that their monthly payment was processed
+              if (affiliateData?.email) {
+                await sendPaymentConfirmedEmail(
+                  affiliateData.nombre,
+                  affiliateData.email,
+                  Math.round(payment.transaction_amount ?? 0),
+                  payment.currency_id ?? 'ARS',
+                )
+              }
             }
           }
         }
