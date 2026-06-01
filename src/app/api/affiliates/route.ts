@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -54,11 +55,8 @@ function credentialsEmailHtml(
 
 function generateTempPassword(): string {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
-  let password = ''
-  for (let i = 0; i < 10; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return password
+  const bytes = randomBytes(12)
+  return Array.from(bytes).map(b => chars[b % chars.length]).join('')
 }
 
 export async function POST(request: Request) {

@@ -129,10 +129,10 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     } catch (err: any) {
       const mpMessage = err?.message ?? String(err)
       const mpCause = JSON.stringify(err?.cause ?? err?.error ?? err?.apiResponse ?? '')
-      console.error('[mp] resume error:', mpMessage, mpCause, JSON.stringify(err))
+      console.error('[initiatePayment] MP error:', mpMessage, mpCause)
       return {
         success: false,
-        error: `[DEBUG MP resume] ${mpMessage} | ${mpCause}`,
+        error: 'Error al procesar el pago. Por favor intentá de nuevo.',
       }
     }
   }
@@ -206,7 +206,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
   } catch (err: any) {
     const mpMessage = err?.message ?? String(err)
     const mpCause = JSON.stringify(err?.cause ?? err?.error ?? '')
-    console.error('[mp] checkout error:', mpMessage, mpCause, err)
+    console.error('[initiatePayment] MP error:', mpMessage, mpCause)
     // Rollback: delete the lead record — no Auth user was created, so no user cleanup needed
     try {
       await supabase.from('affiliates').delete().eq('id', affiliate.id)
@@ -215,7 +215,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     }
     return {
       success: false,
-      error: `[DEBUG MP] ${mpMessage} | ${mpCause}`,
+      error: 'Error al procesar el pago. Por favor intentá de nuevo.',
     }
   }
 }

@@ -296,6 +296,10 @@ export async function sendInternalNewMemberEmail(affiliate: {
   domicilio?: string | null
 }): Promise<void> {
   if (!process.env.RESEND_API_KEY) return
+  const internalRecipients = (process.env.INTERNAL_NOTIFICATION_EMAILS ?? '')
+    .split(',').map(e => e.trim()).filter(Boolean)
+  if (internalRecipients.length === 0) return
+
   const resend = new Resend(process.env.RESEND_API_KEY)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   const planName = Array.isArray(affiliate.plan)
@@ -304,7 +308,7 @@ export async function sendInternalNewMemberEmail(affiliate: {
 
   await resend.emails.send({
     from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
-    to: ['lgurini@previncasalud.com.ar', 'krodriguez@previncasalud.com.ar', 'sistemas@previncasalud.com.ar'],
+    to: internalRecipients,
     subject: `Nueva alta — ${affiliate.nombre} se suscribió a Nexo`,
     html: internalNewMemberEmailHtml(
       affiliate.nombre,
@@ -473,13 +477,16 @@ export async function sendActivationEmail(affiliate: {
 }): Promise<void> {
   if (!process.env.RESEND_API_KEY) return
 
+  const bccRecipients = (process.env.INTERNAL_BCC_EMAILS ?? '')
+    .split(',').map(e => e.trim()).filter(Boolean)
+
   const resend = new Resend(process.env.RESEND_API_KEY)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
 
   await resend.emails.send({
     from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
     to: affiliate.email,
-    bcc: ['cbanegas@previncaholding.com.ar', 'sistemas@previncaseguros.com.ar', 'sistemas@previncasalud.com.ar'],
+    ...(bccRecipients.length > 0 ? { bcc: bccRecipients } : {}),
     subject: '¡Bienvenido/a a Previnca Nexo!',
     html: activationEmailHtml(affiliate.nombre, affiliate.affiliate_number, affiliate.farmacia_number ?? null, affiliate.plan?.name ?? null, appUrl),
   }).catch((err) => {
@@ -553,6 +560,9 @@ export async function sendCredentialsEmail(affiliate: {
 }): Promise<void> {
   if (!process.env.RESEND_API_KEY) return
 
+  const bccRecipients = (process.env.INTERNAL_BCC_EMAILS ?? '')
+    .split(',').map(e => e.trim()).filter(Boolean)
+
   const resend = new Resend(process.env.RESEND_API_KEY)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   const planName = Array.isArray(affiliate.plan)
@@ -562,7 +572,7 @@ export async function sendCredentialsEmail(affiliate: {
   await resend.emails.send({
     from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
     to: affiliate.email,
-    bcc: ['cbanegas@previncaholding.com.ar', 'sistemas@previncaseguros.com.ar', 'sistemas@previncasalud.com.ar'],
+    ...(bccRecipients.length > 0 ? { bcc: bccRecipients } : {}),
     subject: 'Tus credenciales de acceso a Nexo',
     html: credentialsEmailHtml(
       affiliate.nombre,

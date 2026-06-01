@@ -61,11 +61,16 @@ export async function quickApproveAffiliate(affiliateId: string) {
       console.error('[quickApproveAffiliate] createUser error:', authError)
       const isAlreadyExists = (authError as any).code === 'email_exists' || authError.message?.toLowerCase().includes('already') || authError.message?.toLowerCase().includes('exist')
       if (isAlreadyExists) {
-        // Look up the existing user by email and link them
-        const { data: { users } } = await supabase.auth.admin.listUsers()
-        const existingUser = users.find(u => u.email?.toLowerCase() === affiliate.email.toLowerCase())
-        if (existingUser) {
-          userId = existingUser.id
+        // Instead of a full O(n) listUsers() scan, look up via the affiliates table:
+        // if an auth user exists for this email, there must already be an affiliate record linking to them.
+        const { data: existingAffiliate } = await supabase
+          .from('affiliates')
+          .select('user_id')
+          .eq('email', affiliate.email)
+          .not('user_id', 'is', null)
+          .single()
+        if (existingAffiliate?.user_id) {
+          userId = existingAffiliate.user_id
           await supabase.from('affiliates').update({ user_id: userId }).eq('id', affiliateId)
         }
       } else {

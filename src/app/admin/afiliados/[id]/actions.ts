@@ -1,9 +1,10 @@
 'use server'
 
+import { randomBytes } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { sendActivationEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendResubscribeEmail, sendSuspensionEmail, sendCancellationEmail, sendPasswordResetEmail } from '@/lib/emails'
+import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendResubscribeEmail, sendSuspensionEmail, sendCancellationEmail, sendPasswordResetEmail } from '@/lib/emails'
 import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import type { AffiliateStatus } from '@/lib/types'
 
@@ -270,7 +271,7 @@ export async function addPayment(affiliateId: string, formData: FormData) {
 
   const { data: affiliate } = await supabase
     .from('affiliates')
-    .select('status, nombre, apellido, dni, email, affiliate_number, farmacia_number, cobertura_hasta, plan:plans(name)')
+    .select('status, nombre, apellido, dni, email, affiliate_number, farmacia_number, cobertura_hasta, user_id, plan:plans(name)')
     .eq('id', affiliateId)
     .single()
 
@@ -302,6 +303,25 @@ export async function addPayment(affiliateId: string, formData: FormData) {
     const farmaciaNumber = (affiliate as any).farmacia_number
       ?? `289${parseInt(affiliate.affiliate_number ?? '0', 10).toString().padStart(8, '0')}0000`
 
+    // Create Auth user if one doesn't exist yet
+    let tempPassword: string | undefined
+    if (!(affiliate as any).user_id) {
+      const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+      const bytes = randomBytes(12)
+      tempPassword = Array.from(bytes).map(b => chars[b % chars.length]).join('')
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: affiliate.email,
+        password: tempPassword,
+        email_confirm: true,
+      })
+      if (!authError && authData?.user) {
+        await supabase.from('affiliates').update({ user_id: authData.user.id }).eq('id', affiliateId)
+      } else if (authError) {
+        console.error('[addPayment] createUser error:', authError)
+        tempPassword = undefined
+      }
+    }
+
     const { error: activationError } = await supabase
       .from('affiliates')
       .update({
@@ -315,6 +335,17 @@ export async function addPayment(affiliateId: string, formData: FormData) {
 
     if (activationError) {
       return { success: false, message: `Pago registrado pero error al activar al afiliado: ${activationError.message}` }
+    }
+
+    if (tempPassword) {
+      await sendCredentialsEmail({
+        nombre: affiliate.nombre,
+        email: affiliate.email,
+        affiliate_number: affiliate.affiliate_number,
+        farmacia_number: farmaciaNumber,
+        temp_password: tempPassword,
+        plan: resolvedPlan,
+      })
     }
 
     await sendActivationEmail({

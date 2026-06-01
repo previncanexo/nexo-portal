@@ -134,7 +134,7 @@ export default function CuentaForm({ affiliate }: { affiliate: Affiliate }) {
     e.preventDefault()
     setProfileMsg(null)
     startProfile(async () => {
-      const result = await updateProfile(affiliate.id, {
+      const result = await updateProfile({
         whatsapp,
         ciudad,
         fecha_nacimiento: fechaNac,

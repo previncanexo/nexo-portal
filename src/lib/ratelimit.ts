@@ -1,40 +1,30 @@
-class InMemoryRatelimit {
-  private store = new Map<string, { count: number; resetAt: number }>()
+// TODO: Replace with a Redis-backed rate limiter (e.g. @upstash/ratelimit + @upstash/redis).
+// In-memory rate limiting does not work on serverless — each cold start resets the counter
+// and concurrent instances share no state. Until a Redis store is wired up, the limiters
+// below are no-ops that log a warning so the call sites continue to work unchanged.
 
-  constructor(
-    private max: number,
-    private windowMs: number,
-  ) {}
+interface RatelimitResult {
+  success: boolean
+}
 
-  limit(key: string): Promise<{ success: boolean }> {
-    const now = Date.now()
+interface Ratelimiter {
+  limit(identifier: string): Promise<RatelimitResult>
+}
 
-    if (Math.random() < 0.01) this.cleanup(now)
-
-    const entry = this.store.get(key)
-
-    if (!entry || now >= entry.resetAt) {
-      this.store.set(key, { count: 1, resetAt: now + this.windowMs })
+function noopLimiter(name: string): Ratelimiter {
+  return {
+    limit(identifier: string): Promise<RatelimitResult> {
+      console.warn(
+        `[ratelimit] No-op rate limiter "${name}" called for: ${identifier}` +
+        ' — not effective on serverless. Wire up @upstash/ratelimit to enforce limits.',
+      )
       return Promise.resolve({ success: true })
-    }
-
-    if (entry.count >= this.max) {
-      return Promise.resolve({ success: false })
-    }
-
-    entry.count++
-    return Promise.resolve({ success: true })
-  }
-
-  private cleanup(now: number) {
-    for (const [key, entry] of this.store) {
-      if (now >= entry.resetAt) this.store.delete(key)
-    }
+    },
   }
 }
 
-// 5 intentos por IP por hora
-export const registrationLimiter = new InMemoryRatelimit(5, 60 * 60 * 1000)
+// 5 intentos por IP por hora (no-op until Redis is configured)
+export const registrationLimiter: Ratelimiter = noopLimiter('registrationLimiter')
 
-// 100 creaciones por admin por hora
-export const adminAffiliateLimiter = new InMemoryRatelimit(100, 60 * 60 * 1000)
+// 100 creaciones por admin por hora (no-op until Redis is configured)
+export const adminAffiliateLimiter: Ratelimiter = noopLimiter('adminAffiliateLimiter')
