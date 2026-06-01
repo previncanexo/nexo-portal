@@ -155,6 +155,31 @@ export async function POST(req: NextRequest) {
             })
             .eq('id', preApproval.external_reference)
 
+          // Insert payment record for the initial subscription charge.
+          // Uses a stable key (sub-{preapproval_id}) so the payment branch can
+          // replace it with the real mp_payment_id when that event arrives.
+          const placeholderPaymentId = `sub-${body.data.id}`
+          const { count: placeholderCount } = await supabase
+            .from('payments')
+            .select('id', { count: 'exact', head: true })
+            .eq('mp_payment_id', placeholderPaymentId)
+
+          if ((placeholderCount ?? 0) === 0) {
+            const amount = Math.round((preApproval as any).auto_recurring?.transaction_amount ?? 0)
+            if (amount > 0) {
+              await supabase.from('payments').insert({
+                affiliate_id: preApproval.external_reference,
+                mp_payment_id: placeholderPaymentId,
+                mp_status: 'approved',
+                amount,
+                currency: (preApproval as any).auto_recurring?.currency_id ?? 'ARS',
+                paid_at: new Date().toISOString(),
+                period_from: today,
+                period_to: addOneMonth(today),
+              })
+            }
+          }
+
           const resolvedPlan = Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan
 
           if (tempPassword) {
@@ -240,9 +265,14 @@ export async function POST(req: NextRequest) {
           }
 
           if (preApproval.external_reference) {
-            const today = new Date()
-            const nextMonth = new Date(today)
-            nextMonth.setMonth(nextMonth.getMonth() + 1)
+            const todayStr = new Date().toISOString().split('T')[0]
+
+            // Remove the preapproval placeholder if it exists, then insert the real payment
+            await supabase
+              .from('payments')
+              .delete()
+              .eq('affiliate_id', preApproval.external_reference)
+              .eq('mp_payment_id', `sub-${(payment as any).subscription_id}`)
 
             await supabase.from('payments').insert({
               affiliate_id: preApproval.external_reference,
@@ -251,8 +281,8 @@ export async function POST(req: NextRequest) {
               amount: Math.round(payment.transaction_amount ?? 0),
               currency: payment.currency_id ?? 'ARS',
               paid_at: new Date().toISOString(),
-              period_from: today.toISOString().split('T')[0],
-              period_to: nextMonth.toISOString().split('T')[0],
+              period_from: todayStr,
+              period_to: addOneMonth(todayStr),
             })
 
             const { data: affiliateData } = await supabase
