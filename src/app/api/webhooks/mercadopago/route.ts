@@ -7,6 +7,19 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendSuspensionEmail } from '@/lib/emails'
 import { addOneMonth } from '@/lib/dateUtils'
 
+// MP SDK types are incomplete — these interfaces cover the fields we actually use
+interface MPPreApprovalExt {
+  external_reference?: string | null
+  preapproval_plan_id?: string
+  auto_recurring?: { transaction_amount?: number; currency_id?: string }
+}
+interface MPPlanExt {
+  external_reference?: string | null
+}
+interface MPPaymentExt {
+  subscription_id?: number | string
+}
+
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL ?? 'https://n8n.previncasalud.com.ar/webhook/mercadopago-nexo-webhook'
 
 function verifyMpSignature(
@@ -84,12 +97,13 @@ export async function POST(req: NextRequest) {
       const preApproval = await preApprovalClient.get({ id: body.data.id })
 
       // external_reference may live on the subscription or on the per-affiliate plan
-      let affiliateId = preApproval.external_reference || null
-      if (!affiliateId && (preApproval as any).preapproval_plan_id) {
+      const pa = preApproval as unknown as MPPreApprovalExt
+      let affiliateId = pa.external_reference || null
+      if (!affiliateId && pa.preapproval_plan_id) {
         try {
           const planClient = new PreApprovalPlan(mpClient)
-          const mpPlan = await planClient.get({ preApprovalPlanId: String((preApproval as any).preapproval_plan_id) })
-          affiliateId = (mpPlan as any).external_reference || null
+          const mpPlan = await planClient.get({ preApprovalPlanId: String(pa.preapproval_plan_id) })
+          affiliateId = (mpPlan as unknown as MPPlanExt).external_reference || null
         } catch (planErr) {
           console.error('[mp-webhook] Could not fetch plan for external_reference:', planErr)
         }
@@ -99,14 +113,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true })
       }
 
-      // Override preApproval.external_reference so the rest of the handler uses affiliateId
-      ;(preApproval as any).external_reference = affiliateId
+      // Override external_reference so the rest of the handler uses affiliateId
+      pa.external_reference = affiliateId
 
       if (preApproval.status === 'authorized') {
         const { data: affiliate } = await supabase
           .from('affiliates')
           .select('status, user_id, nombre, apellido, dni, email, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name)')
-          .eq('id', preApproval.external_reference)
+          .eq('id', affiliateId)
           .single()
 
         if (affiliate && affiliate.status === 'pending') {
@@ -143,7 +157,7 @@ export async function POST(req: NextRequest) {
               updated_at: new Date().toISOString(),
               ...(userId ? { user_id: userId } : {}),
             })
-            .eq('id', preApproval.external_reference)
+            .eq('id', affiliateId)
 
           // Insert payment record for the initial subscription charge.
           // Uses a stable key (sub-{preapproval_id}) so the payment branch can
@@ -155,14 +169,14 @@ export async function POST(req: NextRequest) {
             .eq('mp_payment_id', placeholderPaymentId)
 
           if ((placeholderCount ?? 0) === 0) {
-            const amount = Math.round((preApproval as any).auto_recurring?.transaction_amount ?? 0)
+            const amount = Math.round(pa.auto_recurring?.transaction_amount ?? 0)
             if (amount > 0) {
               await supabase.from('payments').insert({
-                affiliate_id: preApproval.external_reference,
+                affiliate_id: affiliateId,
                 mp_payment_id: placeholderPaymentId,
                 mp_status: 'approved',
                 amount,
-                currency: (preApproval as any).auto_recurring?.currency_id ?? 'ARS',
+                currency: pa.auto_recurring?.currency_id ?? 'ARS',
                 paid_at: new Date().toISOString(),
                 period_from: today,
                 period_to: addOneMonth(today),
@@ -206,7 +220,7 @@ export async function POST(req: NextRequest) {
 
           revalidatePath('/admin')
           revalidatePath('/admin/afiliados')
-          revalidatePath(`/admin/afiliados/${preApproval.external_reference}`)
+          revalidatePath(`/admin/afiliados/${affiliateId}`)
         }
       }
 
@@ -215,14 +229,14 @@ export async function POST(req: NextRequest) {
         const { data: affiliate } = await supabase
           .from('affiliates')
           .select('status, nombre, email')
-          .eq('id', preApproval.external_reference)
+          .eq('id', affiliateId)
           .single()
 
         if (affiliate?.status === 'active') {
           await supabase
             .from('affiliates')
             .update({ status: 'suspended', updated_at: new Date().toISOString() })
-            .eq('id', preApproval.external_reference)
+            .eq('id', affiliateId)
           await sendSuspensionEmail(affiliate.nombre, affiliate.email)
         }
       }
@@ -232,7 +246,8 @@ export async function POST(req: NextRequest) {
       const paymentClient = new Payment(mpClient)
       const payment = await paymentClient.get({ id: Number(body.data.id) })
 
-      if (payment.status === 'approved' && (payment as any).subscription_id) {
+      const mp = payment as unknown as MPPaymentExt
+      if (payment.status === 'approved' && mp.subscription_id) {
         const { count } = await supabase
           .from('payments')
           .select('id', { count: 'exact', head: true })
@@ -240,35 +255,36 @@ export async function POST(req: NextRequest) {
 
         if ((count ?? 0) === 0) {
           const preApprovalClient = new PreApproval(mpClient)
-          const preApproval = await preApprovalClient.get({ id: (payment as any).subscription_id })
+          const preApproval = await preApprovalClient.get({ id: mp.subscription_id as string })
+          const ppa = preApproval as unknown as MPPreApprovalExt
 
           // external_reference may be on the subscription or on the plan (PreApprovalPlan flow)
-          let paymentAffiliateId = preApproval.external_reference || null
-          if (!paymentAffiliateId && (preApproval as any).preapproval_plan_id) {
+          let paymentAffiliateId = ppa.external_reference || null
+          if (!paymentAffiliateId && ppa.preapproval_plan_id) {
             try {
               const planClient = new PreApprovalPlan(mpClient)
-              const mpPlan = await planClient.get({ preApprovalPlanId: String((preApproval as any).preapproval_plan_id) })
-              paymentAffiliateId = (mpPlan as any).external_reference || null
+              const mpPlan = await planClient.get({ preApprovalPlanId: String(ppa.preapproval_plan_id) })
+              paymentAffiliateId = (mpPlan as unknown as MPPlanExt).external_reference || null
             } catch (planErr) {
               console.error('[mp-webhook] payment: could not fetch plan for external_reference:', planErr)
             }
           }
           if (paymentAffiliateId) {
-            ;(preApproval as any).external_reference = paymentAffiliateId
+            ppa.external_reference = paymentAffiliateId
           }
 
-          if (preApproval.external_reference) {
+          if (ppa.external_reference) {
             const todayStr = new Date().toISOString().split('T')[0]
 
             // Remove the preapproval placeholder if it exists, then insert the real payment
             await supabase
               .from('payments')
               .delete()
-              .eq('affiliate_id', preApproval.external_reference)
-              .eq('mp_payment_id', `sub-${(payment as any).subscription_id}`)
+              .eq('affiliate_id', ppa.external_reference)
+              .eq('mp_payment_id', `sub-${mp.subscription_id}`)
 
             await supabase.from('payments').insert({
-              affiliate_id: preApproval.external_reference,
+              affiliate_id: ppa.external_reference,
               mp_payment_id: String(payment.id),
               mp_status: 'approved',
               amount: Math.round(payment.transaction_amount ?? 0),
@@ -281,7 +297,7 @@ export async function POST(req: NextRequest) {
             const { data: affiliateData } = await supabase
               .from('affiliates')
               .select('status, user_id, nombre, apellido, dni, email, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name), cobertura_hasta')
-              .eq('id', preApproval.external_reference)
+              .eq('id', ppa.external_reference)
               .single()
 
             // Activate pending affiliate when first payment is approved
@@ -312,14 +328,14 @@ export async function POST(req: NextRequest) {
                 .from('affiliates')
                 .update({
                   status: 'active',
-                  mp_subscription_id: String((payment as any).subscription_id),
+                  mp_subscription_id: String(mp.subscription_id),
                   cobertura_desde: today,
                   cobertura_hasta: addOneMonth(today),
                   farmacia_number: farmaciaNumber,
                   updated_at: new Date().toISOString(),
                   ...(userId ? { user_id: userId } : {}),
                 })
-                .eq('id', preApproval.external_reference)
+                .eq('id', ppa.external_reference)
 
               const resolvedPlan = Array.isArray(affiliateData.plan)
                 ? (affiliateData.plan[0] ?? null)
@@ -345,7 +361,7 @@ export async function POST(req: NextRequest) {
               })
 
               await sendInternalNewMemberEmail({
-                id: preApproval.external_reference,
+                id: ppa.external_reference,
                 nombre: affiliateData.nombre,
                 apellido: affiliateData.apellido,
                 dni: affiliateData.dni,
@@ -359,7 +375,7 @@ export async function POST(req: NextRequest) {
 
               revalidatePath('/admin')
               revalidatePath('/admin/afiliados')
-              revalidatePath(`/admin/afiliados/${preApproval.external_reference}`)
+              revalidatePath(`/admin/afiliados/${ppa.external_reference}`)
             } else {
               // Already active — extend cobertura_hasta from the later of today or current cobertura_hasta
               const hoy = new Date().toISOString().split('T')[0]
@@ -372,7 +388,7 @@ export async function POST(req: NextRequest) {
                   cobertura_hasta: addOneMonth(baseDate),
                   updated_at: new Date().toISOString(),
                 })
-                .eq('id', preApproval.external_reference)
+                .eq('id', ppa.external_reference)
 
               // Notify user that their monthly payment was processed
               if (affiliateData?.email) {

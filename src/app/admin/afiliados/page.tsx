@@ -9,10 +9,12 @@ export default async function AfiliadosPage({ searchParams }: { searchParams: Pr
   const supabase = createAdminClient()
   const { status } = await searchParams
 
+  const LIMIT = 1000
   const [{ data, error }, { data: plansData }] = await Promise.all([
-    supabase.from('affiliates').select('*').order('created_at', { ascending: false }),
+    supabase.from('affiliates').select('*').order('created_at', { ascending: false }).limit(LIMIT),
     supabase.from('plans').select('*').order('price'),
   ])
+  const limitReached = (data?.length ?? 0) >= LIMIT
 
   if (error) {
     return (
@@ -27,6 +29,7 @@ export default async function AfiliadosPage({ searchParams }: { searchParams: Pr
       affiliates={(data ?? []) as Affiliate[]}
       plans={(plansData ?? []) as Plan[]}
       initialStatus={status}
+      limitReached={limitReached}
     />
   )
 }

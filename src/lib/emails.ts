@@ -1,5 +1,16 @@
 import { Resend } from 'resend'
 
+function resendFrom(): string {
+  const from = process.env.RESEND_FROM
+  if (!from) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('[emails] RESEND_FROM is not set — emails will be sent from the Resend sandbox domain and may be blocked. Set RESEND_FROM in production.')
+    }
+    return 'Previnca Nexo <onboarding@resend.dev>'
+  }
+  return from
+}
+
 function activationEmailHtml(
   nombre: string,
   affiliateNumber: string,
@@ -135,7 +146,7 @@ export async function sendPaymentConfirmedEmail(
   const resend = new Resend(process.env.RESEND_API_KEY)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
+    from: resendFrom(),
     to: email,
     subject: 'Pago registrado en tu cuenta Nexo',
     html: paymentConfirmedEmailHtml(nombre, amount, currency, appUrl),
@@ -147,7 +158,7 @@ export async function sendPasswordChangedEmail(nombre: string, email: string): P
   const resend = new Resend(process.env.RESEND_API_KEY)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
+    from: resendFrom(),
     to: email,
     subject: 'Tu contraseña de Nexo fue cambiada',
     html: passwordChangedEmailHtml(nombre, appUrl),
@@ -164,7 +175,7 @@ export async function sendCoverageReminderEmail(
   const resend = new Resend(process.env.RESEND_API_KEY)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
+    from: resendFrom(),
     to: email,
     subject: `Tu cobertura Nexo vence en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}`,
     html: coverageReminderEmailHtml(nombre, coverageDate, daysLeft, appUrl),
@@ -198,7 +209,7 @@ export async function sendResubscribeEmail(nombre: string, email: string, checko
   if (!process.env.RESEND_API_KEY) return
   const resend = new Resend(process.env.RESEND_API_KEY)
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
+    from: resendFrom(),
     to: email,
     subject: 'Tu cuenta Nexo fue reactivada — autorizá tu suscripción',
     html: resubscribeEmailHtml(nombre, checkoutUrl),
@@ -307,7 +318,7 @@ export async function sendInternalNewMemberEmail(affiliate: {
     : (affiliate.plan?.name ?? null)
 
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
+    from: resendFrom(),
     to: internalRecipients,
     subject: `Nueva alta — ${affiliate.nombre} se suscribió a Nexo`,
     html: internalNewMemberEmailHtml(
@@ -396,7 +407,7 @@ export async function sendSuspensionEmail(nombre: string, email: string): Promis
   const resend = new Resend(process.env.RESEND_API_KEY)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
+    from: resendFrom(),
     to: email,
     subject: 'Tu cuenta Nexo fue suspendida',
     html: suspensionEmailHtml(nombre, appUrl),
@@ -407,7 +418,7 @@ export async function sendCancellationEmail(nombre: string, email: string): Prom
   if (!process.env.RESEND_API_KEY) return
   const resend = new Resend(process.env.RESEND_API_KEY)
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
+    from: resendFrom(),
     to: email,
     subject: 'Tu cuenta Nexo fue cancelada',
     html: cancellationEmailHtml(nombre),
@@ -418,7 +429,7 @@ export async function sendPasswordResetEmail(nombre: string, email: string, reco
   if (!process.env.RESEND_API_KEY) return
   const resend = new Resend(process.env.RESEND_API_KEY)
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
+    from: resendFrom(),
     to: email,
     subject: 'Restablecé tu contraseña de Nexo',
     html: passwordResetEmailHtml(nombre, recoveryUrl),
@@ -461,7 +472,7 @@ export async function sendPendingConfirmationEmail(affiliate: {
   const resend = new Resend(process.env.RESEND_API_KEY)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
+    from: resendFrom(),
     to: affiliate.email,
     subject: '¡Ya casi! Completá tu pago para activar Previnca Nexo',
     html: pendingConfirmationEmailHtml(affiliate.nombre, affiliate.checkoutUrl, appUrl),
@@ -484,7 +495,7 @@ export async function sendActivationEmail(affiliate: {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
 
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
+    from: resendFrom(),
     to: affiliate.email,
     ...(bccRecipients.length > 0 ? { bcc: bccRecipients } : {}),
     subject: '¡Bienvenido/a a Previnca Nexo!',
@@ -570,7 +581,7 @@ export async function sendCredentialsEmail(affiliate: {
     : (affiliate.plan?.name ?? null)
 
   await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Previnca Nexo <onboarding@resend.dev>',
+    from: resendFrom(),
     to: affiliate.email,
     ...(bccRecipients.length > 0 ? { bcc: bccRecipients } : {}),
     subject: 'Tus credenciales de acceso a Nexo',
