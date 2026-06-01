@@ -199,6 +199,7 @@ interface FormData {
   ciudad: string
   calle: string
   numero: string
+  depto: string
   fecha_nacimiento: string
 }
 
@@ -211,6 +212,7 @@ const initialForm: FormData = {
   ciudad: '',
   calle: '',
   numero: '',
+  depto: '',
   fecha_nacimiento: '',
 }
 
@@ -526,7 +528,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
         email: form.email.trim().toLowerCase(),
         whatsapp: form.whatsapp.trim() || undefined,
         ciudad: form.ciudad.trim() || undefined,
-        domicilio: [form.calle.trim(), form.numero.trim()].filter(Boolean).join(' ') || undefined,
+        domicilio: [form.calle.trim(), form.numero.trim(), form.depto.trim() ? `Dpto. ${form.depto.trim()}` : ''].filter(Boolean).join(' ') || undefined,
         fecha_nacimiento: form.fecha_nacimiento || undefined,
         plan_id: selectedPlan.id || undefined,
       })
@@ -829,6 +831,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
                 </div>
                 <InputField id="calle" label="Domicilio" value={form.calle} onChange={setField('calle')} placeholder="Nombre de la calle" required />
                 <InputField id="numero" label="Número" value={form.numero} onChange={setField('numero')} placeholder="1234" required />
+                <InputField id="depto" label="Departamento (si aplica)" value={form.depto} onChange={setField('depto')} placeholder="Ej: 3B" />
                 <DateField id="fecha_nacimiento" label="Fecha de nacimiento" value={form.fecha_nacimiento} onChange={setField('fecha_nacimiento')} required max={maxBirthDate} />
 
                 {error && (
