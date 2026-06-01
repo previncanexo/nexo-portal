@@ -327,6 +327,19 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
           Ver medicamentos con cobertura
         </a>
 
+        <a
+          href="https://drive.google.com/file/d/1qCXH9unJU6DVAwo5KUUTy2NFQJIit_UZ/view"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 min-h-[44px] rounded-full text-sm font-bold mb-3"
+          style={{ background: 'rgba(134,96,239,0.10)', color: 'var(--purple)', border: '1px solid rgba(134,96,239,0.25)', fontFamily: 'var(--font-dm-sans)' }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          Ver farmacias adheridas
+        </a>
+
         <button
           onClick={onClose}
           className="w-full py-3 min-h-[44px] rounded-full text-sm font-bold text-white"
