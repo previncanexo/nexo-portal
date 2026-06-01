@@ -281,7 +281,7 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
           </div>
           <div>
             <p className="text-sm font-bold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>Farmacias</p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>Descuentos en red nacional</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>Descuentos en Rosario y la región</p>
           </div>
         </div>
 
@@ -313,7 +313,7 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
             {affiliateNumber}
           </div>
           <p className="text-sm mb-4 text-center" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
-            Mostrá este número en la farmacia para el 50% de descuento.
+            Mostrá este número en la farmacia y la receta para aprovechar hasta el 50% de descuento.
           </p>
         </div>
 
@@ -376,7 +376,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     },
     {
       id: 'urgencias',
-      title: 'Emergencias 24/7',
+      title: 'Urgencias 24/7',
       subtitle: 'Asistencia médica inmediata',
       badge: 'Disponible 24/7',
       badgeColor: '#dc2626',
@@ -388,7 +388,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       accentBg: 'rgba(134,96,239,0.10)',
       glowColor: 'rgba(220,38,38,0.12)',
       Icon: IconUrgencias,
-      description: 'Porque los imprevistos pasan. Con Nexo tenés asistencia inmediata ante urgencias, las 24 horas, todos los días, para que puedas sentirte acompañado cuando más lo necesitás.',
+      description: 'Porque los imprevistos pasan. Con Previnca Nexo tenés asistencia inmediata ante urgencias, las 24 horas, todos los días, para que puedas sentirte acompañado cuando más lo necesitás.',
       descriptionExtra: 'Todo de forma simple, rápida y pensada para tu estilo de vida. Porque el bienestar también es tener tranquilidad y respaldo en cualquier momento.',
       bullets: [
         'Atención rápida 24/7',
@@ -400,7 +400,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     },
     {
       id: 'farmacias',
-      title: 'Descuentos en Farmacias',
+      title: 'Descuentos en Rosario y la región',
       subtitle: 'Farmacias en Rosario y la región',
       badge: '50% descuento',
       badgeColor: '#059669',
@@ -411,7 +411,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       accentBg: 'rgba(134,96,239,0.10)',
       glowColor: 'rgba(16,185,129,0.12)',
       Icon: IconFarmacias,
-      description: 'Cuidar tu salud también puede ser más accesible. Con Nexo accedés a descuentos exclusivos en medicamentos en farmacias adheridas en Rosario y la región.',
+      description: 'Cuidar tu salud también puede ser más accesible. Con Previnca Nexo accedés a descuentos exclusivos en medicamentos presentando receta en farmacias adheridas en Rosario y la región.',
       descriptionExtra: 'Porque el bienestar también es ahorrar en lo que necesitás todos los días, de forma simple y sin complicaciones.',
       bullets: [
         'Hasta 50% OFF en farmacias adheridas',
