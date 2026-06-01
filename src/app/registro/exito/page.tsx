@@ -246,14 +246,15 @@ function FailedState() {
 export default async function ExitoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ collection_status?: string; status?: string }>
+  searchParams: Promise<{ collection_status?: string; status?: string; preapproval_id?: string }>
 }) {
   const params = await searchParams
 
   const isApproved =
     params.collection_status === 'approved' ||
     params.status === 'approved' ||
-    params.status === 'authorized' // preapproval/subscription success state
+    params.status === 'authorized' ||
+    !!params.preapproval_id // suscripción autorizada — MP solo envía preapproval_id
 
   const isPending =
     params.collection_status === 'pending' ||
