@@ -642,9 +642,9 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
               className="text-white leading-[1.06] tracking-[-1.5px] mb-8"
               style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic', fontSize: 'clamp(40px, 4.5vw, 64px)' }}
             >
-              Tu salud,<br />
-              digitalmente<br />
-              simple
+              Tu salud y tu<br />
+              bienestar sin<br />
+              vueltas.
             </h1>
 
             <p className="text-base mb-10" style={{ color: 'rgba(255,255,255,0.60)', fontFamily: 'var(--font-dm-sans)', lineHeight: 1.65, maxWidth: '340px' }}>
