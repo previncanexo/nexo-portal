@@ -3,7 +3,18 @@
 import { randomBytes } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail } from '@/lib/emails'
+
+async function requireAdmin(): Promise<{ authorized: true } | { authorized: false; error: { success: false; message: string } }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean)
+  if (!user?.email || !adminEmails.includes(user.email)) {
+    return { authorized: false, error: { success: false, message: 'No autorizado.' } }
+  }
+  return { authorized: true }
+}
 
 function addOneMonth(dateStr: string | null): string {
   const base = dateStr ? new Date(dateStr + 'T12:00:00') : new Date()
@@ -16,6 +27,9 @@ function addOneMonth(dateStr: string | null): string {
 }
 
 export async function quickApproveAffiliate(affiliateId: string) {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
   const supabase = createAdminClient()
 
   const { data: affiliate } = await supabase

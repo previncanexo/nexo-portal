@@ -2,9 +2,20 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 import { sendActivationEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendResubscribeEmail, sendSuspensionEmail, sendCancellationEmail, sendPasswordResetEmail } from '@/lib/emails'
 import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import type { AffiliateStatus } from '@/lib/types'
+
+async function requireAdmin(): Promise<{ authorized: true } | { authorized: false; error: { success: false; message: string } }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean)
+  if (!user?.email || !adminEmails.includes(user.email)) {
+    return { authorized: false, error: { success: false, message: 'No autorizado.' } }
+  }
+  return { authorized: true }
+}
 
 async function cancelMpSubscription(subscriptionId: string): Promise<void> {
   if (!process.env.MP_ACCESS_TOKEN) return
@@ -33,6 +44,9 @@ export async function updateAffiliateStatus(
   coberturaDesde?: string,
   coberturaHasta?: string,
 ) {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
   const supabase = createAdminClient()
 
   const { data: current } = await supabase
@@ -158,6 +172,9 @@ export async function updateAffiliateStatus(
 }
 
 export async function updateAffiliateData(affiliateId: string, formData: FormData) {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
   const supabase = createAdminClient()
 
   const payload: Record<string, unknown> = {
@@ -218,6 +235,9 @@ export async function updateAffiliateData(affiliateId: string, formData: FormDat
 }
 
 export async function updateAffiliateNotes(affiliateId: string, notes: string) {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
   const supabase = createAdminClient()
 
   const { error } = await supabase
@@ -232,6 +252,9 @@ export async function updateAffiliateNotes(affiliateId: string, notes: string) {
 }
 
 export async function addPayment(affiliateId: string, formData: FormData) {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
   const supabase = createAdminClient()
 
   const rawAmount = formData.get('amount') as string
@@ -391,6 +414,9 @@ export async function addPayment(affiliateId: string, formData: FormData) {
 }
 
 export async function deleteAffiliate(affiliateId: string): Promise<{ success: boolean; message: string }> {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
   const supabase = createAdminClient()
 
   const { data: affiliate } = await supabase
@@ -431,6 +457,9 @@ export async function deleteAffiliate(affiliateId: string): Promise<{ success: b
 }
 
 export async function deletePayment(paymentId: string): Promise<{ success: boolean; message: string }> {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
   const supabase = createAdminClient()
 
   // Fetch affiliate_id before deleting so we can revalidate the right paths
@@ -457,6 +486,9 @@ export async function deletePayment(paymentId: string): Promise<{ success: boole
 }
 
 export async function sendAffiliatePasswordReset(affiliateId: string): Promise<{ success: boolean; message: string }> {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
   const supabase = createAdminClient()
 
   const { data: affiliate } = await supabase

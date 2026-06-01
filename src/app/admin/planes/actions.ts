@@ -2,9 +2,23 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 import { MercadoPagoConfig, PreApprovalPlan } from 'mercadopago'
 
+async function requireAdmin(): Promise<{ authorized: true } | { authorized: false; error: { success: false; message: string } }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean)
+  if (!user?.email || !adminEmails.includes(user.email)) {
+    return { authorized: false, error: { success: false, message: 'No autorizado.' } }
+  }
+  return { authorized: true }
+}
+
 export async function createPlan(formData: FormData) {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
   const name = (formData.get('name') as string)?.trim()
   const description = (formData.get('description') as string)?.trim() || null
   const price = parseFloat(formData.get('price') as string)
@@ -28,6 +42,9 @@ export async function createPlan(formData: FormData) {
 }
 
 export async function updatePlan(planId: string, formData: FormData) {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
   const name = (formData.get('name') as string)?.trim()
   const description = (formData.get('description') as string)?.trim() || null
   const price = parseFloat(formData.get('price') as string)
@@ -49,6 +66,9 @@ export async function updatePlan(planId: string, formData: FormData) {
 }
 
 export async function deletePlan(planId: string) {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
   const supabase = createAdminClient()
 
   // Check if any non-cancelled affiliates are using this plan
@@ -73,6 +93,9 @@ export async function deletePlan(planId: string) {
 }
 
 export async function createMpPlan(planId: string): Promise<{ success: boolean; message: string }> {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
   const mpToken = process.env.MP_ACCESS_TOKEN
   if (!mpToken) return { success: false, message: 'MP_ACCESS_TOKEN no está configurado.' }
 
@@ -116,6 +139,9 @@ export async function createMpPlan(planId: string): Promise<{ success: boolean; 
 }
 
 export async function unlinkMpPlan(planId: string): Promise<{ success: boolean; message: string }> {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
   const supabase = createAdminClient()
   const { error } = await supabase
     .from('plans')
