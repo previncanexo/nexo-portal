@@ -80,8 +80,8 @@ export async function POST(req: NextRequest) {
 
   const webhookSecret = process.env.MP_WEBHOOK_SECRET
   if (webhookSecret && body.data?.id) {
-    if (xSignature && !verifyMpSignature(xSignature, xRequestId, body.data.id, webhookSecret)) {
-      console.warn('[mp-webhook] Invalid signature — request rejected')
+    if (!xSignature || !verifyMpSignature(xSignature, xRequestId, body.data.id, webhookSecret)) {
+      console.warn('[mp-webhook] Invalid or missing signature — request rejected')
       return NextResponse.json({ ok: true })
     }
   }

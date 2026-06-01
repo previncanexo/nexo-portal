@@ -1,8 +1,19 @@
 'use server'
 
+import { randomBytes } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail } from '@/lib/emails'
+
+function addOneMonth(dateStr: string): string {
+  const base = new Date(dateStr)
+  const year = base.getFullYear()
+  const month = base.getMonth() + 1
+  const day = base.getDate()
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  const result = new Date(year, month, Math.min(day, lastDay))
+  return result.toISOString().split('T')[0]
+}
 
 export async function quickApproveAffiliate(affiliateId: string) {
   const supabase = createAdminClient()
@@ -15,9 +26,7 @@ export async function quickApproveAffiliate(affiliateId: string) {
 
   if (!affiliate) return { success: false, message: 'Afiliado no encontrado.' }
 
-  const today = new Date()
-  const nextMonth = new Date(today)
-  nextMonth.setMonth(nextMonth.getMonth() + 1)
+  const todayStr = new Date().toISOString().split('T')[0]
 
   const certNum = parseInt(affiliate.affiliate_number ?? '0', 10)
   const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
@@ -26,7 +35,9 @@ export async function quickApproveAffiliate(affiliateId: string) {
   let userId = (affiliate as any).user_id as string | null | undefined
   let tempPassword: string | undefined
   if (!userId) {
-    tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-4).toUpperCase()
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+    const bytes = randomBytes(12)
+    tempPassword = Array.from(bytes).map(b => chars[b % chars.length]).join('')
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: affiliate.email,
       password: tempPassword,
@@ -46,9 +57,9 @@ export async function quickApproveAffiliate(affiliateId: string) {
     .update({
       status: 'active',
       farmacia_number: farmaciaNumber,
-      cobertura_desde: today.toISOString().split('T')[0],
-      cobertura_hasta: nextMonth.toISOString().split('T')[0],
-      updated_at: today.toISOString(),
+      cobertura_desde: todayStr,
+      cobertura_hasta: addOneMonth(todayStr),
+      updated_at: new Date().toISOString(),
     })
     .eq('id', affiliateId)
 

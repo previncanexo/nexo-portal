@@ -110,7 +110,7 @@ export default function AfiliadosClient({ affiliates, plans, initialStatus }: { 
       if (planFilter !== 'all' && a.plan_id !== planFilter) return false
       if (start && new Date(a.created_at) < start) return false
       if (q) {
-        const haystack = [a.nombre, a.apellido, a.dni, a.email]
+        const haystack = [a.nombre, a.apellido, a.dni, a.email, a.affiliate_number]
           .join(' ')
           .toLowerCase()
         if (!haystack.includes(q)) return false

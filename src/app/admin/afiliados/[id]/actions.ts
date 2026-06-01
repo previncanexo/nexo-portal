@@ -242,10 +242,12 @@ export async function addPayment(affiliateId: string, formData: FormData) {
     .single()
 
   const paidAtRaw = (formData.get('paid_at') as string | null)?.trim()
-  const today = paidAtRaw ? new Date(paidAtRaw) : new Date()
-  const nextMonth = new Date(today)
-  nextMonth.setMonth(nextMonth.getMonth() + 1)
+  const paidAt = paidAtRaw
+    ? (paidAtRaw.includes('T') ? new Date(paidAtRaw) : new Date(paidAtRaw + 'T12:00:00'))
+    : new Date()
+  const today = paidAt
 
+  const todayDateStr = today.toISOString().split('T')[0]
   const { error } = await supabase.from('payments').insert({
     affiliate_id: affiliateId,
     amount: Math.round(amount),
@@ -253,8 +255,8 @@ export async function addPayment(affiliateId: string, formData: FormData) {
     mp_status: paymentStatus,
     mp_payment_id,
     paid_at: today.toISOString(),
-    period_from: today.toISOString().split('T')[0],
-    period_to: nextMonth.toISOString().split('T')[0],
+    period_from: todayDateStr,
+    period_to: addOneMonth(todayDateStr),
   })
 
   if (error) {
@@ -272,8 +274,8 @@ export async function addPayment(affiliateId: string, formData: FormData) {
       .update({
         status: 'active',
         farmacia_number: farmaciaNumber,
-        cobertura_desde: today.toISOString().split('T')[0],
-        cobertura_hasta: nextMonth.toISOString().split('T')[0],
+        cobertura_desde: todayDateStr,
+        cobertura_hasta: addOneMonth(todayDateStr),
         updated_at: today.toISOString(),
       })
       .eq('id', affiliateId)
@@ -369,7 +371,11 @@ export async function deleteAffiliate(affiliateId: string): Promise<{ success: b
 
   // Delete auth user
   if (affiliate.user_id) {
-    await supabase.auth.admin.deleteUser(affiliate.user_id)
+    const { error: authDeleteError } = await supabase.auth.admin.deleteUser(affiliate.user_id)
+    if (authDeleteError) {
+      console.error('[deleteAffiliate] Failed to delete auth user:', authDeleteError)
+      // Non-fatal: the affiliate DB record is deleted, log for manual cleanup
+    }
   }
 
   revalidatePath('/admin')
@@ -380,12 +386,26 @@ export async function deleteAffiliate(affiliateId: string): Promise<{ success: b
 export async function deletePayment(paymentId: string): Promise<{ success: boolean; message: string }> {
   const supabase = createAdminClient()
 
+  // Fetch affiliate_id before deleting so we can revalidate the right paths
+  const { data: payment } = await supabase
+    .from('payments')
+    .select('affiliate_id')
+    .eq('id', paymentId)
+    .single()
+
   const { error } = await supabase
     .from('payments')
     .delete()
     .eq('id', paymentId)
 
   if (error) return { success: false, message: error.message }
+
+  revalidatePath('/admin')
+  revalidatePath('/admin/pagos')
+  if (payment?.affiliate_id) {
+    revalidatePath(`/admin/afiliados/${payment.affiliate_id}`)
+  }
+
   return { success: true, message: 'Pago eliminado.' }
 }
 

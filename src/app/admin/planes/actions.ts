@@ -51,16 +51,17 @@ export async function updatePlan(planId: string, formData: FormData) {
 export async function deletePlan(planId: string) {
   const supabase = createAdminClient()
 
-  // Check if any affiliates are using this plan
+  // Check if any non-cancelled affiliates are using this plan
   const { count } = await supabase
     .from('affiliates')
     .select('id', { count: 'exact', head: true })
     .eq('plan_id', planId)
+    .not('status', 'eq', 'cancelled')
 
   if ((count ?? 0) > 0) {
     return {
       success: false,
-      message: `No se puede eliminar: ${count} afiliado${count === 1 ? '' : 's'} usa${count === 1 ? '' : 'n'} este plan.`,
+      message: `No se puede eliminar: ${count} afiliado${count === 1 ? '' : 's'} activo${count === 1 ? '' : 's'} usa${count === 1 ? '' : 'n'} este plan.`,
     }
   }
 

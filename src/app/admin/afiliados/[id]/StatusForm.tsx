@@ -48,7 +48,7 @@ export default function StatusForm({
   const [selected, setSelected] = useState<AffiliateStatus>(currentStatus)
   const [desde, setDesde] = useState(toDateInputValue(coberturaDesde))
   const [hasta, setHasta] = useState(toDateInputValue(coberturaHasta))
-  const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null)
+  const [message, setMessage] = useState<{ text: string; ok: boolean; warn?: boolean } | null>(null)
   const [isPending, startTransition] = useTransition()
 
   function handleSubmit(e: React.FormEvent) {
@@ -56,7 +56,9 @@ export default function StatusForm({
     setMessage(null)
     startTransition(async () => {
       const result = await updateAffiliateStatus(affiliateId, selected, desde, hasta)
-      setMessage({ text: result.message, ok: result.success })
+      // mpReactivationWarning: success=true but message contains a warning
+      const isWarning = result.success && result.message !== 'Estado actualizado correctamente.'
+      setMessage({ text: result.message, ok: result.success, warn: isWarning })
     })
   }
 
@@ -129,9 +131,19 @@ export default function StatusForm({
         <p
           className="text-sm px-4 py-2.5 rounded-xl"
           style={{
-            background: message.ok ? 'rgba(22,163,74,0.08)' : 'rgba(220,38,38,0.08)',
-            border: `1px solid ${message.ok ? 'rgba(22,163,74,0.2)' : 'rgba(220,38,38,0.2)'}`,
-            color: message.ok ? '#16a34a' : '#dc2626',
+            background: message.warn
+              ? 'rgba(217,119,6,0.10)'
+              : message.ok
+                ? 'rgba(22,163,74,0.08)'
+                : 'rgba(220,38,38,0.08)',
+            border: `1px solid ${
+              message.warn
+                ? 'rgba(217,119,6,0.25)'
+                : message.ok
+                  ? 'rgba(22,163,74,0.2)'
+                  : 'rgba(220,38,38,0.2)'
+            }`,
+            color: message.warn ? '#d97706' : message.ok ? '#16a34a' : '#dc2626',
             fontFamily: 'var(--font-dm-sans)',
           }}
         >

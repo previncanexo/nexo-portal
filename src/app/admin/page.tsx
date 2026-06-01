@@ -257,7 +257,7 @@ export default async function AdminDashboardPage() {
   const revenueSumMap: Record<string, number> = {}
   for (const key of monthKeys) revenueSumMap[key] = 0
   for (const row of revenueByMonthRes.data ?? []) {
-    const key = (row.paid_at ?? row.created_at).slice(0, 7)
+    const key = (row.paid_at ?? '').slice(0, 7)
     if (key in revenueSumMap) revenueSumMap[key] += row.amount ?? 0
   }
 
