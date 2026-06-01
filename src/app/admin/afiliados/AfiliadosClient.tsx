@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Affiliate, AffiliateStatus, Plan } from '@/lib/types'
+import { formatDateAR } from '@/lib/dateUtils'
 import CreateAfiliadoModal from './CreateAfiliadoModal'
 import { deleteAffiliate } from './[id]/actions'
 
@@ -19,8 +20,7 @@ const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg:
 type PeriodFilter = 'all' | 'week' | 'month' | 'year'
 
 function formatDate(iso: string | null): string {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return formatDateAR(iso, { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 function getStartOf(period: PeriodFilter): Date | null {

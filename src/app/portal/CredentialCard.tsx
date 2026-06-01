@@ -2,6 +2,7 @@
 
 import QRCode from 'react-qr-code'
 import type { Affiliate } from '@/lib/types'
+import { formatDateAR } from '@/lib/dateUtils'
 
 interface CredentialCardProps {
   affiliate: Affiliate | null
@@ -15,8 +16,7 @@ const STATUS_CONFIG = {
 }
 
 function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })
+  return formatDateAR(dateStr, { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 export default function CredentialCard({ affiliate }: CredentialCardProps) {

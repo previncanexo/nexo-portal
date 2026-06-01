@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import { formatDateAR } from '@/lib/dateUtils'
 
 interface PaymentRow {
   id: string
@@ -33,7 +34,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return formatDateAR(iso, { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 function formatAmount(amount: number, currency: string): string {

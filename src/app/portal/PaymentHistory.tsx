@@ -1,7 +1,8 @@
 import type { Payment } from '@/lib/types'
+import { formatDateAR } from '@/lib/dateUtils'
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })
+  return formatDateAR(dateStr, { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 function formatAmount(amount: number, currency: string): string {

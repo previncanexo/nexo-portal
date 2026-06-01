@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { quickApproveAffiliate } from './actions'
+import { formatDateAR } from '@/lib/dateUtils'
 
 interface PendingAffiliate {
   id: string
@@ -14,7 +15,7 @@ interface PendingAffiliate {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return formatDateAR(iso, { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 function ApproveButton({ affiliateId }: { affiliateId: string }) {

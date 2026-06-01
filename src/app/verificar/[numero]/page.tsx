@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { AffiliateStatus } from '@/lib/types'
+import { formatDateAR } from '@/lib/dateUtils'
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string; icon: 'check' | 'clock' | 'x' }> = {
   active:    { label: 'Afiliado activo',          color: '#86efac', bg: 'rgba(34,197,94,0.12)',   border: 'rgba(34,197,94,0.25)',   icon: 'check' },
@@ -10,8 +11,7 @@ const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg:
 }
 
 function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })
+  return formatDateAR(dateStr, { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
 function IconCheck() {
@@ -247,7 +247,7 @@ export default async function VerificarPage({ params }: { params: Promise<{ nume
 
             {/* Footer */}
             <p className="text-xs text-center mt-4" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
-              {new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}
+              {new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Argentina/Buenos_Aires' })}
             </p>
           </div>
         )}

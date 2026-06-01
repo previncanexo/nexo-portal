@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Affiliate, AffiliateStatus, Payment, Plan } from '@/lib/types'
+import { formatDateAR } from '@/lib/dateUtils'
 import StatusForm from './StatusForm'
 
 export const dynamic = 'force-dynamic'
@@ -33,8 +34,7 @@ function StatusBadge({ status }: { status: AffiliateStatus }) {
 }
 
 function formatDate(iso: string | null): string {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return formatDateAR(iso, { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 function DataRow({ label, value }: { label: string; value: string | null | undefined }) {
