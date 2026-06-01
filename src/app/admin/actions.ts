@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail } from '@/lib/emails'
+import { addOneMonth } from '@/lib/dateUtils'
 
 async function requireAdmin(): Promise<{ authorized: true } | { authorized: false; error: { success: false; message: string } }> {
   const supabase = await createClient()
@@ -14,16 +15,6 @@ async function requireAdmin(): Promise<{ authorized: true } | { authorized: fals
     return { authorized: false, error: { success: false, message: 'No autorizado.' } }
   }
   return { authorized: true }
-}
-
-function addOneMonth(dateStr: string | null): string {
-  const base = dateStr ? new Date(dateStr + 'T12:00:00') : new Date()
-  const year = base.getFullYear()
-  const month = base.getMonth() + 1
-  const day = base.getDate()
-  const lastDay = new Date(year, month + 1, 0).getDate()
-  const clampedDay = Math.min(day, lastDay)
-  return `${year}-${String(month).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`
 }
 
 export async function quickApproveAffiliate(affiliateId: string) {

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendSuspensionEmail } from '@/lib/emails'
+import { addOneMonth } from '@/lib/dateUtils'
 
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL ?? 'https://n8n.previncasalud.com.ar/webhook/mercadopago-nexo-webhook'
 
@@ -30,16 +31,6 @@ function verifyMpSignature(
   } catch {
     return false
   }
-}
-
-function addOneMonth(dateStr: string | null): string {
-  const base = dateStr ? new Date(dateStr + 'T12:00:00') : new Date()
-  const year = base.getFullYear()
-  const month = base.getMonth() + 1
-  const day = base.getDate()
-  const lastDay = new Date(year, month + 1, 0).getDate()
-  const clampedDay = Math.min(day, lastDay)
-  return `${year}-${String(month).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`
 }
 
 export async function POST(req: NextRequest) {

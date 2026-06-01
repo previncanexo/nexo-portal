@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { registrationLimiter } from '@/lib/ratelimit'
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from 'mercadopago'
 import { sendPendingConfirmationEmail } from '@/lib/emails'
+import { addOneMonth } from '@/lib/dateUtils'
 
 interface RegisterInput {
   nombre: string
@@ -50,6 +51,21 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
   if (!/^\d{7,8}$/.test(dni)) {
     return { success: false, error: 'El DNI debe tener 7 u 8 dígitos numéricos (sin puntos ni espacios).' }
   }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    return { success: false, error: 'El email ingresado no es válido.' }
+  }
+
+  const fechaNacimiento = fecha_nacimiento ?? null
+  if (fechaNacimiento) {
+    const birthDate = new Date(fechaNacimiento + 'T12:00:00')
+    const today = new Date()
+    const age = today.getFullYear() - birthDate.getFullYear()
+      - (today < new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate()) ? 1 : 0)
+    if (age < 18) {
+      return { success: false, error: 'Debés ser mayor de 18 años para registrarte.' }
+    }
+  }
 
   const proto = headersList.get('x-forwarded-proto') ?? 'https'
   const host = headersList.get('host') ?? ''
@@ -66,7 +82,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
   // Check if email already exists
   const { data: existingAffiliate } = await supabase
     .from('affiliates')
-    .select('id, affiliate_number, user_id, status, mp_subscription_id')
+    .select('id, affiliate_number, user_id, status, mp_subscription_id, nombre, apellido, whatsapp, ciudad, domicilio, fecha_nacimiento')
     .eq('email', email)
     .maybeSingle()
 
@@ -79,16 +95,21 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
 
   // If pending account exists, resume payment flow instead of creating a new user
   if (existingAffiliate && existingAffiliate.status === 'pending') {
+    // Only update fields that are currently blank — don't overwrite existing data
+    const updatePayload: Record<string, unknown> = {}
+    if (!existingAffiliate.nombre) updatePayload.nombre = nombre
+    if (!existingAffiliate.apellido) updatePayload.apellido = apellido
+    if (!existingAffiliate.whatsapp) updatePayload.whatsapp = whatsapp
+    if (!existingAffiliate.ciudad) updatePayload.ciudad = ciudad
+    if (!existingAffiliate.domicilio) updatePayload.domicilio = domicilio
+    if (!existingAffiliate.fecha_nacimiento) updatePayload.fecha_nacimiento = fechaNacimiento
+    // always update plan_id in case they changed plan
+    updatePayload.plan_id = plan?.id ?? null
+    updatePayload.updated_at = new Date().toISOString()
+
     await supabase
       .from('affiliates')
-      .update({
-        nombre, apellido, dni,
-        ...(whatsapp ? { whatsapp } : {}),
-        ...(ciudad ? { ciudad } : {}),
-        ...(domicilio ? { domicilio } : {}),
-        ...(fecha_nacimiento ? { fecha_nacimiento } : {}),
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', existingAffiliate.id)
 
     try {
