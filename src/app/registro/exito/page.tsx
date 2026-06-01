@@ -136,7 +136,7 @@ function ApprovedState() {
         </p>
         {[
           'Revisá tu email — te enviamos tus credenciales de acceso',
-          'Recibirás un segundo email cuando tu cuenta esté activada',
+          'Recibirás un segundo email de bienvenida a Nexo',
           'Con las credenciales podés ingresar al portal en cualquier momento',
         ].map((item, i) => (
           <div key={i} className="flex items-start gap-3 mb-2 last:mb-0">
