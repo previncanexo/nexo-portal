@@ -11,6 +11,7 @@ export default async function PagosPage() {
     .from('payments')
     .select('*, affiliate:affiliates(id, nombre, apellido, affiliate_number)')
     .order('created_at', { ascending: false })
+    .limit(500)
 
   return <PagosClient payments={(data ?? []) as any} />
 }

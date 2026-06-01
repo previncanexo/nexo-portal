@@ -95,7 +95,7 @@ export default function AfiliadosClient({ affiliates, plans, initialStatus }: { 
       } else {
         setDeleteTarget(null)
         setDeleteError(null)
-        router.refresh()
+        router.push('/admin/afiliados')
       }
     })
   }
@@ -117,7 +117,7 @@ export default function AfiliadosClient({ affiliates, plans, initialStatus }: { 
       }
       return true
     })
-  }, [affiliates, period, statusFilter, search])
+  }, [affiliates, period, statusFilter, planFilter, search])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)

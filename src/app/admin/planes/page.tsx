@@ -10,7 +10,7 @@ export default async function PlanesPage() {
 
   const [{ data: plansData }, { data: countsData }] = await Promise.all([
     supabase.from('plans').select('*').order('price'),
-    supabase.from('affiliates').select('plan_id').not('plan_id', 'is', null),
+    supabase.from('affiliates').select('plan_id').not('plan_id', 'is', null).eq('status', 'active'),
   ])
 
   const plans = (plansData ?? []) as Plan[]

@@ -201,6 +201,7 @@ export default async function AdminDashboardPage() {
     totalRes,
     activeRes,
     pendingRes,
+    pendingCountRes,
     revenueMonthRes,
     affiliatesByMonthRes,
     revenueByMonthRes,
@@ -215,9 +216,10 @@ export default async function AdminDashboardPage() {
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
       .limit(5),
-    supabase.from('payments').select('amount').eq('mp_status', 'approved').gte('created_at', startOfMonth),
+    supabase.from('affiliates').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('payments').select('amount, paid_at').eq('mp_status', 'approved').gte('paid_at', startOfMonth),
     supabase.from('affiliates').select('created_at').gte('created_at', sixMonthsAgo),
-    supabase.from('payments').select('amount, created_at').eq('mp_status', 'approved').gte('created_at', sixMonthsAgo),
+    supabase.from('payments').select('amount, paid_at').eq('mp_status', 'approved').gte('paid_at', sixMonthsAgo),
     supabase
       .from('affiliates')
       .select('id, nombre, apellido, status, created_at')
@@ -237,7 +239,7 @@ export default async function AdminDashboardPage() {
   const totalCount = totalRes.count ?? 0
   const activeCount = activeRes.count ?? 0
   const pendingAffiliates = (pendingRes.data ?? []) as Array<{ id: string; nombre: string; apellido: string; email: string; created_at: string }>
-  const pendingCount = pendingAffiliates.length
+  const pendingCount = pendingCountRes.count ?? 0
 
   const thisMonthRevenue = (revenueMonthRes.data ?? []).reduce(
     (sum, row) => sum + (row.amount ?? 0),
@@ -255,7 +257,7 @@ export default async function AdminDashboardPage() {
   const revenueSumMap: Record<string, number> = {}
   for (const key of monthKeys) revenueSumMap[key] = 0
   for (const row of revenueByMonthRes.data ?? []) {
-    const key = row.created_at.slice(0, 7)
+    const key = (row.paid_at ?? row.created_at).slice(0, 7)
     if (key in revenueSumMap) revenueSumMap[key] += row.amount ?? 0
   }
 

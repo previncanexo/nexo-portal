@@ -22,9 +22,13 @@ interface PaymentRow {
 const PAGE_SIZE = 50
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  approved: { label: 'Aprobado',  color: '#16a34a', bg: 'rgba(22,163,74,0.1)',  border: 'rgba(22,163,74,0.2)' },
-  pending:  { label: 'Pendiente', color: '#ca8a04', bg: 'rgba(202,138,4,0.1)',  border: 'rgba(202,138,4,0.2)' },
-  rejected: { label: 'Rechazado', color: '#dc2626', bg: 'rgba(220,38,38,0.1)',  border: 'rgba(220,38,38,0.2)' },
+  approved:     { label: 'Aprobado',     color: '#16a34a', bg: 'rgba(22,163,74,0.1)',   border: 'rgba(22,163,74,0.2)' },
+  pending:      { label: 'Pendiente',    color: '#ca8a04', bg: 'rgba(202,138,4,0.1)',   border: 'rgba(202,138,4,0.2)' },
+  rejected:     { label: 'Rechazado',    color: '#dc2626', bg: 'rgba(220,38,38,0.1)',   border: 'rgba(220,38,38,0.2)' },
+  in_process:   { label: 'En proceso',   color: '#ea580c', bg: 'rgba(234,88,12,0.1)',   border: 'rgba(234,88,12,0.2)' },
+  cancelled:    { label: 'Cancelado',    color: '#64748b', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.2)' },
+  refunded:     { label: 'Reembolsado',  color: '#2563eb', bg: 'rgba(37,99,235,0.1)',   border: 'rgba(37,99,235,0.2)' },
+  charged_back: { label: 'Contracargo',  color: '#dc2626', bg: 'rgba(220,38,38,0.1)',   border: 'rgba(220,38,38,0.2)' },
 }
 
 
@@ -55,14 +59,14 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
   useEffect(() => { setPage(0) }, [search, monthFilter, statusFilter])
 
   const monthKeys = useMemo(() => {
-    const keys = [...new Set(payments.map((p) => getMonthKey(p.created_at)))].sort().reverse()
+    const keys = [...new Set(payments.map((p) => getMonthKey(p.paid_at ?? p.created_at)))].sort().reverse()
     return keys
   }, [payments])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
     return payments.filter((p) => {
-      if (monthFilter !== 'all' && getMonthKey(p.created_at) !== monthFilter) return false
+      if (monthFilter !== 'all' && getMonthKey(p.paid_at ?? p.created_at) !== monthFilter) return false
       if (statusFilter !== 'all' && p.mp_status !== statusFilter) return false
       if (q) {
         const haystack = [

@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendActivationEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendResubscribeEmail, sendSuspensionEmail, sendCancellationEmail, sendPasswordResetEmail } from '@/lib/emails'
 import { MercadoPagoConfig, PreApproval } from 'mercadopago'
@@ -20,8 +19,14 @@ async function cancelMpSubscription(subscriptionId: string): Promise<void> {
 
 function addOneMonth(dateStr: string | null): string {
   const base = dateStr ? new Date(dateStr) : new Date()
-  base.setMonth(base.getMonth() + 1)
-  return base.toISOString().split('T')[0]
+  const year = base.getFullYear()
+  const month = base.getMonth() + 1 // destination month (0-indexed + 1)
+  const day = base.getDate()
+  // Last day of the destination month
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  const clampedDay = Math.min(day, lastDay)
+  const result = new Date(year, month, clampedDay)
+  return result.toISOString().split('T')[0]
 }
 
 export async function updateAffiliateStatus(
@@ -329,12 +334,14 @@ export async function addPayment(affiliateId: string, formData: FormData) {
     await sendPaymentConfirmedEmail(affiliate.nombre, affiliate.email, amount, currency)
   }
 
+  revalidatePath('/admin')
+  revalidatePath('/admin/afiliados')
   revalidatePath(`/admin/afiliados/${affiliateId}`)
 
   return { success: true, message: 'Pago registrado correctamente.' }
 }
 
-export async function deleteAffiliate(affiliateId: string): Promise<{ success: false; message: string } | never> {
+export async function deleteAffiliate(affiliateId: string): Promise<{ success: boolean; message: string }> {
   const supabase = createAdminClient()
 
   const { data: affiliate } = await supabase
@@ -367,7 +374,7 @@ export async function deleteAffiliate(affiliateId: string): Promise<{ success: f
 
   revalidatePath('/admin')
   revalidatePath('/admin/afiliados')
-  redirect('/admin/afiliados')
+  return { success: true, message: 'Afiliado eliminado correctamente.' }
 }
 
 export async function deletePayment(paymentId: string): Promise<{ success: boolean; message: string }> {

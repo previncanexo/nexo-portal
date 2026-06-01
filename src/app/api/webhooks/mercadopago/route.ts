@@ -34,8 +34,14 @@ function verifyMpSignature(
 
 function addOneMonth(dateStr: string | null): string {
   const base = dateStr ? new Date(dateStr) : new Date()
-  base.setMonth(base.getMonth() + 1)
-  return base.toISOString().split('T')[0]
+  const year = base.getFullYear()
+  const month = base.getMonth() + 1 // destination month (0-indexed + 1)
+  const day = base.getDate()
+  // Last day of the destination month
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  const clampedDay = Math.min(day, lastDay)
+  const result = new Date(year, month, clampedDay)
+  return result.toISOString().split('T')[0]
 }
 
 export async function POST(req: NextRequest) {
@@ -74,8 +80,6 @@ export async function POST(req: NextRequest) {
 
   const webhookSecret = process.env.MP_WEBHOOK_SECRET
   if (webhookSecret && body.data?.id) {
-    const xSignature = req.headers.get('x-signature') ?? ''
-    const xRequestId = req.headers.get('x-request-id') ?? ''
     if (xSignature && !verifyMpSignature(xSignature, xRequestId, body.data.id, webhookSecret)) {
       console.warn('[mp-webhook] Invalid signature — request rejected')
       return NextResponse.json({ ok: true })
@@ -331,11 +335,15 @@ export async function POST(req: NextRequest) {
               revalidatePath('/admin/afiliados')
               revalidatePath(`/admin/afiliados/${preApproval.external_reference}`)
             } else {
-              // Already active — just extend cobertura_hasta
+              // Already active — extend cobertura_hasta from the later of today or current cobertura_hasta
+              const hoy = new Date().toISOString().split('T')[0]
+              const baseDate = affiliateData?.cobertura_hasta && affiliateData.cobertura_hasta > hoy
+                ? affiliateData.cobertura_hasta
+                : hoy
               await supabase
                 .from('affiliates')
                 .update({
-                  cobertura_hasta: addOneMonth(affiliateData?.cobertura_hasta ?? null),
+                  cobertura_hasta: addOneMonth(baseDate),
                   updated_at: new Date().toISOString(),
                 })
                 .eq('id', preApproval.external_reference)
