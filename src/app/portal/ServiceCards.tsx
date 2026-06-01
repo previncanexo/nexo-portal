@@ -189,7 +189,7 @@ function UrgenciasModal({ service, onClose }: { service: ServiceItem; onClose: (
               <IconUrgencias />
             </div>
             <div className="flex-1">
-              <p className="text-base font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>Urgencias Médicas</p>
+              <p className="text-base font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>Emergencias médicas</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
                 <p className="text-xs font-medium" style={{ color: 'rgba(248,113,113,0.80)', fontFamily: 'var(--font-dm-sans)' }}>Disponible 24/7</p>
@@ -376,7 +376,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     },
     {
       id: 'urgencias',
-      title: 'Urgencias 24/7',
+      title: 'Emergencias médicas',
       subtitle: 'Asistencia médica inmediata',
       badge: 'Disponible 24/7',
       badgeColor: '#dc2626',

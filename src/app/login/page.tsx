@@ -46,7 +46,7 @@ function IconTooth() {
 
 const LOGIN_SERVICES = [
   { icon: <IconVideoCamera />, label: 'DOC24' },
-  { icon: <IconAmbulance />, label: 'Urgencias' },
+  { icon: <IconAmbulance />, label: 'Emergencias médicas' },
   { icon: <IconPill />, label: 'Farmacias' },
   { icon: <IconTooth />, label: 'Odontología' },
 ]

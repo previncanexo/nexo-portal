@@ -48,7 +48,7 @@ La afiliación a NEXO y la acreditación del pago de la cuota correspondiente al
 
 2. Guardias Odontológicas: Se facilitará el acceso a guardias odontológicas a través de un prestador tercerizado. El alcance del servicio de urgencia odontológica abarca únicamente las prácticas de medicación, radiografías y apertura de piezas dentarias con fines paliativos. El tratamiento posterior y definitivo de la pieza dentaria no se encuentra incluido en esta modalidad de atención.
 
-3. Urgencias Médicas: El servicio de atención médica se limita de manera exclusiva a las prestaciones derivadas de emergencias y urgencias médicas. Queda expresamente excluido de la presente cobertura el servicio de consulta o visita médica programada a domicilio.
+3. Emergencias médicas: El servicio de atención médica se limita de manera exclusiva a las prestaciones derivadas de emergencias y urgencias médicas. Queda expresamente excluido de la presente cobertura el servicio de consulta o visita médica programada a domicilio.
 
 4. Descuentos en Farmacia: Los usuarios afiliados tendrán acceso a descuentos en farmacia a través de una red de prestadores cerrada y un vademécum acotado, según los acuerdos establecidos con el colegio farmacéutico.
 
@@ -219,7 +219,7 @@ const initialForm: FormData = {
 const PLAN_BENEFITS = [
   { label: 'Teleconsultas médicas ilimitadas · DOC24', icon: '🩺' },
   { label: 'Descuentos hasta 50% en farmacias', icon: '💊' },
-  { label: 'Urgencias médicas', icon: '🚑' },
+  { label: 'Emergencias médicas', icon: '🚑' },
   { label: 'Guardias odontológicas de urgencia', icon: '🦷' },
 ]
 

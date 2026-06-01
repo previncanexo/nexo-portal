@@ -45,7 +45,7 @@ function activationEmailHtml(
       </td></tr>` : ''}
     </table>
   </div>
-  <p style="margin:0 0 24px;font-size:14px;color:#6b7280;">Los servicios de Teleconsultas médicas y Urgencias 24/7 estarán habilitados dentro de las 24 horas hábiles de recibida la credencial digital. El resto de los servicios cuentan con una carencia de 30 días. Finalizado ese período, podrás acceder a guardia odontológica y descuentos en farmacias.</p>
+  <p style="margin:0 0 24px;font-size:14px;color:#6b7280;">Los servicios de Teleconsultas médicas y Emergencias médicas estarán habilitados dentro de las 24 horas hábiles de recibida la credencial digital. El resto de los servicios cuentan con una carencia de 30 días. Finalizado ese período, podrás acceder a guardia odontológica y descuentos en farmacias.</p>
   <p style="margin:0 0 24px;font-size:14px;color:#6b7280;">Recordá que estamos a disposición para acompañarte y responder cualquier consulta que tengas.</p>
   <a href="${appUrl}/login" style="display:inline-block;background:linear-gradient(135deg,#8660EF,#E879A0);color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Acceder al portal →</a>
 </td></tr>

@@ -93,7 +93,7 @@ export default function OgImage() {
             letterSpacing: '0.2px',
             marginBottom: '32px',
           }}>
-            Teleconsultas · Urgencias 24/7 · Farmacias · Odontología
+            Teleconsultas · Emergencias médicas · Farmacias · Odontología
           </div>
 
           {/* Badge */}
