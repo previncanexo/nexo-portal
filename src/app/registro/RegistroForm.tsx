@@ -217,10 +217,10 @@ const initialForm: FormData = {
 }
 
 const PLAN_BENEFITS = [
-  { label: 'Teleconsultas médicas ilimitadas · DOC24', icon: '🩺' },
-  { label: 'Descuentos hasta 50% en farmacias', icon: '💊' },
+  { label: 'Teleconsultas médicas: DOC 24', icon: '🩺' },
+  { label: 'Descuentos en farmacias', icon: '💊' },
   { label: 'Emergencias médicas', icon: '🚑' },
-  { label: 'Guardias odontológicas de urgencia', icon: '🦷' },
+  { label: 'Guardias odontológicas', icon: '🦷' },
 ]
 
 const fieldBase: React.CSSProperties = {
