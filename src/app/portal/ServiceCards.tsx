@@ -434,7 +434,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       glowColor: 'rgba(139,92,246,0.12)',
       Icon: IconOdontologia,
       description: 'Enviá un mensaje al WhatsApp del prestador al 341 3077912 para informar que vas a concurrir a la atención. Luego, podés acercarte a España 729, Rosario.',
-      descriptionExtra: 'Horarios de atención: lunes a viernes de 8 a 20 hs y sábados de 8 a 12 hs.',
+      descriptionExtra: 'Horarios de atención: lunes a viernes de 8 a 20 hs.',
       bullets: [
         'Atención odontológica de urgencia',
         'Acceso digital simple',
