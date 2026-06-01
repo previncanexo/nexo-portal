@@ -5,7 +5,6 @@ import type { Affiliate, Payment } from '@/lib/types'
 import CredentialWithDownload from './CredentialWithDownload'
 import ServiceCards from './ServiceCards'
 import CancelSection from './CancelSection'
-import PaymentHistory from './PaymentHistory'
 import RetryPaymentButton from './RetryPaymentButton'
 import ActiveWatcher from './ActiveWatcher'
 
@@ -223,17 +222,6 @@ export default async function PortalPage() {
             </div>
           </div>
         )}
-      </section>
-
-      {/* Historial de pagos */}
-      <section>
-        <p
-          className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
-          style={{ color: 'rgba(255,255,255,0.70)' }}
-        >
-          Historial de pagos
-        </p>
-        <PaymentHistory payments={payments} />
       </section>
 
       {/* Cancelar suscripción */}
