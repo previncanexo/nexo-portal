@@ -281,7 +281,7 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
           </div>
           <div>
             <p className="text-sm font-bold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>Farmacias</p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>Descuentos en Rosario y la región</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>Descuentos en Farmacias</p>
           </div>
         </div>
 
@@ -397,7 +397,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     },
     {
       id: 'farmacias',
-      title: 'Descuentos en Rosario y la región',
+      title: 'Descuentos en Farmacias',
       subtitle: 'Farmacias en Rosario y la región',
       badge: '50% descuento',
       badgeColor: '#059669',
@@ -408,7 +408,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       accentBg: 'rgba(134,96,239,0.10)',
       glowColor: 'rgba(16,185,129,0.12)',
       Icon: IconFarmacias,
-      description: '',
+      description: 'Descuento en farmacias: presentando tu receta con el número de farmacia que figura en tu credencial digital, podés acceder al 50% OFF en más de 6000 medicamentos seleccionados.',
       descriptionExtra: '',
       bullets: [
         'Hasta 50% OFF en farmacias adheridas',
