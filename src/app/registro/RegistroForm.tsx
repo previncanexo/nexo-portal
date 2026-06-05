@@ -4,6 +4,30 @@ import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { initiatePayment } from './actions'
 
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void
+    fbq?: (...args: unknown[]) => void
+  }
+}
+
+function trackEvent(opts: {
+  ga4Name: string
+  ga4Params?: Record<string, unknown>
+  metaName: string
+  metaStandard?: boolean
+  metaParams?: Record<string, unknown>
+}) {
+  if (typeof window === 'undefined') return
+  try {
+    window.gtag?.('event', opts.ga4Name, opts.ga4Params ?? {})
+  } catch {}
+  try {
+    const fbqAction = opts.metaStandard ? 'track' : 'trackCustom'
+    window.fbq?.(fbqAction, opts.metaName, opts.metaParams ?? {})
+  } catch {}
+}
+
 const TYC_TEXT = `TÉRMINOS Y CONDICIONES
 
 CLAUSULA 1: IDENTIFICACIÓN DEL PRESTADOR Y OBJETO DEL SERVICIO DE INTERMEDIACIÓN
@@ -482,9 +506,19 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [checkoutUrl, setCheckoutUrl] = useState('')
+  const [redirecting, setRedirecting] = useState(false)
   const [tycAccepted, setTycAccepted] = useState(false)
   const [tycModalOpen, setTycModalOpen] = useState(false)
   const hasMultiplePlans = plans.length > 1
+
+  useEffect(() => {
+    if (step === 2) {
+      trackEvent({
+        ga4Name: 'registro_2',
+        metaName: 'registro_2',
+      })
+    }
+  }, [step])
 
   const maxBirthDate = (() => {
     const d = new Date()
@@ -514,6 +548,10 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
       setError('Debés tener 18 años o más para registrarte.')
       return
     }
+    trackEvent({
+      ga4Name: 'registro_1',
+      metaName: 'registro_1',
+    })
     setStep(2)
   }
 
@@ -536,7 +574,32 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
         setError(data.error)
         return
       }
+
+      const value = selectedPlan.price
+      const currency = 'ARS'
+
+      trackEvent({
+        ga4Name: 'completar_registro',
+        ga4Params: { value, currency },
+        metaName: 'CompleteRegistration',
+        metaStandard: true,
+        metaParams: { value, currency, content_name: selectedPlan.name },
+      })
+
+      trackEvent({
+        ga4Name: 'inicio_de_checkout',
+        ga4Params: { value, currency, items: [{ item_id: selectedPlan.id, item_name: selectedPlan.name, price: value, quantity: 1 }] },
+        metaName: 'InitiateCheckout',
+        metaStandard: true,
+        metaParams: { value, currency, content_name: selectedPlan.name, content_ids: [selectedPlan.id], num_items: 1 },
+      })
+
       setCheckoutUrl(data.checkoutUrl)
+      setRedirecting(true)
+      // Delay corto para que GA4/Meta alcancen a enviar antes del navigate
+      setTimeout(() => {
+        window.location.href = data.checkoutUrl
+      }, 600)
     } catch {
       setError('Error inesperado. Intentá de nuevo.')
     } finally {
@@ -544,15 +607,14 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
     }
   }
 
-  if (checkoutUrl) {
-    const registrationEmail = form.email.trim().toLowerCase()
+  if (checkoutUrl || redirecting) {
     return (
       <div
         className="min-h-screen flex items-center justify-center px-4"
         style={{ background: 'linear-gradient(135deg, #12053d 0%, #2d1266 40%, #6535cc 100%)' }}
       >
         <div
-          className="flex flex-col gap-5 rounded-3xl p-7 max-w-sm w-full text-center"
+          className="flex flex-col gap-5 rounded-3xl p-7 max-w-sm w-full text-center items-center"
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(134,96,239,0.25)' }}
         >
           <div className="flex flex-col gap-2">
@@ -560,29 +622,22 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
               ¡Tu cuenta está lista!
             </p>
             <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
-              Completá el pago en Mercado Pago para activar tu cobertura.
+              Redirigiéndote a Mercado Pago...
             </p>
           </div>
 
+          <svg className="animate-spin" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+            <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+            <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+          </svg>
+
           <a
             href={checkoutUrl}
-            className="inline-flex items-center justify-center px-5 py-3 rounded-full text-sm font-bold text-white text-center"
-            style={{
-              background: 'linear-gradient(to right, var(--purple), var(--pink))',
-              fontFamily: 'var(--font-dm-sans)',
-              boxShadow: '0 4px 16px rgba(134,96,239,0.30)',
-              textDecoration: 'none',
-            }}
+            className="text-xs underline"
+            style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}
           >
-            Ir a Mercado Pago →
+            ¿No te redirige? Hacé clic acá
           </a>
-          <button
-            onClick={() => setCheckoutUrl('')}
-            className="text-xs text-center"
-            style={{ color: 'rgba(255,255,255,0.30)', fontFamily: 'var(--font-dm-sans)', background: 'none', border: 'none', cursor: 'pointer' }}
-          >
-            Volver al registro
-          </button>
         </div>
       </div>
     )
