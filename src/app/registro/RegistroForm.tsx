@@ -539,7 +539,12 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
   const hasMultiplePlans = plans.length > 1
 
   useEffect(() => {
-    if (step === 2) {
+    if (step === 1) {
+      trackEvent({
+        ga4Name: 'registro_1',
+        metaName: 'registro_1',
+      })
+    } else if (step === 2) {
       trackEvent({
         ga4Name: 'registro_2',
         metaName: 'registro_2',
@@ -575,10 +580,6 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
       setError('Debés tener 18 años o más para registrarte.')
       return
     }
-    trackEvent({
-      ga4Name: 'registro_1',
-      metaName: 'registro_1',
-    })
     setStep(2)
   }
 
