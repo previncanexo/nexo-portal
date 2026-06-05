@@ -19,13 +19,40 @@ function trackEvent(opts: {
   metaParams?: Record<string, unknown>
 }) {
   if (typeof window === 'undefined') return
+
+  const hasGtag = typeof window.gtag === 'function'
+  const hasFbq = typeof window.fbq === 'function'
+  const fbqAction = opts.metaStandard ? 'track' : 'trackCustom'
+
+  console.log('[track]', {
+    ga4: opts.ga4Name,
+    meta: opts.metaName,
+    metaAction: fbqAction,
+    hasGtag,
+    hasFbq,
+    ga4Params: opts.ga4Params,
+    metaParams: opts.metaParams,
+  })
+
   try {
-    window.gtag?.('event', opts.ga4Name, opts.ga4Params ?? {})
-  } catch {}
+    if (hasGtag) {
+      window.gtag!('event', opts.ga4Name, opts.ga4Params ?? {})
+    } else {
+      console.warn('[track] window.gtag no disponible — evento GA4 no enviado:', opts.ga4Name)
+    }
+  } catch (err) {
+    console.error('[track] error en gtag:', err)
+  }
+
   try {
-    const fbqAction = opts.metaStandard ? 'track' : 'trackCustom'
-    window.fbq?.(fbqAction, opts.metaName, opts.metaParams ?? {})
-  } catch {}
+    if (hasFbq) {
+      window.fbq!(fbqAction, opts.metaName, opts.metaParams ?? {})
+    } else {
+      console.warn('[track] window.fbq no disponible — evento Meta no enviado:', opts.metaName)
+    }
+  } catch (err) {
+    console.error('[track] error en fbq:', err)
+  }
 }
 
 const TYC_TEXT = `TÉRMINOS Y CONDICIONES
