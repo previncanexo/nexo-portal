@@ -613,6 +613,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
       const value = selectedPlan.price
       const currency = 'ARS'
 
+      // 1. API confirma que el lead se creó → CompleteRegistration ahora
       trackEvent({
         ga4Name: 'completar_registro',
         ga4Params: { value, currency },
@@ -621,20 +622,24 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
         metaParams: { value, currency, content_name: selectedPlan.name },
       })
 
-      trackEvent({
-        ga4Name: 'inicio_de_checkout',
-        ga4Params: { value, currency, items: [{ item_id: selectedPlan.id, item_name: selectedPlan.name, price: value, quantity: 1 }] },
-        metaName: 'InitiateCheckout',
-        metaStandard: true,
-        metaParams: { value, currency, content_name: selectedPlan.name, content_ids: [selectedPlan.id], num_items: 1 },
-      })
-
       setCheckoutUrl(data.checkoutUrl)
       setRedirecting(true)
-      // Delay corto para que GA4/Meta alcancen a enviar antes del navigate
+
+      // 2. Justo antes del redirect a MP → InitiateCheckout
+      setTimeout(() => {
+        trackEvent({
+          ga4Name: 'inicio_de_checkout',
+          ga4Params: { value, currency, items: [{ item_id: selectedPlan.id, item_name: selectedPlan.name, price: value, quantity: 1 }] },
+          metaName: 'InitiateCheckout',
+          metaStandard: true,
+          metaParams: { value, currency, content_name: selectedPlan.name, content_ids: [selectedPlan.id], num_items: 1 },
+        })
+      }, 300)
+
+      // 3. Navigate a MP (delay total 800ms para que los dos pixels tengan tiempo de irse)
       setTimeout(() => {
         window.location.href = data.checkoutUrl
-      }, 600)
+      }, 800)
     } catch {
       setError('Error inesperado. Intentá de nuevo.')
     } finally {
