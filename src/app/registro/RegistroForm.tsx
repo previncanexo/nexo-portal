@@ -549,12 +549,16 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
     if (step === 1) {
       trackEvent({
         ga4Name: 'registro_1',
-        metaName: 'registro_1',
+        metaName: 'ViewContent',
+        metaStandard: true,
+        metaParams: { content_name: 'Registro - Step 1', content_category: 'registration' },
       })
     } else if (step === 2) {
       trackEvent({
         ga4Name: 'registro_2',
-        metaName: 'registro_2',
+        metaName: 'Lead',
+        metaStandard: true,
+        metaParams: { content_name: 'Registro - Step 2', content_category: 'registration' },
       })
     }
   }, [step])
