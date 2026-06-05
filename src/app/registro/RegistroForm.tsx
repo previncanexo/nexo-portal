@@ -11,6 +11,45 @@ declare global {
   }
 }
 
+const TRACK_MAX_RETRIES = 25  // 25 * 200ms = 5s
+const TRACK_RETRY_MS = 200
+
+function fireGa4(name: string, params: Record<string, unknown>, attempt = 0) {
+  if (typeof window === 'undefined') return
+  if (typeof window.gtag === 'function') {
+    try {
+      window.gtag('event', name, params)
+      console.log('[track] GA4 OK:', name)
+    } catch (err) {
+      console.error('[track] error gtag:', err)
+    }
+    return
+  }
+  if (attempt < TRACK_MAX_RETRIES) {
+    setTimeout(() => fireGa4(name, params, attempt + 1), TRACK_RETRY_MS)
+  } else {
+    console.warn('[track] GA4 timeout, evento perdido:', name)
+  }
+}
+
+function fireMeta(name: string, action: 'track' | 'trackCustom', params: Record<string, unknown>, attempt = 0) {
+  if (typeof window === 'undefined') return
+  if (typeof window.fbq === 'function') {
+    try {
+      window.fbq(action, name, params)
+      console.log('[track] Meta OK:', name, `(${action})`)
+    } catch (err) {
+      console.error('[track] error fbq:', err)
+    }
+    return
+  }
+  if (attempt < TRACK_MAX_RETRIES) {
+    setTimeout(() => fireMeta(name, action, params, attempt + 1), TRACK_RETRY_MS)
+  } else {
+    console.warn('[track] Meta timeout, evento perdido:', name)
+  }
+}
+
 function trackEvent(opts: {
   ga4Name: string
   ga4Params?: Record<string, unknown>
@@ -19,40 +58,8 @@ function trackEvent(opts: {
   metaParams?: Record<string, unknown>
 }) {
   if (typeof window === 'undefined') return
-
-  const hasGtag = typeof window.gtag === 'function'
-  const hasFbq = typeof window.fbq === 'function'
-  const fbqAction = opts.metaStandard ? 'track' : 'trackCustom'
-
-  console.log('[track]', {
-    ga4: opts.ga4Name,
-    meta: opts.metaName,
-    metaAction: fbqAction,
-    hasGtag,
-    hasFbq,
-    ga4Params: opts.ga4Params,
-    metaParams: opts.metaParams,
-  })
-
-  try {
-    if (hasGtag) {
-      window.gtag!('event', opts.ga4Name, opts.ga4Params ?? {})
-    } else {
-      console.warn('[track] window.gtag no disponible — evento GA4 no enviado:', opts.ga4Name)
-    }
-  } catch (err) {
-    console.error('[track] error en gtag:', err)
-  }
-
-  try {
-    if (hasFbq) {
-      window.fbq!(fbqAction, opts.metaName, opts.metaParams ?? {})
-    } else {
-      console.warn('[track] window.fbq no disponible — evento Meta no enviado:', opts.metaName)
-    }
-  } catch (err) {
-    console.error('[track] error en fbq:', err)
-  }
+  fireGa4(opts.ga4Name, opts.ga4Params ?? {})
+  fireMeta(opts.metaName, opts.metaStandard ? 'track' : 'trackCustom', opts.metaParams ?? {})
 }
 
 const TYC_TEXT = `TÉRMINOS Y CONDICIONES
