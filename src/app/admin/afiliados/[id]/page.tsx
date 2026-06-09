@@ -12,6 +12,7 @@ import NotesForm from './NotesForm'
 import CredentialDownload from './CredentialDownload'
 import DeleteAfiliadoButton from './DeleteAfiliadoButton'
 import DeletePaymentButton from './DeletePaymentButton'
+import RefundButton from './RefundButton'
 import ResetPasswordButton from './ResetPasswordButton'
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string }> = {
@@ -76,6 +77,13 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
   const affiliate = affiliateData as Affiliate
   const payments = (paymentsData ?? []) as Payment[]
   const plans = (plansData ?? []) as Plan[]
+
+  // Último pago aprobado (monto positivo) para el botón de devolución
+  const lastApprovedPayment = [...payments]
+    .filter((p) => p.mp_status === 'approved' && p.amount > 0)
+    .sort((a, b) =>
+      new Date(b.paid_at ?? b.created_at).getTime() - new Date(a.paid_at ?? a.created_at).getTime()
+    )[0]
 
   return (
     <div className="flex flex-col gap-6" style={{ fontFamily: 'var(--font-dm-sans)' }}>
@@ -175,7 +183,7 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
                         <td className="py-2 pr-4 whitespace-nowrap" style={{ color: 'var(--gray-700)' }}>
                           {formatDate(p.paid_at ?? p.created_at)}
                         </td>
-                        <td className="py-2 pr-4 whitespace-nowrap font-semibold" style={{ color: 'var(--gray-900)' }}>
+                        <td className="py-2 pr-4 whitespace-nowrap font-semibold" style={{ color: p.amount < 0 ? '#dc2626' : 'var(--gray-900)' }}>
                           {p.currency} {p.amount.toLocaleString('es-AR')}
                         </td>
                         <td className="py-2 pr-4 whitespace-nowrap" style={{ color: 'var(--gray-600)' }}>
@@ -185,8 +193,8 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
                               ? 'Manual'
                               : 'Manual'}
                         </td>
-                        <td className="py-2 pr-4 whitespace-nowrap" style={{ color: 'var(--gray-600)' }}>
-                          {p.mp_status}
+                        <td className="py-2 pr-4 whitespace-nowrap" style={{ color: p.amount < 0 ? '#dc2626' : 'var(--gray-600)' }}>
+                          {p.amount < 0 ? 'Devolución' : p.mp_status}
                         </td>
                         <td className="py-2 pr-4 whitespace-nowrap font-mono text-xs" style={{ color: 'var(--gray-500)' }}>
                           {p.mp_payment_id ?? '—'}
@@ -222,6 +230,17 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
               Registrar pago
             </h2>
             <PaymentForm affiliateId={affiliate.id} />
+          </div>
+
+          <div className="glass-card px-6 py-6">
+            <h2 className="text-sm font-bold uppercase tracking-wider mb-5" style={{ color: 'var(--gray-700)' }}>
+              Devolución
+            </h2>
+            <RefundButton
+              affiliateId={affiliate.id}
+              lastAmount={lastApprovedPayment?.amount ?? null}
+              currency={lastApprovedPayment?.currency ?? 'ARS'}
+            />
           </div>
 
           <div className="glass-card px-6 py-6">

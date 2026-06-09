@@ -75,6 +75,8 @@ function exportCSV(list: Affiliate[]) {
 export default function AfiliadosClient({ affiliates, plans, initialStatus, limitReached }: { affiliates: Affiliate[]; plans: Plan[]; initialStatus?: string; limitReached?: boolean }) {
   const router = useRouter()
   const [period, setPeriod] = useState<PeriodFilter>('all')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [statusFilter, setStatusFilter] = useState<AffiliateStatus | 'all'>(
     (initialStatus as AffiliateStatus) ?? 'all'
   )
@@ -100,15 +102,22 @@ export default function AfiliadosClient({ affiliates, plans, initialStatus, limi
     })
   }
 
-  useEffect(() => { setPage(0) }, [search, statusFilter, planFilter, period])
+  useEffect(() => { setPage(0) }, [search, statusFilter, planFilter, period, dateFrom, dateTo])
 
   const filtered = useMemo(() => {
-    const start = getStartOf(period)
+    // Si hay rango de fechas custom, ignora el preset (semana/mes/año)
+    const useRange = Boolean(dateFrom || dateTo)
+    const start = useRange ? null : getStartOf(period)
+    const fromD = dateFrom ? new Date(dateFrom + 'T00:00:00') : null
+    const toD = dateTo ? new Date(dateTo + 'T23:59:59') : null
     const q = search.trim().toLowerCase()
     return affiliates.filter((a) => {
       if (statusFilter !== 'all' && a.status !== statusFilter) return false
       if (planFilter !== 'all' && a.plan_id !== planFilter) return false
-      if (start && new Date(a.created_at) < start) return false
+      const created = new Date(a.created_at)
+      if (start && created < start) return false
+      if (fromD && created < fromD) return false
+      if (toD && created > toD) return false
       if (q) {
         const haystack = [a.nombre, a.apellido, a.dni, a.email, a.affiliate_number]
           .join(' ')
@@ -117,7 +126,7 @@ export default function AfiliadosClient({ affiliates, plans, initialStatus, limi
       }
       return true
     })
-  }, [affiliates, period, statusFilter, planFilter, search])
+  }, [affiliates, period, statusFilter, planFilter, search, dateFrom, dateTo])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
@@ -249,6 +258,40 @@ export default function AfiliadosClient({ affiliates, plans, initialStatus, limi
               {p.label}
             </button>
           ))}
+        </div>
+
+        {/* Date range filter */}
+        <div
+          className="flex items-center gap-1 p-1 rounded-xl"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+        >
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => { setDateFrom(e.target.value); setPeriod('all') }}
+            aria-label="Desde"
+            className="px-3 py-2 rounded-lg text-sm outline-none"
+            style={{ background: 'transparent', color: 'rgba(255,255,255,0.85)', colorScheme: 'dark', fontFamily: 'var(--font-dm-sans)' }}
+          />
+          <span style={{ color: 'rgba(255,255,255,0.4)' }}>→</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => { setDateTo(e.target.value); setPeriod('all') }}
+            aria-label="Hasta"
+            className="px-3 py-2 rounded-lg text-sm outline-none"
+            style={{ background: 'transparent', color: 'rgba(255,255,255,0.85)', colorScheme: 'dark', fontFamily: 'var(--font-dm-sans)' }}
+          />
+          {(dateFrom || dateTo) && (
+            <button
+              onClick={() => { setDateFrom(''); setDateTo('') }}
+              title="Limpiar rango"
+              className="px-2.5 py-1.5 rounded-lg text-sm font-semibold"
+              style={{ background: 'transparent', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+            >
+              ×
+            </button>
+          )}
         </div>
 
         {/* Status filter */}

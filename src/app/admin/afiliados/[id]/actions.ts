@@ -507,6 +507,78 @@ export async function deletePayment(paymentId: string): Promise<{ success: boole
   return { success: true, message: 'Pago eliminado.' }
 }
 
+// Devolución: toma el último pago aprobado (monto > 0), lo devuelve en Mercado Pago
+// (si tiene un ID de pago de MP real) y registra una NOTA DE CRÉDITO en la tabla de
+// pagos como un movimiento de monto NEGATIVO con mp_status 'approved'. Se inserta como
+// 'approved' a propósito: las sumas de ingresos filtran por mp_status='approved'
+// (admin/page.tsx, PagosClient.tsx), así que un monto negativo aprobado RESTA solo en
+// todos los totales, sin tocar la lógica de sumas.
+export async function refundLastPayment(affiliateId: string): Promise<{ success: boolean; message: string }> {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
+  const supabase = createAdminClient()
+
+  // Último pago aprobado con monto positivo (los negativos son notas de crédito previas)
+  const { data: payment, error: findErr } = await supabase
+    .from('payments')
+    .select('id, amount, currency, mp_payment_id, paid_at')
+    .eq('affiliate_id', affiliateId)
+    .eq('mp_status', 'approved')
+    .gt('amount', 0)
+    .order('paid_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (findErr) return { success: false, message: findErr.message }
+  if (!payment) return { success: false, message: 'No hay pagos aprobados para devolver.' }
+
+  // Devolución real en Mercado Pago si el pago tiene un ID de pago de MP (numérico)
+  let mpNote = ' (pago manual, sin devolución en Mercado Pago)'
+  const mpId = (payment.mp_payment_id ?? '').trim()
+  if (/^\d+$/.test(mpId)) {
+    if (!process.env.MP_ACCESS_TOKEN) {
+      return { success: false, message: 'No se puede devolver en Mercado Pago: falta MP_ACCESS_TOKEN.' }
+    }
+    try {
+      const res = await fetch(`https://api.mercadopago.com/v1/payments/${mpId}/refunds`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json',
+          'X-Idempotency-Key': `refund-${payment.id}`,
+        },
+        body: '{}', // sin amount = devolución total
+      })
+      if (!res.ok) {
+        const txt = await res.text()
+        return { success: false, message: `Mercado Pago rechazó la devolución (${res.status}): ${txt.slice(0, 180)}` }
+      }
+      mpNote = ' (devuelto en Mercado Pago)'
+    } catch (err) {
+      return { success: false, message: `Error al conectar con Mercado Pago: ${(err as Error).message}` }
+    }
+  }
+
+  // Nota de crédito (monto negativo, approved → resta en los totales)
+  const { error: insErr } = await supabase.from('payments').insert({
+    affiliate_id: affiliateId,
+    amount: -Math.abs(payment.amount),
+    currency: payment.currency ?? 'ARS',
+    mp_status: 'approved',
+    paid_at: new Date().toISOString(),
+  })
+  if (insErr) {
+    return { success: false, message: `Devolución en MP procesada, pero falló al registrar la nota de crédito: ${insErr.message}` }
+  }
+
+  revalidatePath('/admin')
+  revalidatePath('/admin/pagos')
+  revalidatePath(`/admin/afiliados/${affiliateId}`)
+  const monto = payment.amount.toLocaleString('es-AR')
+  return { success: true, message: `Devolución registrada: nota de crédito de ${payment.currency ?? 'ARS'} -${monto}${mpNote}.` }
+}
+
 export async function sendAffiliatePasswordReset(affiliateId: string): Promise<{ success: boolean; message: string }> {
   const auth = await requireAdmin()
   if (!auth.authorized) return auth.error
