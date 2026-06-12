@@ -33,9 +33,6 @@ export async function quickApproveAffiliate(affiliateId: string) {
 
   const todayStr = todayAR()
 
-  const certNum = parseInt(affiliate.affiliate_number ?? '0', 10)
-  const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
-
   // Create Auth user if it doesn't exist yet
   let userId = (affiliate as any).user_id as string | null | undefined
   let tempPassword: string | undefined
@@ -74,18 +71,23 @@ export async function quickApproveAffiliate(affiliateId: string) {
     }
   }
 
-  const { error } = await supabase
+  // El trigger de DB genera affiliate_number + farmacia_number al pasar a 'active'.
+  const { data: numbered, error } = await supabase
     .from('affiliates')
     .update({
       status: 'active',
-      farmacia_number: farmaciaNumber,
       cobertura_desde: todayStr,
       cobertura_hasta: addOneMonth(todayStr),
       updated_at: new Date().toISOString(),
     })
     .eq('id', affiliateId)
+    .select('affiliate_number, farmacia_number')
+    .single()
 
   if (error) return { success: false, message: error.message }
+
+  affiliate.affiliate_number = numbered?.affiliate_number ?? affiliate.affiliate_number
+  const farmaciaNumber = numbered?.farmacia_number ?? ''
 
   const resolvedPlan = Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan
 
