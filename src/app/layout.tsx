@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { DM_Sans, DM_Serif_Display } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
-import { InstallBanner } from './components/InstallBanner'
 
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
@@ -87,7 +86,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </div>
         <div className="relative z-10 flex flex-col min-h-full">
           {children}
-          <InstallBanner />
         </div>
 
         {/* Google Analytics */}
