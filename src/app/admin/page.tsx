@@ -206,6 +206,9 @@ export default async function AdminDashboardPage() {
     revenueByMonthRes,
     recentRes,
     expiringRes,
+    leadsTotalRes,
+    leadsThisMonthRes,
+    leadsLastMonthRes,
   ] = await Promise.all([
     supabase.from('affiliates').select('id', { count: 'exact', head: true }),
     supabase.from('affiliates').select('id', { count: 'exact', head: true }).eq('status', 'active'),
@@ -232,6 +235,20 @@ export default async function AdminDashboardPage() {
       .lte('cobertura_hasta', in30Days)
       .order('cobertura_hasta', { ascending: true })
       .limit(5),
+    // Leads KPIs — solo cuenta los que siguen siendo leads (no convertidos a affiliate).
+    // Las filas convertidas se mantienen en la tabla para histórico, pero no suman al pipeline activo.
+    supabase.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'partial'),
+    supabase
+      .from('leads')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'partial')
+      .gte('created_at', startOfMonth),
+    supabase
+      .from('leads')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'partial')
+      .gte('created_at', new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString())
+      .lt('created_at', startOfMonth),
   ])
 
   // ── Stat totals ──────────────────────────────────────────────────────────
@@ -290,6 +307,11 @@ export default async function AdminDashboardPage() {
   const newLastMonth = affiliateBuckets.find((b) => b.month === prevMonthKey)?.count ?? 0
   const revenueLastMonth = revenueBuckets.find((b) => b.month === prevMonthKey)?.total ?? 0
 
+  // ── Leads (solo los que siguen "partial" — los convertidos se cuentan como afiliados) ──
+  const leadsActiveCount = leadsTotalRes.count ?? 0
+  const leadsThisMonth = leadsThisMonthRes.count ?? 0
+  const leadsLastMonth = leadsLastMonthRes.count ?? 0
+
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div
@@ -299,9 +321,14 @@ export default async function AdminDashboardPage() {
       <PendingApprovalSection affiliates={pendingAffiliates} totalCount={pendingCount} />
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
         <StatCard label="Total afiliados" value={totalCount} />
         <StatCard label="Activos" value={activeCount} />
+        <StatCard
+          label="Leads activos"
+          value={leadsActiveCount}
+          delta={{ value: leadsThisMonth - leadsLastMonth, label: 'vs mes anterior' }}
+        />
         <StatCard
           label="Nuevos este mes"
           value={newThisMonth}

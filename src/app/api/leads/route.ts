@@ -9,6 +9,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { corsHeaders, jsonWithCors } from '@/lib/cors'
+import { sendMetaCapiEvents, extractFbCookies, extractClientIp } from '@/lib/meta-capi'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -22,6 +23,10 @@ interface CreateLeadInput {
   utm_medium?: string
   utm_campaign?: string
   referer?: string
+  /** ID compartido con el pixel para dedup CAPI ↔ pixel */
+  event_id?: string
+  /** URL donde ocurrió el evento (window.location.href del browser) */
+  event_source_url?: string
 }
 
 export async function OPTIONS(req: Request) {
@@ -38,7 +43,7 @@ export async function POST(req: Request) {
     return jsonWithCors({ success: false, error: 'Body inválido' }, { status: 400, origin })
   }
 
-  const { para_quien, nombre, apellido, email, whatsapp, utm_source, utm_medium, utm_campaign, referer } = body
+  const { para_quien, nombre, apellido, email, whatsapp, utm_source, utm_medium, utm_campaign, referer, event_id, event_source_url } = body
 
   // Validaciones de campos obligatorios
   if (!para_quien || !nombre || !apellido || !email || !whatsapp) {
@@ -107,6 +112,28 @@ export async function POST(req: Request) {
       { success: false, error: 'db_error', message: 'No se pudo crear el lead.' },
       { status: 500, origin }
     )
+  }
+
+  // CAPI: Meta Conversions API — fire-and-forget para no demorar la respuesta
+  if (event_id) {
+    const fb = extractFbCookies(req)
+    sendMetaCapiEvents([{
+      event_name: 'Lead',
+      event_id,
+      event_source_url,
+      user_data: {
+        email: emailLower,
+        phone: whatsapp.trim(),
+        firstName: nombre.trim(),
+        lastName: apellido.trim(),
+        externalId: lead.id,
+        fbp: fb.fbp,
+        fbc: fb.fbc,
+        clientIp: extractClientIp(req),
+        clientUserAgent: req.headers.get('user-agent') ?? undefined,
+      },
+      custom_data: { content_name: 'nexo-onboarding' },
+    }]).catch(() => {})
   }
 
   return jsonWithCors({ success: true, leadId: lead.id }, { status: 201, origin })

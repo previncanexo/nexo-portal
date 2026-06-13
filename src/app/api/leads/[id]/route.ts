@@ -12,6 +12,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { corsHeaders, jsonWithCors } from '@/lib/cors'
 import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import { sendPendingConfirmationEmail } from '@/lib/emails'
+import { sendMetaCapiEvents, extractFbCookies, extractClientIp } from '@/lib/meta-capi'
 
 interface FinalizeLeadInput {
   dni?: string
@@ -23,6 +24,11 @@ interface FinalizeLeadInput {
   medio_pago?: string
   mp_email?: string
   plan_id?: string
+  /** ID compartido con el pixel para dedup CAPI CompleteRegistration */
+  event_id_complete_registration?: string
+  /** ID compartido con el pixel para dedup CAPI InitiateCheckout */
+  event_id_initiate_checkout?: string
+  event_source_url?: string
 }
 
 export async function OPTIONS(req: Request) {
@@ -81,7 +87,7 @@ export async function PATCH(
     return jsonWithCors({ success: false, error: 'Body inválido' }, { status: 400, origin })
   }
 
-  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, plan_id } = body
+  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, plan_id, event_id_complete_registration, event_id_initiate_checkout, event_source_url } = body
 
   // Validaciones
   if (!dni || !fecha_nacimiento || !ciudad || !calle || !numero || !medio_pago) {
@@ -251,6 +257,54 @@ export async function PATCH(
       email: lead.email,
       checkoutUrl,
     }).catch((err) => console.error('[api/leads] sendPendingConfirmationEmail:', err))
+
+    // 9. CAPI: CompleteRegistration + InitiateCheckout (fire-and-forget)
+    if (event_id_complete_registration || event_id_initiate_checkout) {
+      const fb = extractFbCookies(req)
+      const userData = {
+        email: lead.email,
+        phone: lead.whatsapp,
+        firstName: lead.nombre,
+        lastName: lead.apellido,
+        dni: dni.trim(),
+        ciudad,
+        externalId: affiliate.id,
+        fbp: fb.fbp,
+        fbc: fb.fbc,
+        clientIp: extractClientIp(req),
+        clientUserAgent: req.headers.get('user-agent') ?? undefined,
+      }
+      const value = plan?.price ?? 19500
+      const events = []
+      if (event_id_complete_registration) {
+        events.push({
+          event_name: 'CompleteRegistration',
+          event_id: event_id_complete_registration,
+          event_source_url,
+          user_data: userData,
+          custom_data: {
+            currency: 'ARS',
+            value,
+            content_name: plan?.name ?? 'Previnca Nexo',
+          },
+        })
+      }
+      if (event_id_initiate_checkout) {
+        events.push({
+          event_name: 'InitiateCheckout',
+          event_id: event_id_initiate_checkout,
+          event_source_url,
+          user_data: userData,
+          custom_data: {
+            currency: 'ARS',
+            value,
+            content_name: plan?.name ?? 'Previnca Nexo',
+            content_ids: plan?.id ? [plan.id] : undefined,
+          },
+        })
+      }
+      sendMetaCapiEvents(events).catch(() => {})
+    }
 
     return jsonWithCors(
       { success: true, leadId, affiliateId: affiliate.id, checkoutUrl },
