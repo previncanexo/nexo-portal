@@ -6,6 +6,7 @@
 const ALLOWED_ORIGINS = [
   'https://nexo.previncasalud.com.ar',
   'https://nexo-landing.vercel.app',
+  'https://nexo-landing-v2.vercel.app',
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:4173',
