@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
       if (preApproval.status === 'authorized') {
         const { data: affiliate } = await supabase
           .from('affiliates')
-          .select('status, user_id, nombre, apellido, dni, email, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name)')
+          .select('status, user_id, nombre, apellido, dni, email, whatsapp, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name)')
           .eq('id', affiliateId)
           .single()
 
@@ -216,6 +216,7 @@ export async function POST(req: NextRequest) {
             plan: resolvedPlan,
             fecha_nacimiento: affiliate.fecha_nacimiento ?? null,
             domicilio: affiliate.domicilio ?? null,
+            whatsapp: affiliate.whatsapp ?? null,
           })
 
           revalidatePath('/admin')
@@ -296,7 +297,7 @@ export async function POST(req: NextRequest) {
 
             const { data: affiliateData } = await supabase
               .from('affiliates')
-              .select('status, user_id, nombre, apellido, dni, email, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name), cobertura_hasta')
+              .select('status, user_id, nombre, apellido, dni, email, whatsapp, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name), cobertura_hasta')
               .eq('id', ppa.external_reference)
               .single()
 
@@ -371,6 +372,7 @@ export async function POST(req: NextRequest) {
                 plan: resolvedPlan,
                 fecha_nacimiento: affiliateData.fecha_nacimiento ?? null,
                 domicilio: affiliateData.domicilio ?? null,
+                whatsapp: affiliateData.whatsapp ?? null,
               })
 
               revalidatePath('/admin')

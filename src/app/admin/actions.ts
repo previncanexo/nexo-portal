@@ -25,7 +25,7 @@ export async function quickApproveAffiliate(affiliateId: string) {
 
   const { data: affiliate } = await supabase
     .from('affiliates')
-    .select('nombre, apellido, dni, email, affiliate_number, user_id, fecha_nacimiento, domicilio, plan:plans(id, name, price)')
+    .select('nombre, apellido, dni, email, whatsapp, affiliate_number, user_id, fecha_nacimiento, domicilio, plan:plans(id, name, price)')
     .eq('id', affiliateId)
     .single()
 
@@ -119,6 +119,7 @@ export async function quickApproveAffiliate(affiliateId: string) {
     plan: resolvedPlan,
     fecha_nacimiento: (affiliate as any).fecha_nacimiento ?? null,
     domicilio: (affiliate as any).domicilio ?? null,
+    whatsapp: (affiliate as any).whatsapp ?? null,
   })
 
   revalidatePath('/admin')

@@ -43,7 +43,7 @@ export async function updateAffiliateStatus(
 
   const { data: current } = await supabase
     .from('affiliates')
-    .select('status, nombre, apellido, dni, email, affiliate_number, farmacia_number, mp_subscription_id, fecha_nacimiento, domicilio, plan:plans(id, name, price)')
+    .select('status, nombre, apellido, dni, email, whatsapp, affiliate_number, farmacia_number, mp_subscription_id, fecha_nacimiento, domicilio, plan:plans(id, name, price)')
     .eq('id', affiliateId)
     .single()
 
@@ -97,6 +97,7 @@ export async function updateAffiliateStatus(
       plan: resolvedPlan,
       fecha_nacimiento: (current as any).fecha_nacimiento ?? null,
       domicilio: (current as any).domicilio ?? null,
+      whatsapp: (current as any).whatsapp ?? null,
     })
   }
 
@@ -262,7 +263,7 @@ export async function addPayment(affiliateId: string, formData: FormData) {
 
   const { data: affiliate } = await supabase
     .from('affiliates')
-    .select('status, nombre, apellido, dni, email, affiliate_number, farmacia_number, cobertura_hasta, user_id, plan:plans(name)')
+    .select('status, nombre, apellido, dni, email, whatsapp, affiliate_number, farmacia_number, cobertura_hasta, user_id, plan:plans(name)')
     .eq('id', affiliateId)
     .single()
 
@@ -358,6 +359,7 @@ export async function addPayment(affiliateId: string, formData: FormData) {
       plan: resolvedPlan,
       fecha_nacimiento: (affiliate as any).fecha_nacimiento ?? null,
       domicilio: (affiliate as any).domicilio ?? null,
+      whatsapp: (affiliate as any).whatsapp ?? null,
     })
 
     revalidatePath('/admin')
