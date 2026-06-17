@@ -10,7 +10,6 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { corsHeaders, jsonWithCors } from '@/lib/cors'
-import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import { sendPendingConfirmationEmail } from '@/lib/emails'
 import { sendMetaCapiEvents, extractFbCookies, extractClientIp } from '@/lib/meta-capi'
 
@@ -71,14 +70,6 @@ export async function PATCH(
 ) {
   const origin = req.headers.get('origin')
   const { id: leadId } = await params
-
-  const mpToken = process.env.MP_ACCESS_TOKEN
-  if (!mpToken) {
-    return jsonWithCors(
-      { success: false, error: 'mp_not_configured', message: 'El sistema de pagos no está configurado.' },
-      { status: 500, origin }
-    )
-  }
 
   let body: FinalizeLeadInput
   try {
@@ -200,40 +191,20 @@ export async function PATCH(
     )
   }
 
-  // 5. Crear PreApproval (suscripción) en MP — SIN plan template
-  const { headers } = req
-  const protoHeader = headers.get('x-forwarded-proto') ?? 'https'
-  const hostHeader = headers.get('host') ?? ''
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || `${protoHeader}://${hostHeader}`
+  // 5. Construir URL de checkout del plan en MP.
+  //    No usamos PreApproval.create() porque con preapproval_plan_id MP exige
+  //    card_token_id (tarjeta ya tokenizada del lado del server). Usar la URL
+  //    de plan_checkout permite que el usuario autorice desde la UI de MP
+  //    (tarjeta o saldo de cuenta) y MP genera la sub + dispara el webhook.
   const payerEmail = medio_pago === 'mp_balance' && mp_email ? mp_email.trim() : lead.email
 
   try {
-    const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
-    const subClient = new PreApproval(mpClient)
-
-    // Suscribe al PLAN existente en MP (sin crear plan nuevo).
-    // auto_recurring viene del plan; payer_email queda en el front cuando autoriza.
-    const sub = await subClient.create({
-      body: {
-        preapproval_plan_id: MP_PLAN_ID,
-        payer_email: payerEmail,
-        external_reference: affiliate.id,
-        reason: plan?.name ?? 'Previnca Nexo',
-        status: 'pending',
-      },
-    })
-
-    if (!sub.init_point) throw new Error('MP no devolvió init_point')
-    const checkoutUrl = sub.init_point
-    const mpSubId = sub.id ? String(sub.id) : null
-
-    // 6. Guardar mp_subscription_id en el affiliate
-    if (mpSubId) {
-      await supabase
-        .from('affiliates')
-        .update({ mp_subscription_id: mpSubId })
-        .eq('id', affiliate.id)
-    }
+    const checkoutUrlObj = new URL('https://www.mercadopago.com.ar/subscriptions/checkout')
+    checkoutUrlObj.searchParams.set('preapproval_plan_id', MP_PLAN_ID)
+    checkoutUrlObj.searchParams.set('external_reference', affiliate.id)
+    checkoutUrlObj.searchParams.set('payer_email', payerEmail)
+    const checkoutUrl = checkoutUrlObj.toString()
+    // mp_subscription_id se completa cuando llega el webhook subscription_preapproval:authorized
 
     // 7. Marcar lead como converted, asociarlo al affiliate y guardar datos del paso 2
     await supabase
