@@ -146,17 +146,14 @@ export async function PATCH(
   }
 
   // 2. Plan (seleccionado o el más barato por default)
-  const planQuery = supabase.from('plans').select('id, name, price, mp_plan_id')
+  const planQuery = supabase.from('plans').select('id, name, price')
   const { data: plan } = plan_id
     ? await planQuery.eq('id', plan_id).maybeSingle()
     : await planQuery.order('price', { ascending: true }).limit(1).maybeSingle()
 
-  if (!plan?.mp_plan_id) {
-    return jsonWithCors(
-      { success: false, error: 'plan_not_configured', message: 'El plan no está vinculado a un plan template de Mercado Pago.' },
-      { status: 500, origin }
-    )
-  }
+  // mp_plan_id hardcodeado del plan único de Previnca Nexo en Mercado Pago.
+  // Para cambiarlo: actualizar este string + redeploy.
+  const MP_PLAN_ID = '2efbdb5cfbf34e77b3f117f8852fa7eb'
 
   // 3. Armar domicilio
   const domicilio = [
@@ -218,10 +215,10 @@ export async function PATCH(
     // auto_recurring viene del plan; payer_email queda en el front cuando autoriza.
     const sub = await subClient.create({
       body: {
-        preapproval_plan_id: plan.mp_plan_id,
+        preapproval_plan_id: MP_PLAN_ID,
         payer_email: payerEmail,
         external_reference: affiliate.id,
-        reason: plan.name,
+        reason: plan?.name ?? 'Previnca Nexo',
         status: 'pending',
       },
     })
