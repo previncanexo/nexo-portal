@@ -64,10 +64,12 @@ export async function updateAffiliateStatus(
     payload.cobertura_hasta = coberturaHasta.trim() === '' ? null : coberturaHasta.trim()
   }
 
-  const { error } = await supabase
+  const { data: numbered, error } = await supabase
     .from('affiliates')
     .update(payload)
     .eq('id', affiliateId)
+    .select('affiliate_number, farmacia_number')
+    .single()
 
   if (error) {
     return { success: false, message: error.message }
@@ -75,8 +77,9 @@ export async function updateAffiliateStatus(
 
   if (status === 'active' && current?.status !== 'active' && current) {
     const resolvedPlan = Array.isArray(current.plan) ? (current.plan[0] ?? null) : current.plan
-    const farmaciaNumber = (current as any).farmacia_number
-      ?? `289${parseInt(current.affiliate_number ?? '0', 10).toString().padStart(8, '0')}0000`
+    // El trigger de DB asignó affiliate_number + farmacia_number en el update de arriba
+    current.affiliate_number = numbered?.affiliate_number ?? current.affiliate_number
+    const farmaciaNumber = numbered?.farmacia_number ?? ''
 
     await sendActivationEmail({
       nombre: current.nombre,
@@ -292,8 +295,6 @@ export async function addPayment(affiliateId: string, formData: FormData) {
   // Si el pago es aprobado y el afiliado está pendiente → activar automáticamente
   if (paymentStatus === 'approved' && affiliate?.status === 'pending') {
     const resolvedPlan = Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan
-    const farmaciaNumber = (affiliate as any).farmacia_number
-      ?? `289${parseInt(affiliate.affiliate_number ?? '0', 10).toString().padStart(8, '0')}0000`
 
     // Create Auth user if one doesn't exist yet
     let tempPassword: string | undefined
@@ -314,20 +315,25 @@ export async function addPayment(affiliateId: string, formData: FormData) {
       }
     }
 
-    const { error: activationError } = await supabase
+    // El trigger de DB genera affiliate_number + farmacia_number al pasar a 'active'.
+    const { data: numbered, error: activationError } = await supabase
       .from('affiliates')
       .update({
         status: 'active',
-        farmacia_number: farmaciaNumber,
         cobertura_desde: todayDateStr,
         cobertura_hasta: addOneMonth(todayDateStr),
         updated_at: today.toISOString(),
       })
       .eq('id', affiliateId)
+      .select('affiliate_number, farmacia_number')
+      .single()
 
     if (activationError) {
       return { success: false, message: `Pago registrado pero error al activar al afiliado: ${activationError.message}` }
     }
+
+    affiliate.affiliate_number = numbered?.affiliate_number ?? affiliate.affiliate_number
+    const farmaciaNumber = numbered?.farmacia_number ?? ''
 
     if (tempPassword) {
       await sendCredentialsEmail({

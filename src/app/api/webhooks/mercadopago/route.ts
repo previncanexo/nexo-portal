@@ -125,8 +125,6 @@ export async function POST(req: NextRequest) {
 
         if (affiliate && affiliate.status === 'pending') {
           const today = todayAR()
-          const certNum = parseInt(affiliate.affiliate_number ?? '0', 10)
-          const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
 
           let userId = affiliate.user_id as string | null | undefined
           let tempPassword: string | undefined
@@ -146,18 +144,24 @@ export async function POST(req: NextRequest) {
             }
           }
 
-          await supabase
+          // El trigger de DB genera affiliate_number + farmacia_number al pasar a 'active'.
+          // Lo leemos del update para usarlo en los emails.
+          const { data: numbered } = await supabase
             .from('affiliates')
             .update({
               status: 'active',
               mp_subscription_id: body.data.id,
               cobertura_desde: today,
               cobertura_hasta: addOneMonth(today),
-              farmacia_number: farmaciaNumber,
               updated_at: new Date().toISOString(),
               ...(userId ? { user_id: userId } : {}),
             })
             .eq('id', affiliateId)
+            .select('affiliate_number, farmacia_number')
+            .single()
+
+          affiliate.affiliate_number = numbered?.affiliate_number ?? affiliate.affiliate_number
+          const farmaciaNumber = numbered?.farmacia_number ?? ''
 
           // Insert payment record for the initial subscription charge.
           // Uses a stable key (sub-{preapproval_id}) so the payment branch can
@@ -304,8 +308,6 @@ export async function POST(req: NextRequest) {
             // Activate pending affiliate when first payment is approved
             if (affiliateData?.status === 'pending') {
               const today = todayAR()
-              const certNum = parseInt(affiliateData.affiliate_number ?? '0', 10)
-              const farmaciaNumber = `289${certNum.toString().padStart(8, '0')}0000`
 
               let userId = affiliateData.user_id as string | null | undefined
               let tempPassword: string | undefined
@@ -325,18 +327,22 @@ export async function POST(req: NextRequest) {
                 }
               }
 
-              await supabase
+              const { data: numbered } = await supabase
                 .from('affiliates')
                 .update({
                   status: 'active',
                   mp_subscription_id: String(mp.subscription_id),
                   cobertura_desde: today,
                   cobertura_hasta: addOneMonth(today),
-                  farmacia_number: farmaciaNumber,
                   updated_at: new Date().toISOString(),
                   ...(userId ? { user_id: userId } : {}),
                 })
                 .eq('id', ppa.external_reference)
+                .select('affiliate_number, farmacia_number')
+                .single()
+
+              affiliateData.affiliate_number = numbered?.affiliate_number ?? affiliateData.affiliate_number
+              const farmaciaNumber = numbered?.farmacia_number ?? ''
 
               const resolvedPlan = Array.isArray(affiliateData.plan)
                 ? (affiliateData.plan[0] ?? null)
