@@ -574,6 +574,7 @@ export async function refundLastPayment(affiliateId: string): Promise<{ success:
     amount: -Math.abs(payment.amount),
     currency: payment.currency ?? 'ARS',
     mp_status: 'approved',
+    type: 'refund',
     paid_at: new Date().toISOString(),
   })
   if (insErr) {

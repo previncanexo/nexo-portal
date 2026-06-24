@@ -45,6 +45,7 @@ export interface Payment {
   period_from: string | null
   period_to: string | null
   created_at: string
+  type: 'payment' | 'refund'
 }
 
 export interface ServiceConsumption {
