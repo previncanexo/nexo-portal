@@ -142,9 +142,9 @@ export async function PATCH(
     ? await planQuery.eq('id', plan_id).maybeSingle()
     : await planQuery.order('price', { ascending: true }).limit(1).maybeSingle()
 
-  // mp_plan_id hardcodeado del plan único de Previnca Nexo en Mercado Pago.
-  // Para cambiarlo: actualizar este string + redeploy.
-  const MP_PLAN_ID = '2efbdb5cfbf34e77b3f117f8852fa7eb'
+  // mp_plan_id del plan único de Previnca Nexo en Mercado Pago.
+  // Override con env var MP_PLAN_ID en Vercel para cada environment.
+  const MP_PLAN_ID = process.env.MP_PLAN_ID || '2efbdb5cfbf34e77b3f117f8852fa7eb'
 
   // 3. Armar domicilio
   const domicilio = [
