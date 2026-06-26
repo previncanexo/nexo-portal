@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendSuspensionEmail } from '@/lib/emails'
+import { sendMetaCapiEvents } from '@/lib/meta-capi'
+import { sendGa4Events } from '@/lib/ga4-mp'
 import { addOneMonth, todayAR } from '@/lib/dateUtils'
 
 // MP SDK types are incomplete — these interfaces cover the fields we actually use
@@ -119,7 +121,7 @@ export async function POST(req: NextRequest) {
       if (preApproval.status === 'authorized') {
         const { data: affiliate } = await supabase
           .from('affiliates')
-          .select('status, user_id, nombre, apellido, dni, email, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name)')
+          .select('status, user_id, nombre, apellido, dni, email, whatsapp, ciudad, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name, price), purchase_event_sent_at')
           .eq('id', affiliateId)
           .single()
 
@@ -222,6 +224,67 @@ export async function POST(req: NextRequest) {
             domicilio: affiliate.domicilio ?? null,
           })
 
+          // Purchase server-side — Meta CAPI + GA4 (idempotente vía purchase_event_sent_at)
+          if (!affiliate.purchase_event_sent_at) {
+            // IDs del browser viven en `leads` (capturados en el PATCH del onboarding)
+            const { data: tracking } = await supabase
+              .from('leads')
+              .select('fbp, fbc, ga_client_id, client_user_agent, client_ip')
+              .eq('affiliate_id', affiliateId)
+              .maybeSingle()
+
+            const purchaseValue = Math.round(pa.auto_recurring?.transaction_amount ?? resolvedPlan?.price ?? 19500)
+            const purchaseCurrency = pa.auto_recurring?.currency_id ?? 'ARS'
+            const purchasePlanName = resolvedPlan?.name ?? 'Previnca Nexo'
+
+            sendMetaCapiEvents([{
+              event_name: 'Purchase',
+              event_id: String(body.data.id),
+              user_data: {
+                email: affiliate.email,
+                phone: affiliate.whatsapp,
+                firstName: affiliate.nombre,
+                lastName: affiliate.apellido,
+                dni: affiliate.dni,
+                ciudad: affiliate.ciudad ?? undefined,
+                externalId: affiliateId,
+                fbp: tracking?.fbp ?? undefined,
+                fbc: tracking?.fbc ?? undefined,
+                clientIp: tracking?.client_ip ?? undefined,
+                clientUserAgent: tracking?.client_user_agent ?? undefined,
+              },
+              custom_data: {
+                currency: purchaseCurrency,
+                value: purchaseValue,
+                content_name: purchasePlanName,
+              },
+            }]).catch(() => {})
+
+            sendGa4Events({
+              clientId: tracking?.ga_client_id ?? null,
+              userId: affiliateId,
+              events: [{
+                name: 'purchase',
+                params: {
+                  transaction_id: String(body.data.id),
+                  value: purchaseValue,
+                  currency: purchaseCurrency,
+                  items: [{
+                    item_id: affiliateId,
+                    item_name: purchasePlanName,
+                    price: purchaseValue,
+                    quantity: 1,
+                  }],
+                },
+              }],
+            }).catch(() => {})
+
+            await supabase
+              .from('affiliates')
+              .update({ purchase_event_sent_at: new Date().toISOString() })
+              .eq('id', affiliateId)
+          }
+
           revalidatePath('/admin')
           revalidatePath('/admin/afiliados')
           revalidatePath(`/admin/afiliados/${affiliateId}`)
@@ -300,7 +363,7 @@ export async function POST(req: NextRequest) {
 
             const { data: affiliateData } = await supabase
               .from('affiliates')
-              .select('status, user_id, nombre, apellido, dni, email, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name), cobertura_hasta')
+              .select('status, user_id, nombre, apellido, dni, email, whatsapp, ciudad, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name, price), cobertura_hasta, purchase_event_sent_at')
               .eq('id', ppa.external_reference)
               .single()
 
@@ -378,6 +441,67 @@ export async function POST(req: NextRequest) {
                 fecha_nacimiento: affiliateData.fecha_nacimiento ?? null,
                 domicilio: affiliateData.domicilio ?? null,
               })
+
+              // Purchase server-side — Meta CAPI + GA4 (idempotente vía purchase_event_sent_at)
+              if (!affiliateData.purchase_event_sent_at) {
+                // IDs del browser viven en `leads` (capturados en el PATCH del onboarding)
+                const { data: tracking } = await supabase
+                  .from('leads')
+                  .select('fbp, fbc, ga_client_id, client_user_agent, client_ip')
+                  .eq('affiliate_id', ppa.external_reference)
+                  .maybeSingle()
+
+                const purchaseValue = Math.round(payment.transaction_amount ?? resolvedPlan?.price ?? 19500)
+                const purchaseCurrency = payment.currency_id ?? 'ARS'
+                const purchasePlanName = resolvedPlan?.name ?? 'Previnca Nexo'
+
+                sendMetaCapiEvents([{
+                  event_name: 'Purchase',
+                  event_id: String(mp.subscription_id),
+                  user_data: {
+                    email: affiliateData.email,
+                    phone: affiliateData.whatsapp,
+                    firstName: affiliateData.nombre,
+                    lastName: affiliateData.apellido,
+                    dni: affiliateData.dni,
+                    ciudad: affiliateData.ciudad ?? undefined,
+                    externalId: ppa.external_reference,
+                    fbp: tracking?.fbp ?? undefined,
+                    fbc: tracking?.fbc ?? undefined,
+                    clientIp: tracking?.client_ip ?? undefined,
+                    clientUserAgent: tracking?.client_user_agent ?? undefined,
+                  },
+                  custom_data: {
+                    currency: purchaseCurrency,
+                    value: purchaseValue,
+                    content_name: purchasePlanName,
+                  },
+                }]).catch(() => {})
+
+                sendGa4Events({
+                  clientId: tracking?.ga_client_id ?? null,
+                  userId: ppa.external_reference,
+                  events: [{
+                    name: 'purchase',
+                    params: {
+                      transaction_id: String(mp.subscription_id),
+                      value: purchaseValue,
+                      currency: purchaseCurrency,
+                      items: [{
+                        item_id: ppa.external_reference,
+                        item_name: purchasePlanName,
+                        price: purchaseValue,
+                        quantity: 1,
+                      }],
+                    },
+                  }],
+                }).catch(() => {})
+
+                await supabase
+                  .from('affiliates')
+                  .update({ purchase_event_sent_at: new Date().toISOString() })
+                  .eq('id', ppa.external_reference)
+              }
 
               revalidatePath('/admin')
               revalidatePath('/admin/afiliados')

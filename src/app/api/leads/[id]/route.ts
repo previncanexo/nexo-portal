@@ -28,6 +28,9 @@ interface FinalizeLeadInput {
   /** ID compartido con el pixel para dedup CAPI InitiateCheckout */
   event_id_initiate_checkout?: string
   event_source_url?: string
+  /** GA4 client_id parseado del cookie `_ga` en el browser — necesario para
+   *  atribuir el Purchase server-side al mismo usuario en el webhook MP. */
+  ga_client_id?: string
 }
 
 export async function OPTIONS(req: Request) {
@@ -78,7 +81,13 @@ export async function PATCH(
     return jsonWithCors({ success: false, error: 'Body inválido' }, { status: 400, origin })
   }
 
-  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, plan_id, event_id_complete_registration, event_id_initiate_checkout, event_source_url } = body
+  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, plan_id, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id } = body
+
+  // Identificadores del browser para CAPI Purchase / GA4 purchase server-side
+  // (en el webhook MP no podremos leerlos — se persisten en el affiliate).
+  const fb = extractFbCookies(req)
+  const clientIp = extractClientIp(req)
+  const clientUserAgent = req.headers.get('user-agent') ?? undefined
 
   // Validaciones
   if (!dni || !fecha_nacimiento || !ciudad || !calle || !numero || !medio_pago) {
@@ -219,6 +228,12 @@ export async function PATCH(
         medio_pago,
         mp_email: mp_email?.trim() || null,
         plan_id: plan?.id ?? null,
+        // IDs del browser para Meta CAPI / GA4 Purchase server-side (los lee el webhook MP)
+        fbp: fb.fbp ?? null,
+        fbc: fb.fbc ?? null,
+        ga_client_id: ga_client_id ?? null,
+        client_user_agent: clientUserAgent ?? null,
+        client_ip: clientIp ?? null,
       })
       .eq('id', leadId)
 
@@ -231,7 +246,6 @@ export async function PATCH(
 
     // 9. CAPI: CompleteRegistration + InitiateCheckout (fire-and-forget)
     if (event_id_complete_registration || event_id_initiate_checkout) {
-      const fb = extractFbCookies(req)
       const userData = {
         email: lead.email,
         phone: lead.whatsapp,
@@ -242,8 +256,8 @@ export async function PATCH(
         externalId: affiliate.id,
         fbp: fb.fbp,
         fbc: fb.fbc,
-        clientIp: extractClientIp(req),
-        clientUserAgent: req.headers.get('user-agent') ?? undefined,
+        clientIp,
+        clientUserAgent,
       }
       const value = plan?.price ?? 19500
       const events = []
