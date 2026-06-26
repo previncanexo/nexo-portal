@@ -222,6 +222,7 @@ export async function POST(req: NextRequest) {
             plan: resolvedPlan,
             fecha_nacimiento: affiliate.fecha_nacimiento ?? null,
             domicilio: affiliate.domicilio ?? null,
+            whatsapp: affiliate.whatsapp ?? null,
           })
 
           // Purchase server-side — Meta CAPI + GA4 (idempotente vía purchase_event_sent_at)
@@ -440,6 +441,7 @@ export async function POST(req: NextRequest) {
                 plan: resolvedPlan,
                 fecha_nacimiento: affiliateData.fecha_nacimiento ?? null,
                 domicilio: affiliateData.domicilio ?? null,
+                whatsapp: affiliateData.whatsapp ?? null,
               })
 
               // Purchase server-side — Meta CAPI + GA4 (idempotente vía purchase_event_sent_at)

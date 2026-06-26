@@ -228,6 +228,7 @@ function internalNewMemberEmailHtml(
   appUrl: string,
   fechaNacimiento: string | null,
   domicilio: string | null,
+  telefono: string | null,
 ): string {
   const now = new Date(Date.now() - 3 * 60 * 60 * 1000)
   const dateStr = now.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
@@ -256,6 +257,10 @@ function internalNewMemberEmailHtml(
         <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">DNI</p>
         <p style="margin:0;font-size:15px;font-weight:700;color:#111827;font-family:monospace;">${dni}</p>
       </td></tr>
+      ${telefono ? `<tr><td style="border-top:1px solid #e5e7eb;padding-top:14px;padding-bottom:14px;">
+        <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Teléfono</p>
+        <p style="margin:0;font-size:15px;font-weight:700;color:#111827;">${telefono}</p>
+      </td></tr>` : ''}
       ${fechaNacimiento ? `<tr><td style="border-top:1px solid #e5e7eb;padding-top:14px;padding-bottom:14px;">
         <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Fecha de nacimiento</p>
         <p style="margin:0;font-size:14px;font-weight:600;color:#374151;">${fechaNacimiento}</p>
@@ -305,6 +310,7 @@ export async function sendInternalNewMemberEmail(affiliate: {
   plan?: { name: string } | null
   fecha_nacimiento?: string | null
   domicilio?: string | null
+  whatsapp?: string | null
 }): Promise<void> {
   if (!process.env.RESEND_API_KEY) return
   const internalRecipients = (process.env.INTERNAL_NOTIFICATION_EMAILS ?? '')
@@ -333,6 +339,7 @@ export async function sendInternalNewMemberEmail(affiliate: {
       appUrl,
       affiliate.fecha_nacimiento ?? null,
       affiliate.domicilio ?? null,
+      affiliate.whatsapp ?? null,
     ),
   }).catch((err) => console.error('[internal-new-member-email]', err))
 }
