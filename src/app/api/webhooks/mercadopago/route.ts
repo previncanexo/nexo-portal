@@ -225,8 +225,18 @@ export async function POST(req: NextRequest) {
             whatsapp: affiliate.whatsapp ?? null,
           })
 
-          // Purchase server-side — Meta CAPI + GA4 (idempotente vía purchase_event_sent_at)
-          if (!affiliate.purchase_event_sent_at) {
+          // Purchase server-side — Meta CAPI + GA4.
+          // Claim atómico: UPDATE ... WHERE purchase_event_sent_at IS NULL.
+          // Si dos webhooks corren en paralelo, solo uno recibe la fila → solo uno dispara.
+          const { data: claimed } = await supabase
+            .from('affiliates')
+            .update({ purchase_event_sent_at: new Date().toISOString() })
+            .eq('id', affiliateId)
+            .is('purchase_event_sent_at', null)
+            .select('id')
+            .maybeSingle()
+
+          if (claimed) {
             // IDs del browser viven en `leads` (capturados en el PATCH del onboarding)
             const { data: tracking } = await supabase
               .from('leads')
@@ -279,11 +289,6 @@ export async function POST(req: NextRequest) {
                 },
               }],
             }).catch(() => {})
-
-            await supabase
-              .from('affiliates')
-              .update({ purchase_event_sent_at: new Date().toISOString() })
-              .eq('id', affiliateId)
           }
 
           revalidatePath('/admin')
@@ -444,8 +449,16 @@ export async function POST(req: NextRequest) {
                 whatsapp: affiliateData.whatsapp ?? null,
               })
 
-              // Purchase server-side — Meta CAPI + GA4 (idempotente vía purchase_event_sent_at)
-              if (!affiliateData.purchase_event_sent_at) {
+              // Purchase server-side — Meta CAPI + GA4. Claim atómico (ver rama 'authorized').
+              const { data: claimed } = await supabase
+                .from('affiliates')
+                .update({ purchase_event_sent_at: new Date().toISOString() })
+                .eq('id', ppa.external_reference)
+                .is('purchase_event_sent_at', null)
+                .select('id')
+                .maybeSingle()
+
+              if (claimed) {
                 // IDs del browser viven en `leads` (capturados en el PATCH del onboarding)
                 const { data: tracking } = await supabase
                   .from('leads')
@@ -498,11 +511,6 @@ export async function POST(req: NextRequest) {
                     },
                   }],
                 }).catch(() => {})
-
-                await supabase
-                  .from('affiliates')
-                  .update({ purchase_event_sent_at: new Date().toISOString() })
-                  .eq('id', ppa.external_reference)
               }
 
               revalidatePath('/admin')
