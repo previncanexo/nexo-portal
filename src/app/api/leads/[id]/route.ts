@@ -213,6 +213,11 @@ export async function PATCH(
     checkoutUrlObj.searchParams.set('external_reference', affiliate.id)
     checkoutUrlObj.searchParams.set('payer_email', payerEmail)
     const checkoutUrl = checkoutUrlObj.toString()
+    // Persistir el link de pago para la recuperación de abandono/rechazo.
+    await supabase
+      .from('affiliates')
+      .update({ checkout_url: checkoutUrl })
+      .eq('id', affiliate.id)
     // mp_subscription_id se completa cuando llega el webhook subscription_preapproval:authorized
 
     // 7. Marcar lead como converted, asociarlo al affiliate y guardar datos del paso 2
