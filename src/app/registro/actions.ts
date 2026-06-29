@@ -130,6 +130,11 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
       })
       if (!mpPlan.init_point) throw new Error('MP no devolvió URL de pago')
       const checkoutUrl = mpPlan.init_point
+      // Persistir el link de pago para la recuperación de abandono/rechazo.
+      await supabase
+        .from('affiliates')
+        .update({ checkout_url: checkoutUrl })
+        .eq('id', existingAffiliate.id)
       const mpId = mpPlan.id ? String(mpPlan.id) : undefined
 
       if (mpId) {
@@ -207,6 +212,11 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
     })
     if (!mpPlan.init_point) throw new Error('MP no devolvió URL de pago')
     const checkoutUrl = mpPlan.init_point
+    // Persistir el link de pago para la recuperación de abandono/rechazo.
+    await supabase
+      .from('affiliates')
+      .update({ checkout_url: checkoutUrl })
+      .eq('id', affiliate.id)
     const mpId = mpPlan.id ? String(mpPlan.id) : undefined
 
     if (mpId) {

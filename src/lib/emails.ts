@@ -605,3 +605,197 @@ export async function sendCredentialsEmail(affiliate: {
     console.error('[credentials-email] Resend error:', err)
   })
 }
+
+// ─── Recovery & Abandonment Templates ───────────────────────────────────────
+
+function recoveryUserEmailHtml(opts: {
+  titulo: string
+  saludo: string
+  cuerpo: string
+  ctaLabel: string
+  ctaUrl: string
+}): string {
+  return `<!DOCTYPE html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+<tr><td align="center">
+<table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+<tr><td style="height:6px;background:linear-gradient(90deg,#8660EF,#E879A0);"></td></tr>
+<tr><td style="padding:36px 36px 0;">
+  <h1 style="margin:0 0 16px;font-size:24px;color:#8660EF;">${opts.titulo}</h1>
+  <p style="margin:0 0 12px;color:#374151;font-size:15px;">${opts.saludo}</p>
+  <p style="margin:0 0 24px;color:#374151;font-size:15px;">${opts.cuerpo}</p>
+  <a href="${opts.ctaUrl}" style="display:inline-block;background:linear-gradient(135deg,#8660EF,#E879A0);color:#ffffff;padding:14px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">${opts.ctaLabel} →</a>
+</td></tr>
+<tr><td style="padding:24px 36px 36px;">
+  <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#374151;">¿Tenés alguna duda?</p>
+  <p style="margin:0;font-size:13px;color:#6b7280;">Escribinos por WhatsApp al 341 505-6130 y te ayudamos.</p>
+  <p style="margin:20px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Este correo fue generado automáticamente · Previnca Nexo</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`
+}
+
+function recoveryInternalEmailHtml(opts: {
+  titulo: string
+  etiqueta: string
+  nombre: string
+  apellido: string | null
+  email: string
+  whatsapp: string | null
+  detalle: string
+  adminUrl: string
+}): string {
+  const now = new Date(Date.now() - 3 * 60 * 60 * 1000)
+  const dateStr = now.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
+  const timeStr = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })
+  return `<!DOCTYPE html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+<tr><td align="center">
+<table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+<tr><td style="height:6px;background:linear-gradient(90deg,#8660EF,#E879A0);"></td></tr>
+<tr><td style="padding:32px 36px 0;">
+  <p style="margin:0 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#8660EF;">${opts.etiqueta}</p>
+  <h1 style="margin:0 0 20px;font-size:22px;color:#111827;">${opts.titulo}</h1>
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-bottom:24px;">
+    <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Nombre</p>
+    <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#111827;">${opts.nombre}${opts.apellido ? ' ' + opts.apellido : ''}</p>
+    <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Email</p>
+    <p style="margin:0 0 12px;font-size:14px;color:#374151;">${opts.email}</p>
+    ${opts.whatsapp ? `<p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">WhatsApp</p>
+    <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#111827;">${opts.whatsapp}</p>` : ''}
+    <p style="margin:0 0 2px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;">Detalle</p>
+    <p style="margin:0;font-size:14px;color:#374151;">${opts.detalle} · ${dateStr} ${timeStr} hs (ARG)</p>
+  </div>
+  <a href="${opts.adminUrl}" style="display:inline-block;background:#8660EF;color:#ffffff;padding:12px 24px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">Ver en el admin →</a>
+</td></tr>
+<tr><td style="padding:24px 36px 32px;">
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:20px;">Solo para uso interno · Previnca Nexo · Generado automáticamente.</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`
+}
+
+function internalRecipients(): string[] {
+  return (process.env.INTERNAL_NOTIFICATION_EMAILS ?? '')
+    .split(',').map(e => e.trim()).filter(Boolean)
+}
+
+export async function sendPaymentRejectedEmail(args: {
+  nombre: string; email: string; checkoutUrl: string | null
+}): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: resendFrom(),
+    to: args.email,
+    subject: 'No pudimos procesar tu pago — reintentá en un clic',
+    html: recoveryUserEmailHtml({
+      titulo: 'Tu pago no se aprobó',
+      saludo: `Hola <strong>${args.nombre}</strong>, tu pago para Previnca Nexo no pudo procesarse.`,
+      cuerpo: 'No te preocupes: podés reintentarlo ahora mismo desde el botón de abajo. Si el problema persiste, escribinos y lo resolvemos.',
+      ctaLabel: 'Reintentar pago',
+      ctaUrl: args.checkoutUrl ?? `${appUrl}/registro`,
+    }),
+  }).catch((err) => console.error('[payment-rejected-email]', err))
+}
+
+export async function sendInternalPaymentRejectedEmail(args: {
+  nombre: string; apellido: string; email: string; whatsapp: string | null; dni: string | null; affiliateId: string
+}): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return
+  const to = internalRecipients()
+  if (to.length === 0) return
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: resendFrom(),
+    to,
+    subject: `Pago rechazado — ${args.nombre} ${args.apellido}`,
+    html: recoveryInternalEmailHtml({
+      titulo: 'Un pago fue rechazado',
+      etiqueta: 'Pago rechazado',
+      nombre: args.nombre,
+      apellido: args.apellido,
+      email: args.email,
+      whatsapp: args.whatsapp,
+      detalle: args.dni ? `DNI ${args.dni}` : 'Pago no aprobado por MercadoPago',
+      adminUrl: `${appUrl}/admin/afiliados/${args.affiliateId}`,
+    }),
+  }).catch((err) => console.error('[internal-payment-rejected-email]', err))
+}
+
+export async function sendAbandonedFormEmail(args: {
+  nombre: string; email: string
+}): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: resendFrom(),
+    to: args.email,
+    subject: '¿Te quedó algo pendiente? Terminá tu alta en Previnca Nexo',
+    html: recoveryUserEmailHtml({
+      titulo: 'Estás a un paso',
+      saludo: `Hola <strong>${args.nombre}</strong>, empezaste tu alta en Previnca Nexo y quedó a mitad de camino.`,
+      cuerpo: 'Completar tus datos lleva menos de 2 minutos y activás tu cobertura. Retomá desde donde lo dejaste con el botón de abajo.',
+      ctaLabel: 'Completar mi alta',
+      ctaUrl: `${appUrl}/registro`,
+    }),
+  }).catch((err) => console.error('[abandoned-form-email]', err))
+}
+
+export async function sendAbandonedPaymentEmail(args: {
+  nombre: string; email: string; checkoutUrl: string
+}): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: resendFrom(),
+    to: args.email,
+    subject: 'Estás a un paso — completá tu pago en Previnca Nexo',
+    html: recoveryUserEmailHtml({
+      titulo: '¡Ya casi estás!',
+      saludo: `Hola <strong>${args.nombre}</strong>, completaste tus datos pero falta el pago para activar tu cobertura.`,
+      cuerpo: 'Terminá tu suscripción ahora desde el botón de abajo y recibí tus credenciales de acceso al instante.',
+      ctaLabel: 'Completar mi compra',
+      ctaUrl: args.checkoutUrl,
+    }),
+  }).catch((err) => console.error('[abandoned-payment-email]', err))
+}
+
+export async function sendInternalAbandonedEmail(args: {
+  nombre: string; apellido: string | null; email: string; whatsapp: string | null;
+  etapa: 'formulario' | 'pago'; adminPath: string
+}): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return
+  const to = internalRecipients()
+  if (to.length === 0) return
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: resendFrom(),
+    to,
+    subject: `Abandono (${args.etapa}) — ${args.nombre}${args.apellido ? ' ' + args.apellido : ''}`,
+    html: recoveryInternalEmailHtml({
+      titulo: 'Un prospecto no completó el alta',
+      etiqueta: `Abandono de ${args.etapa}`,
+      nombre: args.nombre,
+      apellido: args.apellido,
+      email: args.email,
+      whatsapp: args.whatsapp,
+      detalle: args.etapa === 'formulario' ? 'Abandonó el formulario de onboarding' : 'No completó el pago',
+      adminUrl: `${appUrl}${args.adminPath}`,
+    }),
+  }).catch((err) => console.error('[internal-abandoned-email]', err))
+}
