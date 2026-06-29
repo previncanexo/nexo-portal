@@ -564,19 +564,18 @@ export async function POST(req: NextRequest) {
         }
 
         if (rejAffiliateId) {
+          // Claim atómico: UPDATE ... WHERE status='pending' AND rejection_notified_at IS NULL.
+          // Solo el primer webhook concurrente que gane el claim envía los emails.
           const { data: aff } = await supabase
             .from('affiliates')
-            .select('id, nombre, apellido, dni, email, whatsapp, checkout_url, status, rejection_notified_at')
+            .update({ rejection_notified_at: new Date().toISOString() })
             .eq('id', rejAffiliateId)
-            .single()
+            .eq('status', 'pending')
+            .is('rejection_notified_at', null)
+            .select('id, nombre, apellido, dni, email, whatsapp, checkout_url')
+            .maybeSingle()
 
-          // Solo notificar si sigue pendiente y no se notificó antes (dedup de reintentos de MP).
-          if (aff && aff.status === 'pending' && !aff.rejection_notified_at) {
-            await supabase
-              .from('affiliates')
-              .update({ rejection_notified_at: new Date().toISOString() })
-              .eq('id', aff.id)
-
+          if (aff) {
             await sendPaymentRejectedEmail({
               nombre: aff.nombre,
               email: aff.email,
