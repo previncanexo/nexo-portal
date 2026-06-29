@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendSuspensionEmail } from '@/lib/emails'
+import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendSuspensionEmail, sendPaymentRejectedEmail, sendInternalPaymentRejectedEmail } from '@/lib/emails'
 import { sendMetaCapiEvents } from '@/lib/meta-capi'
 import { sendGa4Events } from '@/lib/ga4-mp'
 import { addOneMonth, todayAR } from '@/lib/dateUtils'
@@ -540,6 +540,56 @@ export async function POST(req: NextRequest) {
                 )
               }
             }
+          }
+        }
+      }
+
+      if (payment.status === 'rejected') {
+        // Resolver el afiliado igual que el flujo aprobado: subscription → external_reference.
+        let rejAffiliateId: string | null = null
+        if (mp.subscription_id) {
+          try {
+            const preApprovalClient = new PreApproval(mpClient)
+            const pre = await preApprovalClient.get({ id: mp.subscription_id as string })
+            const preExt = pre as unknown as MPPreApprovalExt
+            rejAffiliateId = preExt.external_reference || null
+            if (!rejAffiliateId && preExt.preapproval_plan_id) {
+              const planClient = new PreApprovalPlan(mpClient)
+              const mpPlan = await planClient.get({ preApprovalPlanId: String(preExt.preapproval_plan_id) })
+              rejAffiliateId = (mpPlan as unknown as MPPlanExt).external_reference || null
+            }
+          } catch (rejErr) {
+            console.error('[mp-webhook] rejected: no se pudo resolver el afiliado:', rejErr)
+          }
+        }
+
+        if (rejAffiliateId) {
+          const { data: aff } = await supabase
+            .from('affiliates')
+            .select('id, nombre, apellido, dni, email, whatsapp, checkout_url, status, rejection_notified_at')
+            .eq('id', rejAffiliateId)
+            .single()
+
+          // Solo notificar si sigue pendiente y no se notificó antes (dedup de reintentos de MP).
+          if (aff && aff.status === 'pending' && !aff.rejection_notified_at) {
+            await supabase
+              .from('affiliates')
+              .update({ rejection_notified_at: new Date().toISOString() })
+              .eq('id', aff.id)
+
+            await sendPaymentRejectedEmail({
+              nombre: aff.nombre,
+              email: aff.email,
+              checkoutUrl: aff.checkout_url ?? null,
+            })
+            await sendInternalPaymentRejectedEmail({
+              nombre: aff.nombre,
+              apellido: aff.apellido,
+              email: aff.email,
+              whatsapp: aff.whatsapp ?? null,
+              dni: aff.dni ?? null,
+              affiliateId: aff.id,
+            })
           }
         }
       }
