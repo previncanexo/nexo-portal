@@ -42,7 +42,11 @@ export async function GET(req: NextRequest) {
         etapa: 'formulario',
         adminPath: '/admin/leads',
       })
-      await supabase.from('leads').update({ status: 'abandoned' }).eq('id', lead.id)
+      const { error: leadUpdErr } = await supabase.from('leads').update({ status: 'abandoned' }).eq('id', lead.id)
+      if (leadUpdErr) {
+        console.error('[abandoned-recovery] no se pudo marcar lead abandoned', lead.id, leadUpdErr.message)
+        continue // no contar como procesado; la próxima corrida reintenta
+      }
       results.form++
     }
   }
@@ -60,10 +64,14 @@ export async function GET(req: NextRequest) {
     console.error('[abandoned-recovery] affiliates error:', affErr.message)
   } else {
     for (const aff of affiliates ?? []) {
-      await supabase
+      const { error: updateErr } = await supabase
         .from('affiliates')
         .update({ abandonment_notified_at: new Date().toISOString() })
         .eq('id', aff.id)
+      if (updateErr) {
+        console.error('[abandoned-recovery] no se pudo marcar abandonment_notified_at para', aff.id, updateErr.message)
+        continue // no enviar; se reintenta en la próxima corrida
+      }
       await sendAbandonedPaymentEmail({
         nombre: aff.nombre,
         email: aff.email,
