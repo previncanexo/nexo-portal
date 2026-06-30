@@ -3,7 +3,7 @@
 **Fecha:** 2026-06-30
 **Proyecto:** nexo-portal
 **Rama:** feat/seguro-hogar
-**Estado:** Aprobado (diseño) — pendiente de contenido (cobertura completa), spec review y plan
+**Estado:** Aprobado (diseño) — cobertura completa agregada (salvo monto de "Línea Blanca", cortado en la imagen). Pendiente: plan de implementación.
 
 ## Contexto
 
@@ -56,8 +56,9 @@ Nuevo `ServiceItem` `id: 'seguro-hogar'`, título "Seguro de Hogar", badge "Pago
 
 ### B. Modal `SeguroHogarModal`
 - Muestra los dos planes (datos de la tabla de arriba).
-- Cada plan: las 3 coberturas + un toggle **"Ver cobertura completa"** que despliega el detalle
-  inline (contenido pendiente).
+- Cada plan: las 3 coberturas principales + un toggle **"Ver cobertura completa"** que despliega
+  el detalle inline (lista completa de coberturas — ver sección "Cobertura completa"). Ambos
+  planes muestran el mismo detalle de cobertura.
 - Botón **"Contratar"** por plan (enlace real `<a href={URL} target="_blank" rel="noopener noreferrer">`).
   En `onClick` dispara `registerSeguroHogarSolicitud(plan)` en fire-and-forget (sin `await`
   que bloquee la apertura).
@@ -109,11 +110,26 @@ create policy "seguro_hogar: service role" on public.seguro_hogar_solicitudes fo
 - Construir y verificar en **testing/staging**. Migración primero al proyecto Supabase de test.
 - Setear `NEXT_PUBLIC_SEGURO_HOGAR_URL` en el entorno de testing de Vercel.
 
-## Contenido pendiente (a proveer por el cliente antes de implementar)
+## Cobertura completa (detalle desplegable, igual para ambos planes)
 
-- **Detalle de "cobertura completa"** por plan: el texto exacto de las coberturas ampliadas
-  (de la segunda imagen / póliza). No se inventa — debe ser textual. Si no llega a tiempo, se
-  puede implementar primero con las 3 coberturas visibles y sumar el detalle después.
+Texto/montos extraídos de la imagen provista por el cliente:
+
+| Cobertura | Suma asegurada | Detalle |
+|---|---|---|
+| Incendio Edificio | $80.000.000 | Reconstrucción y/o reparación y/o reposición · Incendio Primer Riesgo Absoluto $8.000.000 · Huracán, Vendaval, Ciclón y/o Tornado — Sublímite 100% |
+| Incendio Contenido | $3.200.000 | Huracán, Vendaval, Ciclón y/o Tornado — Sublímite 100% · Daños a Equipos Electrónicos por Rayo — Sublímite 100% |
+| Cristales, vidrios y espejos | $700.000 | — |
+| Resp. Civil Hechos Privados | $4.000.000 | — |
+| Resp. Civil Linderos | $6.000.000 | — |
+| Seg. Técnico — Eq. Electrónicos | $800.000 | — |
+| Seg. Técnico — Línea Blanca | (a confirmar) | El monto quedó cortado en la imagen. Confirmar con el cliente antes de mostrarlo; mientras tanto, omitir este ítem o dejar el monto en blanco. |
+
+Definir estos datos como una constante en el componente (array de coberturas), fácil de editar.
+
+### Diferido (fuera de alcance, a validar con el cliente — "se valida con Eli")
+
+- **Descarga de documentos** (póliza/folletos): el cliente quiere a futuro que el usuario pueda
+  descargar documentos del seguro. NO entra en esta versión. Se suma cuando esté confirmado.
 
 ## Edge cases
 
