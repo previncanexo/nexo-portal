@@ -74,3 +74,26 @@ export async function retryPayment(): Promise<RetryResult> {
     return { success: false, error: `Error MP: ${msg}` }
   }
 }
+
+// Registro best-effort del interés en Psicología On Demand.
+// No debe interrumpir la redirección: si falla, solo loguea.
+export async function registerPsicologiaClick(): Promise<void> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const admin = createAdminClient()
+    const { data: affiliate } = await admin
+      .from('affiliates')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
+
+    await admin.from('psicologia_clicks').insert({
+      affiliate_id: affiliate?.id ?? null,
+    })
+  } catch (err) {
+    console.error('[psicologia-click]', err)
+  }
+}
