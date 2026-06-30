@@ -2,6 +2,10 @@
 
 import { useState } from 'react'
 import type { Affiliate } from '@/lib/types'
+import { registerPsicologiaClick } from './actions'
+
+const PSICOLOGIA_URL = process.env.NEXT_PUBLIC_PSICOLOGIA_URL
+const PSICOLOGIA_PRECIO = 30000
 
 interface ServiceCardsProps {
   affiliate: Affiliate | null
@@ -40,6 +44,15 @@ function IconOdontologia() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 5.5c-1.5-2-4-2.5-5.5-1S4 8 4.5 10c.3 1 .5 2 .5 3 0 2 .5 4 1.5 5.5.5.8 1 1.5 1.5 1.5s1-1 1.5-2.5c.3-1 .5-2 .5-3 0 1 .2 2 .5 3 .5 1.5 1 2.5 1.5 2.5s1-.7 1.5-1.5C18.5 17 19 15 19 13c0-1 .2-2 .5-3 .5-2-.5-4.5-2-6S13.5 3.5 12 5.5Z" />
+    </svg>
+  )
+}
+
+function IconPsicologia() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9.5 2a4.5 4.5 0 0 0-4.4 5.5A4 4 0 0 0 4 13a4 4 0 0 0 3 3.9V19a2 2 0 0 0 4 0V4.5A2.5 2.5 0 0 0 9.5 2Z" />
+      <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5V19a2 2 0 0 0 4 0v-2.1A4 4 0 0 0 20 13a4 4 0 0 0-1.1-5.5A4.5 4.5 0 0 0 14.5 2Z" />
     </svg>
   )
 }
@@ -352,10 +365,87 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
   )
 }
 
+/* ── Modal Psicología On Demand ── */
+function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background: 'rgba(5,2,25,0.78)', backdropFilter: 'blur(12px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm rounded-3xl overflow-hidden"
+        style={{
+          background: 'rgba(18,5,61,0.88)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06) inset',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}>
+            <service.Icon />
+          </div>
+          <div>
+            <p className="font-bold text-white text-base leading-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>{service.title}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>{service.subtitle}</p>
+          </div>
+        </div>
+
+        <div className="px-6 py-5 max-h-[55vh] overflow-y-auto flex flex-col gap-4">
+          <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
+          <ul className="flex flex-col gap-2.5">
+            {service.bullets.map((bullet, i) => (
+              <li key={i} className="flex items-start gap-2.5">
+                <span className="text-sm mt-px shrink-0" style={{ color: 'var(--pink)' }}>✔</span>
+                <span className="text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.68)', fontFamily: 'var(--font-dm-sans)' }}>{bullet}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* Costo */}
+          <div className="rounded-2xl px-4 py-3 flex items-baseline justify-between" style={{ background: 'rgba(134,96,239,0.12)', border: '1px solid rgba(134,96,239,0.22)' }}>
+            <span className="text-sm" style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}>Costo por consulta</span>
+            <span className="text-lg font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>${PSICOLOGIA_PRECIO.toLocaleString('es-AR')}</span>
+          </div>
+
+          {/* Aviso */}
+          <p className="text-xs leading-relaxed rounded-xl px-3 py-2.5" style={{ color: 'rgba(255,255,255,0.60)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'var(--font-dm-sans)' }}>
+            Servicio adicional. Se cobra aparte de tu cobertura Nexo.
+          </p>
+        </div>
+
+        <div className="px-5 pb-6 pt-1 flex flex-col gap-2">
+          <a
+            href={PSICOLOGIA_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => { void registerPsicologiaClick() }}
+            className="w-full py-3 rounded-2xl text-sm font-semibold text-center transition-opacity active:scale-95"
+            style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', textDecoration: 'none' }}
+          >
+            Reservar turno
+          </a>
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-2xl text-sm font-semibold transition-opacity active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.50)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ── Componente principal ── */
 export default function ServiceCards({ affiliate }: ServiceCardsProps) {
   const [farmaciaModalOpen, setFarmaciaModalOpen] = useState(false)
   const [urgenciasModalOpen, setUrgenciasModalOpen] = useState(false)
+  const [psicologiaModalOpen, setPsicologiaModalOpen] = useState(false)
   const [infoService, setInfoService] = useState<ServiceItem | null>(null)
 
   const services: ServiceItem[] = [
@@ -453,13 +543,36 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       ],
       whatsapp: 'https://wa.me/5493413077912?text=Hola%2C%20voy%20a%20concurrir%20a%20la%20guardia%20odontol%C3%B3gica',
     },
+    ...(PSICOLOGIA_URL
+      ? [{
+          id: 'psicologia',
+          title: 'Psicología On Demand',
+          subtitle: 'Sesiones con profesionales, a tu ritmo',
+          badge: 'Pago aparte',
+          badgeColor: '#d97706',
+          badgeBg: 'rgba(217,119,6,0.10)',
+          buttonLabel: 'Ver y reservar',
+          buttonAction: 'modal' as const,
+          accentColor: 'white',
+          accentBg: 'rgba(134,96,239,0.10)',
+          glowColor: 'rgba(217,119,6,0.14)',
+          Icon: IconPsicologia,
+          description: 'Accedé a sesiones de psicología con profesionales, de forma simple y online. Es un servicio adicional, independiente de tu cobertura Nexo, que se abona por separado.',
+          bullets: [
+            'Sesiones con profesionales',
+            'Reservás tu turno online',
+            'Servicio adicional, se cobra aparte',
+          ],
+        }]
+      : []),
   ]
 
   function handleAction(service: ServiceItem) {
     if (service.buttonAction === 'info') {
       setInfoService(service)
     } else if (service.buttonAction === 'modal') {
-      if (service.id === 'urgencias') setUrgenciasModalOpen(true)
+      if (service.id === 'psicologia') setPsicologiaModalOpen(true)
+      else if (service.id === 'urgencias') setUrgenciasModalOpen(true)
       else setFarmaciaModalOpen(true)
     } else if (service.buttonAction === 'tel' && service.buttonHref) {
       window.location.href = service.buttonHref
@@ -537,6 +650,12 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       )}
       {infoService && (
         <ServiceInfoModal service={infoService} onClose={() => setInfoService(null)} />
+      )}
+      {psicologiaModalOpen && (
+        <PsicologiaModal
+          service={services.find((s) => s.id === 'psicologia')!}
+          onClose={() => setPsicologiaModalOpen(false)}
+        />
       )}
     </>
   )
