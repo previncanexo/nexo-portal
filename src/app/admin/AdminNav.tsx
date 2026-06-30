@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: '/admin/afiliados', label: 'Afiliados' },
   { href: '/admin/leads', label: 'Leads' },
   { href: '/admin/pagos', label: 'Pagos' },
+  { href: '/admin/seguro-hogar', label: 'Seguro de Hogar' },
 ]
 
 export default function AdminNav() {

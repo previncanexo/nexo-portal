@@ -2,10 +2,41 @@
 
 import { useState } from 'react'
 import type { Affiliate } from '@/lib/types'
-import { registerPsicologiaClick } from './actions'
+import { registerPsicologiaClick, registerSeguroHogarSolicitud } from './actions'
 
 const PSICOLOGIA_URL = process.env.NEXT_PUBLIC_PSICOLOGIA_URL
 const PSICOLOGIA_PRECIO = 30000
+
+const SEGURO_HOGAR_URL = process.env.NEXT_PUBLIC_SEGURO_HOGAR_URL
+
+const SEGURO_PLANES = [
+  {
+    id: 'hasta_1er_piso' as const,
+    badge: 'Hasta 1er piso',
+    alcance: 'Casas, PB y 1er piso · Solo en Rosario',
+    precio: '$19.000',
+  },
+  {
+    id: 'segundo_piso_plus' as const,
+    badge: '2do piso +',
+    alcance: '2do piso en adelante · Dentro y fuera de Rosario',
+    precio: '$22.000',
+  },
+]
+
+const SEGURO_COBERTURAS_PRINCIPALES = ['Incendio Edificio', 'Responsabilidad Civil', 'Equipos Electrónicos']
+
+// Detalle desplegable (igual para ambos planes). "Línea Blanca" se omite (monto sin confirmar).
+const SEGURO_COBERTURA_COMPLETA = [
+  { nombre: 'Incendio Edificio', monto: '$80.000.000', detalle: 'Reconstrucción y/o reparación y/o reposición · Incendio Primer Riesgo Absoluto $8.000.000 · Huracán, Vendaval, Ciclón y/o Tornado — Sublímite 100%' },
+  { nombre: 'Incendio Contenido', monto: '$3.200.000', detalle: 'Huracán, Vendaval, Ciclón y/o Tornado — Sublímite 100% · Daños a Equipos Electrónicos por Rayo — Sublímite 100%' },
+  { nombre: 'Cristales, vidrios y espejos', monto: '$700.000', detalle: '' },
+  { nombre: 'Resp. Civil Hechos Privados', monto: '$4.000.000', detalle: '' },
+  { nombre: 'Resp. Civil Linderos', monto: '$6.000.000', detalle: '' },
+  { nombre: 'Seg. Técnico — Eq. Electrónicos', monto: '$800.000', detalle: '' },
+]
+
+const SEGURO_LEGAL = 'Cobertura sujeta a los términos y condiciones de la póliza correspondiente a la contratación, brindada por la compañía SAN CRISTÓBAL SEGUROS, CUIT 34-50004533-9, inscripta en la Superintendencia de Seguros de la Nación (SSN) mediante Nro. 0192. PREVINCA SERVICIOS SOCIALES S.A.C.I.F.I.Y.A., CUIT 30-54026445-3, interviene como Agente Institorio de la aseguradora inscripto en el Registro de Agentes Institorios de la SSN bajo el N° 233.'
 
 interface ServiceCardsProps {
   affiliate: Affiliate | null
@@ -53,6 +84,16 @@ function IconPsicologia() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9.5 2a4.5 4.5 0 0 0-4.4 5.5A4 4 0 0 0 4 13a4 4 0 0 0 3 3.9V19a2 2 0 0 0 4 0V4.5A2.5 2.5 0 0 0 9.5 2Z" />
       <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5V19a2 2 0 0 0 4 0v-2.1A4 4 0 0 0 20 13a4 4 0 0 0-1.1-5.5A4.5 4.5 0 0 0 14.5 2Z" />
+    </svg>
+  )
+}
+
+function IconHogar() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" />
+      <path d="M9.5 21v-6h5v6" />
     </svg>
   )
 }
@@ -441,11 +482,110 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
   )
 }
 
+/* ── Modal Seguro de Hogar (dos planes + cobertura desplegable) ── */
+function SeguroHogarModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
+  const [coberturaAbierta, setCoberturaAbierta] = useState(false)
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background: 'rgba(5,2,25,0.78)', backdropFilter: 'blur(12px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-3xl overflow-hidden"
+        style={{
+          background: 'rgba(18,5,61,0.88)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06) inset',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}>
+            <service.Icon />
+          </div>
+          <div>
+            <p className="font-bold text-white text-base leading-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>{service.title}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>{service.subtitle}</p>
+          </div>
+        </div>
+
+        <div className="px-6 py-5 max-h-[60vh] overflow-y-auto flex flex-col gap-4">
+          {SEGURO_PLANES.map((p) => (
+            <div key={p.id} className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>HOGAR PROTEGIDO</span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(134,96,239,0.18)', color: 'var(--purple)' }}>{p.badge}</span>
+              </div>
+              <p className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>{p.alcance}</p>
+              <p className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.precio}<span className="text-sm font-normal" style={{ color: 'rgba(255,255,255,0.5)' }}>/mes</span></p>
+              <p className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>6 cuotas sin interés</p>
+              <ul className="flex flex-col gap-1.5 mb-3">
+                {SEGURO_COBERTURAS_PRINCIPALES.map((c, i) => (
+                  <li key={i} className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.68)', fontFamily: 'var(--font-dm-sans)' }}>
+                    <span style={{ color: 'var(--pink)' }}>✔</span>{c}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={SEGURO_HOGAR_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => { void registerSeguroHogarSolicitud(p.id) }}
+                className="block w-full py-2.5 rounded-xl text-sm font-semibold text-center active:scale-95"
+                style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}
+              >
+                Contratar
+              </a>
+            </div>
+          ))}
+
+          <button
+            onClick={() => setCoberturaAbierta((v) => !v)}
+            className="text-xs font-semibold text-left"
+            style={{ color: 'var(--purple)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+          >
+            {coberturaAbierta ? 'Ocultar cobertura completa ▲' : 'Ver cobertura completa ▼'}
+          </button>
+          {coberturaAbierta && (
+            <div className="flex flex-col gap-2.5">
+              {SEGURO_COBERTURA_COMPLETA.map((c, i) => (
+                <div key={i} className="rounded-xl px-3 py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>{c.nombre}</span>
+                    <span className="text-xs font-bold" style={{ color: 'var(--pink)', fontFamily: 'var(--font-dm-sans)' }}>{c.monto}</span>
+                  </div>
+                  {c.detalle && <p className="text-[11px] mt-1 leading-snug" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>{c.detalle}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>{SEGURO_LEGAL}</p>
+        </div>
+
+        <div className="px-5 pb-6 pt-1">
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-2xl text-sm font-semibold active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.50)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ── Componente principal ── */
 export default function ServiceCards({ affiliate }: ServiceCardsProps) {
   const [farmaciaModalOpen, setFarmaciaModalOpen] = useState(false)
   const [urgenciasModalOpen, setUrgenciasModalOpen] = useState(false)
   const [psicologiaModalOpen, setPsicologiaModalOpen] = useState(false)
+  const [seguroHogarModalOpen, setSeguroHogarModalOpen] = useState(false)
   const [infoService, setInfoService] = useState<ServiceItem | null>(null)
 
   const services: ServiceItem[] = [
@@ -565,13 +705,36 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
           ],
         }]
       : []),
+    ...(SEGURO_HOGAR_URL
+      ? [{
+          id: 'seguro-hogar',
+          title: 'Seguro de Hogar',
+          subtitle: 'Protegé tu casa, se contrata aparte',
+          badge: 'Pago aparte',
+          badgeColor: '#d97706',
+          badgeBg: 'rgba(217,119,6,0.10)',
+          buttonLabel: 'Ver planes',
+          buttonAction: 'modal' as const,
+          accentColor: 'white',
+          accentBg: 'rgba(134,96,239,0.10)',
+          glowColor: 'rgba(217,119,6,0.14)',
+          Icon: IconHogar,
+          description: 'Asegurá tu hogar con planes pensados para Rosario y la región. Es un producto adicional, independiente de tu cobertura Nexo, que se contrata y abona por separado.',
+          bullets: [
+            'Dos planes según tu vivienda',
+            'Incendio, Responsabilidad Civil y más',
+            'Producto adicional, se contrata aparte',
+          ],
+        }]
+      : []),
   ]
 
   function handleAction(service: ServiceItem) {
     if (service.buttonAction === 'info') {
       setInfoService(service)
     } else if (service.buttonAction === 'modal') {
-      if (service.id === 'psicologia') setPsicologiaModalOpen(true)
+      if (service.id === 'seguro-hogar') setSeguroHogarModalOpen(true)
+      else if (service.id === 'psicologia') setPsicologiaModalOpen(true)
       else if (service.id === 'urgencias') setUrgenciasModalOpen(true)
       else setFarmaciaModalOpen(true)
     } else if (service.buttonAction === 'tel' && service.buttonHref) {
@@ -638,6 +801,12 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
         ))}
       </div>
 
+      {seguroHogarModalOpen && (
+        <SeguroHogarModal
+          service={services.find((s) => s.id === 'seguro-hogar')!}
+          onClose={() => setSeguroHogarModalOpen(false)}
+        />
+      )}
       {urgenciasModalOpen && (
         <UrgenciasModal service={urgenciasService} onClose={() => setUrgenciasModalOpen(false)} />
       )}
