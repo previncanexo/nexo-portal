@@ -297,20 +297,29 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Cancelled or paused by MP → suspend active affiliate
+      // Cancelled or paused by MP → suspend active affiliate.
+      // Guard: solo actuar si la sub que se cancela es la sub real del affiliate.
+      // Si llega un cancel para una sub fantasma (URL hijacking), la ignoramos —
+      // no queremos suspender al affiliate por la cancelación de una sub ajena.
       if (preApproval.status === 'cancelled' || preApproval.status === 'paused') {
         const { data: affiliate } = await supabase
           .from('affiliates')
-          .select('status, nombre, email')
+          .select('status, nombre, email, mp_subscription_id')
           .eq('id', affiliateId)
           .single()
 
-        if (affiliate?.status === 'active') {
+        if (affiliate?.status === 'active' && affiliate.mp_subscription_id === body.data.id) {
           await supabase
             .from('affiliates')
             .update({ status: 'suspended', updated_at: new Date().toISOString() })
             .eq('id', affiliateId)
           await sendSuspensionEmail(affiliate.nombre, affiliate.email)
+        } else if (affiliate?.status === 'active') {
+          console.warn('[mp-webhook] ghost sub cancellation ignored', {
+            affiliate_id: affiliateId,
+            received_sub_id: body.data.id,
+            real_sub_id: affiliate.mp_subscription_id,
+          })
         }
       }
     }
@@ -369,7 +378,7 @@ export async function POST(req: NextRequest) {
 
             const { data: affiliateData } = await supabase
               .from('affiliates')
-              .select('status, user_id, nombre, apellido, dni, email, whatsapp, ciudad, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name, price), cobertura_hasta, purchase_event_sent_at')
+              .select('status, user_id, nombre, apellido, dni, email, whatsapp, ciudad, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name, price), cobertura_hasta, purchase_event_sent_at, mp_subscription_id')
               .eq('id', ppa.external_reference)
               .single()
 
@@ -516,6 +525,16 @@ export async function POST(req: NextRequest) {
               revalidatePath('/admin')
               revalidatePath('/admin/afiliados')
               revalidatePath(`/admin/afiliados/${ppa.external_reference}`)
+            } else if (affiliateData?.mp_subscription_id !== String(mp.subscription_id)) {
+              // Cobro fantasma — viene de una sub ajena con el mismo external_reference
+              // (URL hijacking). NO extender cobertura ni notificar — la sub que cobró
+              // pertenece a otro usuario. La plata entró pero no se atribuye a este affiliate.
+              console.warn('[mp-webhook] ghost payment ignored — sub_id mismatch', {
+                affiliate_id: ppa.external_reference,
+                received_sub_id: mp.subscription_id,
+                real_sub_id: affiliateData?.mp_subscription_id,
+                payment_id: payment.id,
+              })
             } else {
               // Already active — extend cobertura_hasta from the later of today or current cobertura_hasta
               const hoy = todayAR()
