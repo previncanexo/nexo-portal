@@ -1,7 +1,6 @@
 import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
-import PendingApprovalSection from './PendingApprovalSection'
 import { todayAR } from '@/lib/dateUtils'
 
 export const dynamic = 'force-dynamic'
@@ -199,8 +198,6 @@ export default async function AdminDashboardPage() {
   const [
     totalRes,
     activeRes,
-    pendingRes,
-    pendingCountRes,
     revenueMonthRes,
     affiliatesByMonthRes,
     revenueByMonthRes,
@@ -212,13 +209,6 @@ export default async function AdminDashboardPage() {
   ] = await Promise.all([
     supabase.from('affiliates').select('id', { count: 'exact', head: true }),
     supabase.from('affiliates').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-    supabase
-      .from('affiliates')
-      .select('id, nombre, apellido, email, created_at')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false })
-      .limit(5),
-    supabase.from('affiliates').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('payments').select('amount, paid_at').eq('mp_status', 'approved').gte('paid_at', startOfMonth),
     supabase.from('affiliates').select('created_at').gte('created_at', sixMonthsAgo),
     supabase.from('payments').select('amount, paid_at').eq('mp_status', 'approved').gte('paid_at', sixMonthsAgo),
@@ -254,8 +244,6 @@ export default async function AdminDashboardPage() {
   // ── Stat totals ──────────────────────────────────────────────────────────
   const totalCount = totalRes.count ?? 0
   const activeCount = activeRes.count ?? 0
-  const pendingAffiliates = (pendingRes.data ?? []) as Array<{ id: string; nombre: string; apellido: string; email: string; created_at: string }>
-  const pendingCount = pendingCountRes.count ?? 0
 
   const thisMonthRevenue = (revenueMonthRes.data ?? []).reduce(
     (sum, row) => sum + (row.amount ?? 0),
@@ -318,8 +306,6 @@ export default async function AdminDashboardPage() {
       className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10"
       style={{ fontFamily: 'var(--font-dm-sans)' }}
     >
-      <PendingApprovalSection affiliates={pendingAffiliates} totalCount={pendingCount} />
-
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
         <StatCard label="Total afiliados" value={totalCount} />
