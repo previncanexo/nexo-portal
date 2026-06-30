@@ -74,3 +74,52 @@ export async function retryPayment(): Promise<RetryResult> {
     return { success: false, error: `Error MP: ${msg}` }
   }
 }
+
+// Registro best-effort del interés en Psicología On Demand.
+// No debe interrumpir la redirección: si falla, solo loguea.
+export async function registerPsicologiaClick(): Promise<void> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const admin = createAdminClient()
+    const { data: affiliate } = await admin
+      .from('affiliates')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
+
+    await admin.from('psicologia_clicks').insert({
+      affiliate_id: affiliate?.id ?? null,
+    })
+  } catch (err) {
+    console.error('[psicologia-click]', err)
+  }
+}
+
+// Registro best-effort de la solicitud de Seguro de Hogar. No interrumpe la redirección.
+export async function registerSeguroHogarSolicitud(
+  plan: 'hasta_1er_piso' | 'segundo_piso_plus',
+): Promise<void> {
+  try {
+    if (plan !== 'hasta_1er_piso' && plan !== 'segundo_piso_plus') return
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const admin = createAdminClient()
+    const { data: affiliate } = await admin
+      .from('affiliates')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
+
+    await admin.from('seguro_hogar_solicitudes').insert({
+      affiliate_id: affiliate?.id ?? null,
+      plan,
+    })
+  } catch (err) {
+    console.error('[seguro-hogar-solicitud]', err)
+  }
+}

@@ -138,10 +138,21 @@ export async function PATCH(
       { status: 404, origin }
     )
   }
+  // Idempotencia: si el lead ya fue convertido, devolver la checkoutUrl del
+  // affiliate ya creado (en vez de error). El frontend ya no cachea affiliateId
+  // ni checkoutUrl en localStorage — depende de este path para recuperarlos
+  // cuando el usuario hace clic en "Pagar" más de una vez (back-navigation,
+  // doble click, etc.) sin generar un nuevo affiliate ni una nueva sub MP.
   if (lead.status === 'converted' && lead.affiliate_id) {
+    const MP_PLAN_ID = process.env.MP_PLAN_ID || '2efbdb5cfbf34e77b3f117f8852fa7eb'
+    const payerEmail = medio_pago === 'mp_balance' && mp_email ? mp_email.trim() : lead.email
+    const url = new URL('https://www.mercadopago.com.ar/subscriptions/checkout')
+    url.searchParams.set('preapproval_plan_id', MP_PLAN_ID)
+    url.searchParams.set('external_reference', lead.affiliate_id)
+    url.searchParams.set('payer_email', payerEmail)
     return jsonWithCors(
-      { success: false, error: 'lead_already_converted', message: 'Este lead ya fue convertido a afiliado.' },
-      { status: 409, origin }
+      { success: true, leadId, affiliateId: lead.affiliate_id, checkoutUrl: url.toString() },
+      { status: 200, origin }
     )
   }
 
