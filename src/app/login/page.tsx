@@ -278,13 +278,13 @@ export default function LoginPage() {
 
         <p className="text-center text-xs mt-5" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>
           ¿No tenés cuenta?{' '}
-          <Link
-            href="/registro"
+          <a
+            href={`${process.env.NEXT_PUBLIC_LANDING_URL ?? 'https://nexo.previncasalud.com.ar'}/onboarding/afiliado`}
             className="underline hover:opacity-80 transition-opacity"
             style={{ color: 'rgba(255,255,255,0.62)' }}
           >
             Registrarse
-          </Link>
+          </a>
         </p>
       </div>
     </div>
