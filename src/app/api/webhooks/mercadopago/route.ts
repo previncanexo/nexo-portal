@@ -311,7 +311,7 @@ export async function POST(req: NextRequest) {
             .select('affiliate_number, farmacia_number')
             .single()
 
-          affiliate.affiliate_number = numbered?.affiliate_number ?? affiliate.affiliate_number
+          const affiliateNumber = numbered?.affiliate_number ?? affiliate.affiliate_number ?? ''
           const farmaciaNumber = numbered?.farmacia_number ?? ''
 
           // Insert payment record for the initial subscription charge.
@@ -345,7 +345,7 @@ export async function POST(req: NextRequest) {
             await sendCredentialsEmail({
               nombre: affiliate.nombre,
               email: affiliate.email,
-              affiliate_number: affiliate.affiliate_number,
+              affiliate_number: affiliateNumber,
               farmacia_number: farmaciaNumber,
               temp_password: tempPassword,
               plan: resolvedPlan,
@@ -355,7 +355,7 @@ export async function POST(req: NextRequest) {
           await sendActivationEmail({
             nombre: affiliate.nombre,
             email: affiliate.email,
-            affiliate_number: affiliate.affiliate_number,
+            affiliate_number: affiliateNumber,
             farmacia_number: farmaciaNumber,
             plan: resolvedPlan,
           })
@@ -363,10 +363,10 @@ export async function POST(req: NextRequest) {
           await sendInternalNewMemberEmail({
             id: affiliateId,
             nombre: affiliate.nombre,
-            apellido: affiliate.apellido,
+            apellido: affiliate.apellido ?? '',
             dni: affiliate.dni,
             email: affiliate.email,
-            affiliate_number: affiliate.affiliate_number,
+            affiliate_number: affiliateNumber,
             farmacia_number: farmaciaNumber,
             plan: resolvedPlan,
             fecha_nacimiento: affiliate.fecha_nacimiento ?? null,
