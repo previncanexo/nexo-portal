@@ -9,6 +9,145 @@ import { sendMetaCapiEvents } from '@/lib/meta-capi'
 import { sendGa4Events } from '@/lib/ga4-mp'
 import { addOneMonth, todayAR } from '@/lib/dateUtils'
 
+// -------------------------------------------------------------------------
+// HELPERS — matching por email (en vez de external_reference)
+// -------------------------------------------------------------------------
+
+/**
+ * De un CUIT (11 digitos) obtiene el DNI (8 digitos del medio).
+ * Formato CUIT: <2 dig prefijo><8 dig DNI><1 dig verificador>
+ * Ej: 20370951447 → 37095144
+ */
+function dniFromCuit(cuit: string | null | undefined): string | null {
+  if (!cuit) return null
+  const digits = String(cuit).replace(/\D/g, '')
+  if (digits.length !== 11) return null
+  return digits.substring(2, 10)
+}
+
+interface PayerInfo {
+  email: string | null
+  dni: string | null   // extraído del CUIT (identification.number)
+  payerId: number | null
+}
+
+/**
+ * Obtiene datos del pagador para una sub de MP, haciendo el hop:
+ *   sub_id → authorized_payments → payment → payer.{email, identification, id}
+ * Necesario porque el objeto preapproval nunca expone payer_email real.
+ */
+async function getPayerInfoFromSub(mpToken: string, subId: string): Promise<PayerInfo> {
+  const empty: PayerInfo = { email: null, dni: null, payerId: null }
+  try {
+    const authRes = await fetch(
+      `https://api.mercadopago.com/authorized_payments/search?preapproval_id=${subId}`,
+      { headers: { Authorization: `Bearer ${mpToken}` } }
+    )
+    if (!authRes.ok) return empty
+    const authData = await authRes.json()
+    const firstPaymentId = authData?.results?.[0]?.payment?.id
+    if (!firstPaymentId) return empty
+
+    const payRes = await fetch(
+      `https://api.mercadopago.com/v1/payments/${firstPaymentId}`,
+      { headers: { Authorization: `Bearer ${mpToken}` } }
+    )
+    if (!payRes.ok) return empty
+    const payment = await payRes.json()
+    const payer = payment?.payer ?? {}
+    return {
+      email: payer.email ?? null,
+      dni: dniFromCuit(payer.identification?.number),
+      payerId: payer.id != null ? Number(payer.id) : null,
+    }
+  } catch (err) {
+    console.error('[mp-webhook] getPayerInfoFromSub error:', err)
+    return empty
+  }
+}
+
+/**
+ * Busca un affiliate PENDING cuyo email coincida con el payer_email de MP.
+ * Verifica en 2 niveles:
+ *   1. affiliates.email (email de cuenta principal)
+ *   2. leads.mp_email (email de la cuenta MP que el user declaró en onboarding
+ *      cuando eligió "dinero en cuenta" — puede diferir del email principal)
+ */
+type PendingAffiliate = {
+  id: string
+  status: string
+  user_id: string | null
+  nombre: string
+  apellido: string | null
+  dni: string
+  email: string
+  whatsapp: string | null
+  ciudad: string | null
+  affiliate_number: string | null
+  fecha_nacimiento: string | null
+  domicilio: string | null
+  plan: { name: string | null; price: number | null } | { name: string | null; price: number | null }[] | null
+  purchase_event_sent_at: string | null
+}
+
+async function findPendingAffiliate(
+  supabase: ReturnType<typeof createAdminClient>,
+  info: PayerInfo,
+): Promise<PendingAffiliate | null> {
+  const affSelect = 'id, status, user_id, nombre, apellido, dni, email, whatsapp, ciudad, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name, price), purchase_event_sent_at'
+
+  // 1) match por DNI (señal fuerte — es único legal por persona)
+  if (info.dni) {
+    const { data: byDni } = await supabase
+      .from('affiliates')
+      .select(affSelect)
+      .eq('status', 'pending')
+      .eq('dni', info.dni)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (byDni) return byDni as PendingAffiliate
+  }
+
+  // 2) match por email del afiliado
+  if (info.email) {
+    const { data: byAff } = await supabase
+      .from('affiliates')
+      .select(affSelect)
+      .eq('status', 'pending')
+      .eq('email', info.email)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (byAff) return byAff as PendingAffiliate
+
+    // 3) match por lead.mp_email → affiliate (caso "para otra persona" con dinero en cuenta)
+    const { data: lead } = await supabase
+      .from('leads')
+      .select('affiliate_id')
+      .eq('mp_email', info.email)
+      .not('affiliate_id', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (lead?.affiliate_id) {
+      const { data: byLead } = await supabase
+        .from('affiliates')
+        .select(affSelect)
+        .eq('id', lead.affiliate_id)
+        .eq('status', 'pending')
+        .maybeSingle()
+      if (byLead) return byLead as PendingAffiliate
+    }
+  }
+
+  return null
+}
+
+// -------------------------------------------------------------------------
+// TYPES
+// -------------------------------------------------------------------------
+
 // MP SDK types are incomplete — these interfaces cover the fields we actually use
 interface MPPreApprovalExt {
   external_reference?: string | null
@@ -97,35 +236,41 @@ export async function POST(req: NextRequest) {
     if (body.type === 'subscription_preapproval' && body.data?.id) {
       const preApprovalClient = new PreApproval(mpClient)
       const preApproval = await preApprovalClient.get({ id: body.data.id })
-
-      // external_reference may live on the subscription or on the per-affiliate plan
+      const subId = String(body.data.id)
       const pa = preApproval as unknown as MPPreApprovalExt
-      let affiliateId = pa.external_reference || null
-      if (!affiliateId && pa.preapproval_plan_id) {
-        try {
-          const planClient = new PreApprovalPlan(mpClient)
-          const mpPlan = await planClient.get({ preApprovalPlanId: String(pa.preapproval_plan_id) })
-          affiliateId = (mpPlan as unknown as MPPlanExt).external_reference || null
-        } catch (planErr) {
-          console.error('[mp-webhook] Could not fetch plan for external_reference:', planErr)
-        }
-      }
-
-      if (!affiliateId) {
-        return NextResponse.json({ ok: true })
-      }
-
-      // Override external_reference so the rest of the handler uses affiliateId
-      pa.external_reference = affiliateId
 
       if (preApproval.status === 'authorized') {
-        const { data: affiliate } = await supabase
+        // Match #1: por mp_subscription_id ya guardado (renovación / re-notificación).
+        const { data: alreadyActive } = await supabase
           .from('affiliates')
-          .select('status, user_id, nombre, apellido, dni, email, whatsapp, ciudad, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name, price), purchase_event_sent_at')
-          .eq('id', affiliateId)
-          .single()
+          .select('id')
+          .eq('mp_subscription_id', subId)
+          .maybeSingle()
+        if (alreadyActive) {
+          return NextResponse.json({ ok: true })
+        }
 
-        if (affiliate && affiliate.status === 'pending') {
+        // Match #2: por payer (activación inicial). Ya no confiamos en
+        // external_reference — MP no lo persistía correctamente con hosted
+        // checkout de plan template. Ahora resolvemos el affiliate por:
+        //   1. DNI extraído del CUIT del pagador (más fuerte)
+        //   2. payer_email == affiliate.email
+        //   3. payer_email == lead.mp_email (caso "para otra persona")
+        const payerInfo = await getPayerInfoFromSub(process.env.MP_ACCESS_TOKEN!, subId)
+        if (!payerInfo.email && !payerInfo.dni) {
+          console.warn('[mp-webhook] no se pudo obtener payer info para sub', subId)
+          return NextResponse.json({ ok: true })
+        }
+        const affiliate = await findPendingAffiliate(supabase, payerInfo)
+        if (!affiliate) {
+          console.warn('[mp-webhook] no hay affiliate pending para payer', payerInfo, 'sub=', subId)
+          return NextResponse.json({ ok: true })
+        }
+        const affiliateId = affiliate.id
+
+        {
+          // scope para conservar la indentación del bloque original de activación
+          if (affiliate.status === 'pending') {
           const today = todayAR()
 
           let userId = affiliate.user_id as string | null | undefined
@@ -153,6 +298,7 @@ export async function POST(req: NextRequest) {
             .update({
               status: 'active',
               mp_subscription_id: body.data.id,
+              mp_payer_id: payerInfo.payerId,   // payer_id de MP para trazabilidad
               cobertura_desde: today,
               cobertura_hasta: addOneMonth(today),
               updated_at: new Date().toISOString(),
@@ -295,31 +441,27 @@ export async function POST(req: NextRequest) {
           revalidatePath('/admin/afiliados')
           revalidatePath(`/admin/afiliados/${affiliateId}`)
         }
+        }
       }
 
       // Cancelled or paused by MP → suspend active affiliate.
-      // Guard: solo actuar si la sub que se cancela es la sub real del affiliate.
-      // Si llega un cancel para una sub fantasma (URL hijacking), la ignoramos —
-      // no queremos suspender al affiliate por la cancelación de una sub ajena.
+      // Match por mp_subscription_id (guardado al activar). Si la sub no está
+      // registrada en la DB, es una sub fantasma — se ignora.
       if (preApproval.status === 'cancelled' || preApproval.status === 'paused') {
         const { data: affiliate } = await supabase
           .from('affiliates')
-          .select('status, nombre, email, mp_subscription_id')
-          .eq('id', affiliateId)
-          .single()
+          .select('id, status, nombre, email')
+          .eq('mp_subscription_id', subId)
+          .maybeSingle()
 
-        if (affiliate?.status === 'active' && affiliate.mp_subscription_id === body.data.id) {
+        if (affiliate?.status === 'active') {
           await supabase
             .from('affiliates')
             .update({ status: 'suspended', updated_at: new Date().toISOString() })
-            .eq('id', affiliateId)
+            .eq('id', affiliate.id)
           await sendSuspensionEmail(affiliate.nombre, affiliate.email)
-        } else if (affiliate?.status === 'active') {
-          console.warn('[mp-webhook] ghost sub cancellation ignored', {
-            affiliate_id: affiliateId,
-            received_sub_id: body.data.id,
-            real_sub_id: affiliate.mp_subscription_id,
-          })
+        } else if (!affiliate) {
+          console.warn('[mp-webhook] cancel/pause de sub que no existe en DB (fantasma)', subId)
         }
       }
     }
