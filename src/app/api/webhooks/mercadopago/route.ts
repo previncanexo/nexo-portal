@@ -89,7 +89,7 @@ type PendingAffiliate = {
   affiliate_number: string | null
   fecha_nacimiento: string | null
   domicilio: string | null
-  plan: { name: string | null; price: number | null } | { name: string | null; price: number | null }[] | null
+  plan: { name: string; price: number } | { name: string; price: number }[] | null
   purchase_event_sent_at: string | null
 }
 
