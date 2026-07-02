@@ -144,7 +144,7 @@ export async function PATCH(
   // cuando el usuario hace clic en "Pagar" más de una vez (back-navigation,
   // doble click, etc.) sin generar un nuevo affiliate ni una nueva sub MP.
   if (lead.status === 'converted' && lead.affiliate_id) {
-    const MP_PLAN_ID = process.env.MP_PLAN_ID || '2efbdb5cfbf34e77b3f117f8852fa7eb'
+    const MP_PLAN_ID = process.env.MP_PLAN_ID || 'ceb5b6e931104c7f920e9a588c8e2344'
     const payerEmail = medio_pago === 'mp_balance' && mp_email ? mp_email.trim() : lead.email
     const url = new URL('https://www.mercadopago.com.ar/subscriptions/checkout')
     url.searchParams.set('preapproval_plan_id', MP_PLAN_ID)
@@ -164,7 +164,11 @@ export async function PATCH(
 
   // mp_plan_id del plan único de Previnca Nexo en Mercado Pago.
   // Override con env var MP_PLAN_ID en Vercel para cada environment.
-  const MP_PLAN_ID = process.env.MP_PLAN_ID || '2efbdb5cfbf34e77b3f117f8852fa7eb'
+  // Default apunta al plan LIMPIO (sin external_reference contaminado).
+  // El anterior '2efbdb5cfbf34e77b3f117f8852fa7eb' fue creado por el flow
+  // viejo con external_reference=affiliate_id de Matias — todas las subs
+  // hijas heredaban ese external_reference y los pagos quedaban mal atribuidos.
+  const MP_PLAN_ID = process.env.MP_PLAN_ID || 'ceb5b6e931104c7f920e9a588c8e2344'
 
   // 3. Armar domicilio
   const domicilio = [
