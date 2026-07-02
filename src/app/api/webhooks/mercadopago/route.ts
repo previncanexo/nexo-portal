@@ -402,9 +402,9 @@ export async function POST(req: NextRequest) {
               event_id: String(body.data.id),
               user_data: {
                 email: affiliate.email,
-                phone: affiliate.whatsapp,
+                phone: affiliate.whatsapp ?? undefined,
                 firstName: affiliate.nombre,
-                lastName: affiliate.apellido,
+                lastName: affiliate.apellido ?? undefined,
                 dni: affiliate.dni,
                 ciudad: affiliate.ciudad ?? undefined,
                 externalId: affiliateId,
