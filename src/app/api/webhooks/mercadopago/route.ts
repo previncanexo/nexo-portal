@@ -14,15 +14,18 @@ import { addOneMonth, todayAR } from '@/lib/dateUtils'
 // -------------------------------------------------------------------------
 
 /**
- * De un CUIT (11 digitos) obtiene el DNI (8 digitos del medio).
- * Formato CUIT: <2 dig prefijo><8 dig DNI><1 dig verificador>
- * Ej: 20370951447 → 37095144
+ * Extrae el DNI del campo identification de MP. MP puede devolver:
+ *   - DNI directo (7-8 dígitos) → usar tal cual
+ *   - CUIT (11 dígitos) → extraer los 8 dígitos del medio (posiciones 2-9)
+ *     Formato CUIT: <2 dig prefijo><8 dig DNI><1 dig verificador>
+ *     Ej: 20370951447 → 37095144
  */
-function dniFromCuit(cuit: string | null | undefined): string | null {
-  if (!cuit) return null
-  const digits = String(cuit).replace(/\D/g, '')
-  if (digits.length !== 11) return null
-  return digits.substring(2, 10)
+function extractDni(raw: string | null | undefined): string | null {
+  if (!raw) return null
+  const digits = String(raw).replace(/\D/g, '')
+  if (digits.length === 7 || digits.length === 8) return digits
+  if (digits.length === 11) return digits.substring(2, 10)
+  return null
 }
 
 interface PayerInfo {
@@ -57,7 +60,7 @@ async function getPayerInfoFromSub(mpToken: string, subId: string): Promise<Paye
     const payer = payment?.payer ?? {}
     return {
       email: payer.email ?? null,
-      dni: dniFromCuit(payer.identification?.number),
+      dni: extractDni(payer.identification?.number),
       payerId: payer.id != null ? Number(payer.id) : null,
     }
   } catch (err) {
