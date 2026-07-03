@@ -235,6 +235,36 @@ export async function POST(req: NextRequest) {
   const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
   const supabase = createAdminClient()
 
+  // MP dispara `subscription_authorized_payment` para los cobros mensuales de
+  // una sub (renovaciones). El data.id apunta al authorized_payment, no al
+  // payment. Lo convertimos en un evento `payment` fetcheando el payment.id
+  // para reusar la rama de payment.approved (registrar en DB + extender cobertura).
+  if (body.type === 'subscription_authorized_payment' && body.data?.id) {
+    try {
+      const authRes = await fetch(
+        `https://api.mercadopago.com/authorized_payments/${body.data.id}`,
+        { headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` } }
+      )
+      if (authRes.ok) {
+        const authData = await authRes.json()
+        const paymentId = authData?.payment?.id
+        if (paymentId) {
+          body.type = 'payment'
+          body.data = { id: String(paymentId) }
+        } else {
+          console.warn('[mp-webhook] subscription_authorized_payment sin payment.id', body.data.id)
+          return NextResponse.json({ ok: true })
+        }
+      } else {
+        console.error('[mp-webhook] no se pudo fetchear authorized_payment', body.data.id, authRes.status)
+        return NextResponse.json({ ok: true })
+      }
+    } catch (err) {
+      console.error('[mp-webhook] error fetching authorized_payment:', err)
+      return NextResponse.json({ ok: true })
+    }
+  }
+
   try {
     if (body.type === 'subscription_preapproval' && body.data?.id) {
       const preApprovalClient = new PreApproval(mpClient)
