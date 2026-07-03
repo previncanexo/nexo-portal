@@ -651,7 +651,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     ...(SEGURO_HOGAR_URL
       ? [{
           id: 'seguro-hogar',
-          title: 'Seguro de Hogar',
+          title: 'Seguros del Hogar On Demand',
           subtitle: 'Cobertura para tu hogar, se contrata aparte',
           badge: 'Pago aparte',
           badgeColor: '#0d9488',
