@@ -466,11 +466,68 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
   )
 }
 
+/* ── Modal Seguro de Hogar (texto breve + "Ver planes") ── */
+function SeguroHogarModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background: 'rgba(5,2,25,0.78)', backdropFilter: 'blur(12px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm rounded-3xl overflow-hidden"
+        style={{
+          background: 'rgba(18,5,61,0.88)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06) inset',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white' }}>
+            <service.Icon />
+          </div>
+          <div>
+            <p className="font-bold text-white text-base leading-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>{service.title}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>{service.subtitle}</p>
+          </div>
+        </div>
+
+        <div className="px-6 py-5 flex flex-col gap-3">
+          <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
+        </div>
+
+        <div className="px-5 pb-6 pt-1 flex flex-col gap-2">
+          <a
+            href={SEGURO_HOGAR_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-3 rounded-2xl text-sm font-semibold text-center transition-opacity active:scale-95"
+            style={{ background: service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', textDecoration: 'none' }}
+          >
+            Ver planes
+          </a>
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-2xl text-sm font-semibold transition-opacity active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.50)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ── Componente principal ── */
 export default function ServiceCards({ affiliate }: ServiceCardsProps) {
   const [farmaciaModalOpen, setFarmaciaModalOpen] = useState(false)
   const [urgenciasModalOpen, setUrgenciasModalOpen] = useState(false)
   const [psicologiaModalOpen, setPsicologiaModalOpen] = useState(false)
+  const [seguroHogarModalOpen, setSeguroHogarModalOpen] = useState(false)
   const [infoService, setInfoService] = useState<ServiceItem | null>(null)
 
   const services: ServiceItem[] = [
@@ -600,8 +657,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
           badgeColor: '#0d9488',
           badgeBg: 'rgba(13,148,136,0.10)',
           buttonLabel: 'Ver planes',
-          buttonAction: 'link' as const,
-          buttonHref: SEGURO_HOGAR_URL,
+          buttonAction: 'modal' as const,
           accentColor: 'white',
           accentBg: 'rgba(13,148,136,0.10)',
           glowColor: 'rgba(13,148,136,0.16)',
@@ -620,7 +676,8 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     if (service.buttonAction === 'info') {
       setInfoService(service)
     } else if (service.buttonAction === 'modal') {
-      if (service.id === 'psicologia') setPsicologiaModalOpen(true)
+      if (service.id === 'seguro-hogar') setSeguroHogarModalOpen(true)
+      else if (service.id === 'psicologia') setPsicologiaModalOpen(true)
       else if (service.id === 'urgencias') setUrgenciasModalOpen(true)
       else setFarmaciaModalOpen(true)
     } else if (service.buttonAction === 'tel' && service.buttonHref) {
@@ -687,6 +744,12 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
         ))}
       </div>
 
+      {seguroHogarModalOpen && (
+        <SeguroHogarModal
+          service={services.find((s) => s.id === 'seguro-hogar')!}
+          onClose={() => setSeguroHogarModalOpen(false)}
+        />
+      )}
       {urgenciasModalOpen && (
         <UrgenciasModal service={urgenciasService} onClose={() => setUrgenciasModalOpen(false)} />
       )}
