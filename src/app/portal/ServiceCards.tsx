@@ -6,6 +6,18 @@ import { registerPsicologiaClick, registerSeguroHogarSolicitud } from './actions
 
 const PSICOLOGIA_URL = process.env.NEXT_PUBLIC_PSICOLOGIA_URL
 
+// Equipo de psicología (fuente: doc consolidada del servicio, julio 2026).
+// `agendaUrl` queda vacío hasta que DOC24 confirme si expone un link por profesional.
+// Mientras tanto todos caen a PSICOLOGIA_URL y la UI lo aclara: se elige el profesional
+// dentro de DOC24. Cuando existan los links, sólo se completa este campo.
+const PSICOLOGOS: { id: string; nombre: string; iniciales: string; dias: string; franja: string; agendaUrl?: string }[] = [
+  { id: 'reimers', nombre: 'Lic. Lorena Reimers', iniciales: 'LR', dias: 'Lunes y Miércoles', franja: '13:30 – 17:30' },
+  { id: 'blanco', nombre: 'Lic. Laura Blanco', iniciales: 'LB', dias: 'Martes', franja: '08:30 – 11:00' },
+  { id: 'aragues', nombre: 'Lic. María Camila Aragues', iniciales: 'MA', dias: 'Miércoles', franja: '10:00 – 11:30' },
+  { id: 'medina', nombre: 'Lic. Rocío Medina', iniciales: 'RM', dias: 'Jueves', franja: '09:00 – 11:30' },
+  { id: 'estigarribia', nombre: 'Lic. Censo Estigarribia', iniciales: 'CE', dias: 'Viernes', franja: '13:00 – 17:00' },
+]
+
 const SEGURO_HOGAR_URL = process.env.NEXT_PUBLIC_SEGURO_HOGAR_URL
 
 const SEGURO_PLANES = [
@@ -428,6 +440,8 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
 
 /* ── Modal Psicología On Demand ── */
 function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
+  const acento = service.theme?.solid ?? 'var(--purple)'
+  const gradiente = service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))'
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
@@ -435,7 +449,7 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-3xl overflow-hidden"
+        className="w-full max-w-md rounded-3xl overflow-hidden"
         style={{
           background: 'rgba(18,5,61,0.88)',
           border: '1px solid rgba(255,255,255,0.12)',
@@ -446,7 +460,7 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}>
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: gradiente, color: 'white' }}>
             <service.Icon />
           </div>
           <div>
@@ -455,34 +469,49 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
           </div>
         </div>
 
-        <div className="px-6 py-5 max-h-[55vh] overflow-y-auto flex flex-col gap-4">
+        <div className="px-6 py-5 max-h-[60vh] overflow-y-auto flex flex-col gap-4">
           <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
-          <ul className="flex flex-col gap-2.5">
-            {service.bullets.map((bullet, i) => (
-              <li key={i} className="flex items-start gap-2.5">
-                <span className="text-sm mt-px shrink-0" style={{ color: 'var(--pink)' }}>✔</span>
-                <span className="text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.68)', fontFamily: 'var(--font-dm-sans)' }}>{bullet}</span>
-              </li>
+
+          <div className="flex flex-col gap-2.5">
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
+              Equipo profesional · videoconsulta de 30 min
+            </p>
+            {PSICOLOGOS.map((p) => (
+              <div key={p.id} className="rounded-2xl p-3 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                <div
+                  className="w-12 h-12 rounded-full flex flex-col items-center justify-center shrink-0"
+                  style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.18)', border: `1px dashed ${service.theme?.borderHover ?? 'rgba(255,255,255,0.25)'}`, color: acento }}
+                  aria-label={`Foto de ${p.nombre} pendiente`}
+                >
+                  <span className="text-xs font-bold leading-none" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.iniciales}</span>
+                  <span className="text-[8px] leading-none mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>foto</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-white leading-tight truncate" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.nombre}</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.50)', fontFamily: 'var(--font-dm-sans)' }}>{p.dias} · {p.franja}</p>
+                </div>
+                <a
+                  href={p.agendaUrl ?? PSICOLOGIA_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => { void registerPsicologiaClick() }}
+                  className="shrink-0 px-3 py-2 rounded-xl text-xs font-semibold text-center active:scale-95"
+                  style={{ background: gradiente, color: 'white', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}
+                >
+                  Reservar
+                </a>
+              </div>
             ))}
-          </ul>
+          </div>
 
           {/* Aviso */}
           <p className="text-xs leading-relaxed rounded-xl px-3 py-2.5" style={{ color: 'rgba(255,255,255,0.60)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'var(--font-dm-sans)' }}>
-            Servicio adicional. Se cobra aparte de tu cobertura Previnca Nexo.
+            Servicio adicional. Se cobra aparte de tu cobertura Previnca Nexo. El turno se reserva
+            en DOC24, donde elegís al profesional y la franja disponible.
           </p>
         </div>
 
-        <div className="px-5 pb-6 pt-1 flex flex-col gap-2">
-          <a
-            href={PSICOLOGIA_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => { void registerPsicologiaClick() }}
-            className="w-full py-3 rounded-2xl text-sm font-semibold text-center transition-opacity active:scale-95"
-            style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', textDecoration: 'none' }}
-          >
-            Reservar turno
-          </a>
+        <div className="px-5 pb-6 pt-1">
           <button
             onClick={onClose}
             className="w-full py-3 rounded-2xl text-sm font-semibold transition-opacity active:scale-95"
