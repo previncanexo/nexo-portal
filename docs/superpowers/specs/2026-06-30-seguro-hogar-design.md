@@ -3,7 +3,11 @@
 **Fecha:** 2026-06-30
 **Proyecto:** nexo-portal
 **Rama:** feat/seguro-hogar
-**Estado:** Aprobado (diseño) — cobertura completa agregada (salvo monto de "Línea Blanca", cortado en la imagen). Pendiente: plan de implementación.
+**Estado:** Implementado. Cobertura completa cerrada: el monto de "Línea Blanca" ($900.000) fue
+confirmado por el cliente el 2026-07-10 y ya se muestra en el modal.
+
+**Nota de historia:** el modal de planes se implementó en `5b2a233` y quedó fuera de la UI en
+`6be515e` (que además introdujo el tema teal). Se restauró el 2026-07-10 conservando el teal.
 
 ## Contexto
 
@@ -122,7 +126,7 @@ Texto/montos extraídos de la imagen provista por el cliente:
 | Resp. Civil Hechos Privados | $4.000.000 | — |
 | Resp. Civil Linderos | $6.000.000 | — |
 | Seg. Técnico — Eq. Electrónicos | $800.000 | — |
-| Seg. Técnico — Línea Blanca | (a confirmar) | El monto quedó cortado en la imagen. Confirmar con el cliente antes de mostrarlo; mientras tanto, omitir este ítem o dejar el monto en blanco. |
+| Seg. Técnico — Línea Blanca | $900.000 | Confirmado por el cliente el 2026-07-10. |
 
 Definir estos datos como una constante en el componente (array de coberturas), fácil de editar.
 
