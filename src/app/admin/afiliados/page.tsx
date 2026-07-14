@@ -3,7 +3,7 @@ import type { Affiliate, Plan } from '@/lib/types'
 import AfiliadosClient from './AfiliadosClient'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Afiliados — Admin Nexo' }
+export const metadata = { title: 'Registros — Admin Nexo' }
 
 export default async function AfiliadosPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const supabase = createAdminClient()
@@ -19,7 +19,7 @@ export default async function AfiliadosPage({ searchParams }: { searchParams: Pr
   if (error) {
     return (
       <div className="text-center py-20" style={{ color: 'rgba(255,255,255,0.5)' }}>
-        Error al cargar afiliados: {error.message}
+        Error al cargar registros: {error.message}
       </div>
     )
   }

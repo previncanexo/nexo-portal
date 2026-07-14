@@ -24,7 +24,7 @@ interface LeadRow {
 function statusBadge(status: string) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
     partial: { bg: 'rgba(251,191,36,0.18)', color: '#fbbf24', label: 'Parcial' },
-    converted: { bg: 'rgba(74,222,128,0.18)', color: '#4ade80', label: 'Convertido' },
+    converted: { bg: 'rgba(74,222,128,0.18)', color: '#4ade80', label: 'Completo' },
     abandoned: { bg: 'rgba(248,113,113,0.18)', color: '#f87171', label: 'Abandonado' },
   }
   const v = map[status] ?? { bg: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', label: status }
@@ -112,7 +112,7 @@ export default async function LeadsPage() {
         {[
           { label: 'Total', value: stats.total, color: '#fff' },
           { label: 'Parciales', value: stats.partial, color: '#fbbf24' },
-          { label: 'Convertidos', value: stats.converted, color: '#4ade80' },
+          { label: 'Completos', value: stats.converted, color: '#4ade80' },
           { label: 'Abandonados', value: stats.abandoned, color: '#f87171' },
         ].map((s) => (
           <div

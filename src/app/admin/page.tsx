@@ -70,7 +70,7 @@ function formatDate(dateStr: string | null): string {
 
 function statusLabel(status: string): string {
   const map: Record<string, string> = {
-    active: 'Activo',
+    active: 'Afiliado',
     pending: 'Pendiente',
     suspended: 'Suspendido',
     cancelled: 'Cancelado',
@@ -308,8 +308,8 @@ export default async function AdminDashboardPage() {
     >
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
-        <StatCard label="Total afiliados" value={totalCount} />
-        <StatCard label="Activos" value={activeCount} />
+        <StatCard label="Total registros" value={totalCount} />
+        <StatCard label="Afiliados" value={activeCount} />
         <StatCard
           label="Leads activos"
           value={leadsActiveCount}
@@ -408,7 +408,7 @@ export default async function AdminDashboardPage() {
           border: '1px solid rgba(255,255,255,0.10)',
         }}
       >
-        <p className="text-xs uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>Afiliados recientes</p>
+        <p className="text-xs uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>Registros recientes</p>
         <p className="text-base font-bold text-white mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Últimos registros</p>
 
         {recentAffiliates.length === 0 ? (

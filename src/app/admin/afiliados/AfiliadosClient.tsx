@@ -11,7 +11,7 @@ import { deleteAffiliate } from './[id]/actions'
 const PAGE_SIZE = 25
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string }> = {
-  active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.12)',   border: 'rgba(22,163,74,0.25)' },
+  active:    { label: 'Afiliado',    color: '#16a34a', bg: 'rgba(22,163,74,0.12)',   border: 'rgba(22,163,74,0.25)' },
   pending:   { label: 'Pendiente',  color: '#b45309', bg: 'rgba(180,83,9,0.1)',    border: 'rgba(180,83,9,0.22)' },
   suspended: { label: 'Suspendido', color: '#c2410c', bg: 'rgba(194,65,12,0.1)',   border: 'rgba(194,65,12,0.22)' },
   cancelled: { label: 'Cancelado',  color: '#b91c1c', bg: 'rgba(185,28,28,0.1)',   border: 'rgba(185,28,28,0.22)' },
@@ -133,7 +133,7 @@ export default function AfiliadosClient({ affiliates, plans, initialStatus, limi
 
   const stats = [
     { label: 'Total',      value: filtered.length,                                                                         accent: 'var(--purple)', accentBg: 'rgba(134,96,239,0.1)' },
-    { label: 'Activos',    value: filtered.filter((a) => a.status === 'active').length,                                     accent: '#16a34a',       accentBg: 'rgba(22,163,74,0.08)' },
+    { label: 'Afiliados',  value: filtered.filter((a) => a.status === 'active').length,                                     accent: '#16a34a',       accentBg: 'rgba(22,163,74,0.08)' },
     { label: 'Pendientes', value: filtered.filter((a) => a.status === 'pending').length,                                    accent: '#b45309',       accentBg: 'rgba(180,83,9,0.08)' },
     { label: 'Inactivos',  value: filtered.filter((a) => a.status === 'suspended' || a.status === 'cancelled').length,      accent: '#b91c1c',       accentBg: 'rgba(185,28,28,0.08)' },
   ]
@@ -147,7 +147,7 @@ export default function AfiliadosClient({ affiliates, plans, initialStatus, limi
 
   const STATUSES: { value: AffiliateStatus | 'all'; label: string }[] = [
     { value: 'all',       label: 'Todos los estados' },
-    { value: 'active',    label: 'Activos' },
+    { value: 'active',    label: 'Afiliados' },
     { value: 'pending',   label: 'Pendientes' },
     { value: 'suspended', label: 'Suspendidos' },
     { value: 'cancelled', label: 'Cancelados' },
@@ -164,7 +164,7 @@ export default function AfiliadosClient({ affiliates, plans, initialStatus, limi
           <svg className="shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
-          Se muestran los últimos 1.000 afiliados. Para ver registros anteriores, usá los filtros o exportá el CSV.
+          Se muestran los últimos 1.000 registros. Para ver registros anteriores, usá los filtros o exportá el CSV.
         </div>
       )}
 
@@ -181,7 +181,7 @@ export default function AfiliadosClient({ affiliates, plans, initialStatus, limi
             className="text-3xl font-bold text-white"
             style={{ fontFamily: 'var(--font-dm-sans)' }}
           >
-            Afiliados
+            Registros
           </h1>
         </div>
 

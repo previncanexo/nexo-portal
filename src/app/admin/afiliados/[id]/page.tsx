@@ -16,7 +16,7 @@ import RefundButton from './RefundButton'
 import ResetPasswordButton from './ResetPasswordButton'
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string }> = {
-  active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.1)',  border: 'rgba(22,163,74,0.2)' },
+  active:    { label: 'Afiliado',    color: '#16a34a', bg: 'rgba(22,163,74,0.1)',  border: 'rgba(22,163,74,0.2)' },
   pending:   { label: 'Pendiente',  color: '#ca8a04', bg: 'rgba(202,138,4,0.1)',  border: 'rgba(202,138,4,0.2)' },
   suspended: { label: 'Suspendido', color: '#ea580c', bg: 'rgba(234,88,12,0.1)',  border: 'rgba(234,88,12,0.2)' },
   cancelled: { label: 'Cancelado',  color: '#dc2626', bg: 'rgba(220,38,38,0.1)',  border: 'rgba(220,38,38,0.2)' },
