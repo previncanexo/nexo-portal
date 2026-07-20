@@ -472,6 +472,27 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
         <div className="px-6 py-5 max-h-[60vh] overflow-y-auto flex flex-col gap-4">
           <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
 
+          {/* Precio de la sesión: valor de lista tachado + precio para afiliados */}
+          <div
+            className="rounded-2xl px-4 py-3.5 flex flex-col gap-1"
+            style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.12)', border: `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.14)'}` }}
+          >
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
+              Valor de la sesión
+            </p>
+            <div className="flex items-baseline gap-2.5 flex-wrap">
+              <span
+                className="text-base font-medium"
+                style={{ color: 'rgba(255,255,255,0.40)', textDecoration: 'line-through', fontFamily: 'var(--font-dm-sans)' }}
+              >
+                $40.000
+              </span>
+              <span className="text-3xl font-extrabold leading-none" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>
+                $30.000
+              </span>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-2.5">
             <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
               Equipo profesional · videoconsulta de 30 min
