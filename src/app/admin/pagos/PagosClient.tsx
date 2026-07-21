@@ -3,6 +3,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { formatDateAR } from '@/lib/dateUtils'
+import PeriodFilter from '@/components/admin/PeriodFilter'
+import CustomDropdown from '@/components/admin/CustomDropdown'
 
 interface PaymentRow {
   id: string
@@ -12,63 +14,60 @@ interface PaymentRow {
   mp_payment_id: string | null
   paid_at: string | null
   created_at: string
+  period_from: string | null
+  period_to: string | null
+  type: 'payment' | 'refund'
   affiliate: {
     id: string
     nombre: string
     apellido: string
     affiliate_number: string
+    email?: string | null
+    whatsapp?: string | null
+    plan_id?: string | null
+    plan_name?: string | null
+    mp_subscription_id?: string | null
   } | null
 }
 
-const PAGE_SIZE = 50
-
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  approved:     { label: 'Aprobado',     color: '#16a34a', bg: 'rgba(22,163,74,0.1)',   border: 'rgba(22,163,74,0.2)' },
-  pending:      { label: 'Pendiente',    color: '#ca8a04', bg: 'rgba(202,138,4,0.1)',   border: 'rgba(202,138,4,0.2)' },
-  rejected:     { label: 'Rechazado',    color: '#dc2626', bg: 'rgba(220,38,38,0.1)',   border: 'rgba(220,38,38,0.2)' },
-  in_process:   { label: 'En proceso',   color: '#ea580c', bg: 'rgba(234,88,12,0.1)',   border: 'rgba(234,88,12,0.2)' },
-  cancelled:    { label: 'Cancelado',    color: '#64748b', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.2)' },
-  refunded:     { label: 'Reembolsado',  color: '#2563eb', bg: 'rgba(37,99,235,0.1)',   border: 'rgba(37,99,235,0.2)' },
-  charged_back: { label: 'Contracargo',  color: '#dc2626', bg: 'rgba(220,38,38,0.1)',   border: 'rgba(220,38,38,0.2)' },
+const STATUS_CHIP: Record<string, { label: string; className: string }> = {
+  approved:     { label: 'Aprobado',    className: 'chip chip-approved' },
+  pending:      { label: 'Pendiente',   className: 'chip chip-pending' },
+  rejected:     { label: 'Rechazado',   className: 'chip chip-rejected' },
+  in_process:   { label: 'En proceso',  className: 'chip chip-pending' },
+  cancelled:    { label: 'Cancelado',   className: 'chip chip-cancelled' },
+  refunded:     { label: 'Reembolsado', className: 'chip chip-completo' },
+  charged_back: { label: 'Contracargo', className: 'chip chip-rejected' },
 }
 
-
-function formatDate(iso: string): string {
+function formatDate(iso: string | null): string {
   return formatDateAR(iso, { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+function formatDateTime(iso: string | null): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleString('es-AR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
 }
 
 function formatAmount(amount: number, currency: string): string {
   return `${currency} ${amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-function getMonthKey(iso: string): string {
-  return iso.slice(0, 7)
-}
-
-function formatMonthLabel(key: string): string {
-  const [y, m] = key.split('-')
-  const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-  return `${months[parseInt(m) - 1]} ${y}`
+function initials(nombre: string, apellido: string): string {
+  return ((nombre[0] || '') + (apellido[0] || '')).toUpperCase()
 }
 
 export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
-  const [search, setSearch] = useState<string>('')
-  const [monthFilter, setMonthFilter] = useState<string>('all')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [page, setPage] = useState(0)
-
-  useEffect(() => { setPage(0) }, [search, monthFilter, statusFilter])
-
-  const monthKeys = useMemo(() => {
-    const keys = [...new Set(payments.map((p) => getMonthKey(p.paid_at ?? p.created_at)))].sort().reverse()
-    return keys
-  }, [payments])
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string[]>([])
+  const [detail, setDetail] = useState<PaymentRow | null>(null)
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
     return payments.filter((p) => {
-      if (monthFilter !== 'all' && getMonthKey(p.paid_at ?? p.created_at) !== monthFilter) return false
-      if (statusFilter !== 'all' && p.mp_status !== statusFilter) return false
+      if (statusFilter.length > 0 && !statusFilter.includes(p.mp_status)) return false
       if (q) {
         const haystack = [
           p.affiliate?.nombre ?? '',
@@ -80,16 +79,12 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
       }
       return true
     })
-  }, [payments, search, monthFilter, statusFilter])
-
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-  const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+  }, [payments, search, statusFilter])
 
   const totalApproved = useMemo(
-    () => filtered.filter((p) => p.mp_status === 'approved').reduce((sum, p) => sum + p.amount, 0),
+    () => filtered.filter((p) => p.mp_status === 'approved').reduce((s, p) => s + p.amount, 0),
     [filtered]
   )
-
   const countApproved = filtered.filter((p) => p.mp_status === 'approved').length
 
   function exportCSV() {
@@ -100,7 +95,7 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
       p.affiliate?.affiliate_number ?? '—',
       p.amount.toFixed(2),
       p.currency,
-      STATUS_CONFIG[p.mp_status]?.label ?? p.mp_status,
+      STATUS_CHIP[p.mp_status]?.label ?? p.mp_status,
       p.mp_payment_id ?? '',
     ])
     const csv = [headers, ...rows]
@@ -118,173 +113,153 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {payments.length === 500 && (
-        <div style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', color: 'rgba(245,158,11,0.9)' }}>
-          Mostrando los últimos 500 pagos. Es posible que registros más antiguos no aparezcan.
-        </div>
-      )}
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.50)', fontFamily: 'var(--font-dm-sans)' }}>
-            Panel de administración
-          </p>
-          <h1 className="text-3xl font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-            Pagos
-          </h1>
-        </div>
-        <button
-          onClick={exportCSV}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
-          style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-dm-sans)', cursor: 'pointer' }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Exportar ({filtered.length})
-        </button>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+      <div className="section-heading">
+        <h1>Pagos</h1>
+        <p>Historial de cobros de MercadoPago. Filtrá por periodo o estado para conciliar.</p>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <span className="text-sm block mb-1" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>Total filtrado</span>
-          <span className="text-3xl font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>{filtered.length}</span>
+      <PeriodFilter defaultPreset="6m" />
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '20px 0' }} />
+
+      {/* Filter block */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'stretch' }}>
+        <div className="period-card" style={{ height: 48, boxSizing: 'border-box' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+            <span style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>
+              Filtro
+            </span>
+          </div>
+          <input
+            className="input-dark"
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por nombre o N° afiliado..."
+            style={{ flex: 1, height: '100%', minWidth: 0, boxSizing: 'border-box' }}
+          />
         </div>
-        <div className="rounded-2xl p-5" style={{ background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)' }}>
-          <span className="text-sm block mb-1" style={{ color: 'rgba(22,163,74,0.8)', fontFamily: 'var(--font-dm-sans)' }}>Aprobados</span>
-          <span className="text-3xl font-bold" style={{ color: '#16a34a', fontFamily: 'var(--font-dm-sans)' }}>{countApproved}</span>
-        </div>
-        <div className="rounded-2xl p-5 col-span-2 sm:col-span-1" style={{ background: 'rgba(134,96,239,0.08)', border: '1px solid rgba(134,96,239,0.2)' }}>
-          <span className="text-sm block mb-1" style={{ color: 'rgba(134,96,239,0.8)', fontFamily: 'var(--font-dm-sans)' }}>Recaudado (ARS)</span>
-          <span className="text-2xl font-bold" style={{ color: 'var(--purple)', fontFamily: 'var(--font-dm-sans)' }}>
-            ${totalApproved.toLocaleString('es-AR')}
-          </span>
+
+        <div style={{ display: 'flex', gap: 16, alignItems: 'stretch', height: 48 }}>
+          <CustomDropdown
+            multi
+            placeholder="Todos los estados"
+            options={[
+              { value: 'approved',     label: 'Aprobado' },
+              { value: 'pending',      label: 'Pendiente' },
+              { value: 'rejected',     label: 'Rechazado' },
+              { value: 'in_process',   label: 'En proceso' },
+              { value: 'cancelled',    label: 'Cancelado' },
+              { value: 'refunded',     label: 'Reembolsado' },
+              { value: 'charged_back', label: 'Contracargo' },
+            ]}
+            value={statusFilter}
+            onChange={(v) => setStatusFilter(v as string[])}
+            style={{ flex: 1, minWidth: 0 }}
+          />
+          <button
+            className="btn-ghost-admin"
+            style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}
+            onClick={exportCSV}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Exportar ({filtered.length})
+          </button>
         </div>
       </div>
 
-      {/* Search + Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por nombre o N° afiliado..."
-          className="flex-1 min-w-[200px] px-4 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-dm-sans)' }}
-        />
-      </div>
-      <div className="flex flex-wrap gap-3 items-center">
-        <select
-          value={monthFilter}
-          onChange={(e) => setMonthFilter(e.target.value)}
-          className="px-4 py-2.5 rounded-xl text-sm font-semibold outline-none"
-          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-dm-sans)', cursor: 'pointer' }}
-        >
-          <option value="all" style={{ background: '#0f1623' }}>Todos los meses</option>
-          {monthKeys.map((k) => (
-            <option key={k} value={k} style={{ background: '#0f1623' }}>
-              {formatMonthLabel(k)}
-            </option>
-          ))}
-        </select>
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '6px 0' }} />
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 rounded-xl text-sm font-semibold outline-none"
-          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-dm-sans)', cursor: 'pointer' }}
-        >
-          <option value="all" style={{ background: '#0f1623' }}>Todos los estados</option>
-          <option value="approved" style={{ background: '#0f1623' }}>{STATUS_CONFIG.approved.label}</option>
-          <option value="pending" style={{ background: '#0f1623' }}>{STATUS_CONFIG.pending.label}</option>
-          <option value="rejected" style={{ background: '#0f1623' }}>{STATUS_CONFIG.rejected.label}</option>
-          <option value="in_process" style={{ background: '#0f1623' }}>{STATUS_CONFIG.in_process.label}</option>
-          <option value="cancelled" style={{ background: '#0f1623' }}>{STATUS_CONFIG.cancelled.label}</option>
-          <option value="refunded" style={{ background: '#0f1623' }}>{STATUS_CONFIG.refunded.label}</option>
-          <option value="charged_back" style={{ background: '#0f1623' }}>{STATUS_CONFIG.charged_back.label}</option>
-        </select>
-      </div>
-
-      {/* Table */}
-      <div className="glass-card overflow-hidden">
-        <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
-          <h2 className="text-lg font-semibold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
-            Listado de pagos
-          </h2>
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 12, marginBottom: 24 }}>
+        <div className="stat-card">
+          <span className="stat-label">Total filtrado</span>
+          <span className="stat-value">{filtered.length}</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Cantidad de pagos en el rango</span>
         </div>
+        <div className="stat-card">
+          <span className="stat-label">Aprobados</span>
+          <span className="stat-value" style={{ color: '#4ade80' }}>{countApproved}</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Pagos cobrados con éxito</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Recaudado (ARS)</span>
+          <span className="stat-value" style={{ color: '#a08af2' }}>${totalApproved.toLocaleString('es-AR')}</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Suma de pagos aprobados</span>
+        </div>
+      </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+      {/* Tabla dark */}
+      <div className="table-dark">
+        <div style={{ overflowX: 'auto' }}>
+          <table>
             <thead>
-              <tr style={{ borderBottom: '2px solid rgba(0,0,0,0.08)', background: 'rgba(0,0,0,0.03)' }}>
-                {['Fecha', 'Afiliado', 'Monto', 'Estado', 'ID MP', ''].map((col) => (
-                  <th key={col} className="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: 'var(--gray-700)' }}>
-                    {col}
-                  </th>
-                ))}
+              <tr>
+                <th>Fecha</th>
+                <th>Afiliado</th>
+                <th>Monto</th>
+                <th>Estado</th>
+                <th>ID MP</th>
+                <th style={{ textAlign: 'right' }}></th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center text-sm" style={{ color: 'var(--gray-500)' }}>
+                  <td colSpan={6} style={{ padding: '48px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
                     No hay pagos para los filtros seleccionados.
                   </td>
                 </tr>
               )}
-              {paged.map((p, i) => {
-                const statusCfg = STATUS_CONFIG[p.mp_status] ?? STATUS_CONFIG.pending
+              {filtered.map((p) => {
+                const chip = STATUS_CHIP[p.mp_status] ?? { label: p.mp_status, className: 'chip' }
                 return (
-                  <tr
-                    key={p.id}
-                    style={{ borderBottom: i < paged.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none' }}
-                    className="hover:bg-black/[0.025] transition-colors"
-                  >
-                    <td className="px-5 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--gray-700)' }}>
+                  <tr key={p.id} style={{ cursor: 'pointer' }} onClick={() => setDetail(p)}>
+                    <td style={{ color: 'rgba(255,255,255,0.65)', whiteSpace: 'nowrap' }}>
                       {formatDate(p.paid_at ?? p.created_at)}
                     </td>
-                    <td className="px-5 py-4 whitespace-nowrap">
+                    <td>
                       {p.affiliate ? (
-                        <div>
-                          <p className="text-sm font-semibold" style={{ color: 'var(--gray-900)' }}>
+                        <>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: '#fff', margin: 0 }}>
                             {p.affiliate.nombre} {p.affiliate.apellido}
                           </p>
-                          <p className="text-xs font-mono" style={{ color: 'var(--purple)' }}>
+                          <p style={{ fontSize: 12, fontFamily: 'monospace', color: '#a08af2', margin: '2px 0 0 0' }}>
                             {p.affiliate.affiliate_number}
                           </p>
-                        </div>
+                        </>
                       ) : (
-                        <span className="text-sm" style={{ color: 'var(--gray-500)' }}>—</span>
+                        <span style={{ color: 'rgba(255,255,255,0.4)' }}>—</span>
                       )}
                     </td>
-                    <td className="px-5 py-4 whitespace-nowrap text-sm font-bold" style={{ color: 'var(--gray-900)' }}>
+                    <td style={{ fontWeight: 700, color: '#fff', whiteSpace: 'nowrap' }}>
                       {formatAmount(p.amount, p.currency)}
                     </td>
-                    <td className="px-5 py-4 whitespace-nowrap">
-                      <span
-                        className="inline-block text-xs font-bold px-3 py-1.5 rounded-full"
-                        style={{ color: statusCfg.color, background: statusCfg.bg, border: `1px solid ${statusCfg.border}` }}
-                      >
-                        {statusCfg.label}
-                      </span>
+                    <td>
+                      <span className={chip.className}>{chip.label}</span>
                     </td>
-                    <td className="px-5 py-4 whitespace-nowrap text-xs font-mono" style={{ color: 'var(--gray-500)' }}>
+                    <td style={{ fontSize: 12, fontFamily: 'monospace', color: 'rgba(255,255,255,0.55)' }}>
                       {p.mp_payment_id ?? '—'}
                     </td>
-                    <td className="px-5 py-4 whitespace-nowrap">
-                      {p.affiliate && (
-                        <Link
-                          href={`/admin/afiliados/${p.affiliate.id}`}
-                          className="text-sm font-semibold px-3.5 py-1.5 rounded-full transition-all hover:opacity-80"
-                          style={{ background: 'rgba(134,96,239,0.1)', color: 'var(--purple)', border: '1px solid rgba(134,96,239,0.25)' }}
-                        >
-                          Ver afiliado
-                        </Link>
-                      )}
+                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                      <button
+                        type="button"
+                        className="btn-detail"
+                        onClick={(e) => { e.stopPropagation(); setDetail(p) }}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        Ver detalle
+                      </button>
                     </td>
                   </tr>
                 )
@@ -294,43 +269,127 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
         </div>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between gap-4 pt-2">
-          <span className="text-sm" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
-            {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)} de {filtered.length}
-          </span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
-              className="px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-30"
-              style={{
-                background: 'rgba(255,255,255,0.07)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                color: 'rgba(255,255,255,0.85)',
-                cursor: page === 0 ? 'not-allowed' : 'pointer',
-                fontFamily: 'var(--font-dm-sans)',
-              }}
-            >
-              ← Anterior
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page >= totalPages - 1}
-              className="px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-30"
-              style={{
-                background: 'rgba(255,255,255,0.07)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                color: 'rgba(255,255,255,0.85)',
-                cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer',
-                fontFamily: 'var(--font-dm-sans)',
-              }}
-            >
-              Siguiente →
-            </button>
-          </div>
+      {detail && <PagoDetailModal pago={detail} onClose={() => setDetail(null)} />}
+    </div>
+  )
+}
+
+function PagoDetailModal({ pago: p, onClose }: { pago: PaymentRow; onClose: () => void }) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  const chip = STATUS_CHIP[p.mp_status] ?? { label: p.mp_status, className: 'chip' }
+  const af = p.affiliate
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div style={{ maxWidth: 960, width: '100%', maxHeight: '92vh', overflow: 'hidden', padding: 0, background: 'rgba(20,10,40,0.97)', borderRadius: 24, position: 'relative', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+        <button
+          onClick={onClose}
+          aria-label="Cerrar"
+          style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)', width: 34, height: 34, borderRadius: 9999, cursor: 'pointer', fontSize: 18, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}
+        >×</button>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', height: '92vh', maxHeight: '92vh' }}>
+          {/* Aside pago */}
+          <aside style={{ background: 'linear-gradient(160deg, rgba(134,96,239,0.22) 0%, rgba(238,92,208,0.10) 60%, rgba(20,10,40,0.4) 100%)', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: '1px solid rgba(255,255,255,0.08)', overflowY: 'auto' }}>
+            <div style={{ width: 72, height: 72, borderRadius: 20, background: 'linear-gradient(135deg, var(--purple), var(--pink))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 8px 32px rgba(134,96,239,0.45)' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="6" width="20" height="12" rx="2" ry="2" />
+                <line x1="2" y1="10" x2="22" y2="10" />
+              </svg>
+            </div>
+            <div>
+              <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 6 }}>Pago</p>
+              <p style={{ fontSize: 30, fontWeight: 700, color: '#fff', lineHeight: 1.1, marginBottom: 6 }}>{formatAmount(p.amount, p.currency)}</p>
+              <p style={{ fontFamily: 'monospace', color: '#a08af2', fontWeight: 700, fontSize: 13, marginBottom: 14 }}>{p.id.slice(0, 8)}</p>
+              <span className={chip.className}>{chip.label}</span>
+            </div>
+            <div style={{ paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.10)' }}>
+              <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Fecha del cobro</p>
+              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 14 }}>{formatDateTime(p.created_at)}</p>
+              <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Confirmado en MP</p>
+              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 14 }}>{formatDateTime(p.paid_at)}</p>
+              <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Tipo</p>
+              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>{p.type === 'refund' ? 'Reembolso' : 'Cobro'}</p>
+            </div>
+          </aside>
+
+          {/* Section detalles */}
+          <section style={{ padding: '28px 28px 24px 28px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="6" width="20" height="12" rx="2" ry="2" />
+                  <line x1="2" y1="10" x2="22" y2="10" />
+                </svg>
+                <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Detalles del pago</p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px 24px' }}>
+                <Field label="ID Mercado Pago" value={p.mp_payment_id} />
+                <Field label="Suscripción MP" value={af?.mp_subscription_id ?? null} />
+                <Field label="Moneda" value={p.currency} />
+                <Field label="Estado interno" value={p.mp_status} />
+                <Field label="Período desde" value={formatDate(p.period_from)} />
+                <Field label="Período hasta" value={formatDate(p.period_to)} />
+              </div>
+            </div>
+
+            {af && (
+              <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Afiliado vinculado</p>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 12, padding: '16px 18px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, var(--purple), var(--pink))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 16, fontWeight: 700, flexShrink: 0 }}>
+                      {initials(af.nombre, af.apellido)}
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <p style={{ fontSize: 16, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{af.nombre} {af.apellido}</p>
+                      <p style={{ fontFamily: 'monospace', color: '#a08af2', fontWeight: 700, fontSize: 12 }}>{af.affiliate_number}</p>
+                    </div>
+                    <Link href={`/admin/afiliados/${af.id}`} className="btn-detail" style={{ flexShrink: 0 }}>
+                      Ver afiliado →
+                    </Link>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
+                    <Field label="Plan contratado" value={af.plan_name ?? null} />
+                    <Field label="Email" value={af.email ?? null} />
+                    <Field label="WhatsApp" value={af.whatsapp ?? null} />
+                    <Field label="ID interno" value={af.id.slice(0, 8)} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', paddingTop: 20, paddingBottom: 8, borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 'auto' }}>
+              <button onClick={onClose} className="btn-ghost-admin">Cerrar</button>
+            </div>
+          </section>
         </div>
-      )}
+      </div>
+    </div>
+  )
+}
+
+function Field({ label, value }: { label: string; value: string | null | undefined }) {
+  return (
+    <div>
+      <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>{label}</p>
+      <p style={{ color: value ? '#fff' : 'rgba(255,255,255,0.35)', fontSize: 14, fontWeight: value ? 500 : 400, wordBreak: 'break-word' }}>
+        {value || '—'}
+      </p>
     </div>
   )
 }

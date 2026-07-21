@@ -1,447 +1,206 @@
-import type { CSSProperties } from 'react'
-import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { todayAR } from '@/lib/dateUtils'
+import PeriodFilter, { parsePeriodParams } from '@/components/admin/PeriodFilter'
+import BarLineChart from '@/components/admin/BarLineChart'
 
 export const dynamic = 'force-dynamic'
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-interface MonthBucket {
-  month: string // "YYYY-MM"
-  label: string // "Ene 2025"
-  count: number
-}
-
-interface RevenueBucket {
-  month: string
-  label: string
-  total: number
-}
-
-interface RecentAffiliate {
-  id: string
-  nombre: string
-  apellido: string
-  status: string
-  created_at: string
-}
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const MONTH_LABELS: Record<string, string> = {
-  '01': 'Ene',
-  '02': 'Feb',
-  '03': 'Mar',
-  '04': 'Abr',
-  '05': 'May',
-  '06': 'Jun',
-  '07': 'Jul',
-  '08': 'Ago',
-  '09': 'Sep',
-  '10': 'Oct',
-  '11': 'Nov',
-  '12': 'Dic',
-}
+const MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
-function formatMonth(yearMonth: string): string {
-  const [year, month] = yearMonth.split('-')
-  return `${MONTH_LABELS[month] ?? month} ${year}`
-}
+interface Bucket { label: string; value: number }
 
-/** Returns the last N month keys in "YYYY-MM" format, oldest first. */
-function lastNMonths(n: number): string[] {
-  const months: string[] = []
-  const now = new Date()
-  for (let i = n - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    months.push(`${y}-${m}`)
+/** Agrega registros con `created_at`/`paid_at` en buckets según el rango:
+ *  - < 3 días → por hora del día actual
+ *  - < 20 días → por día
+ *  - < 100 días → por semana (lun–dom)
+ *  - resto → por mes */
+function bucketize(
+  items: Array<{ date: string; amount?: number }>,
+  from: Date,
+  to: Date,
+  aggregation: 'count' | 'sum' = 'count'
+): Bucket[] {
+  const rangeMs = to.getTime() - from.getTime()
+  const days = rangeMs / (24 * 60 * 60 * 1000)
+
+  type Granularity = 'hour' | 'day' | 'week' | 'month'
+  const gran: Granularity =
+    days < 3 ? 'hour' :
+    days < 20 ? 'day' :
+    days < 100 ? 'week' : 'month'
+
+  function keyOf(d: Date): string {
+    if (gran === 'hour') return `${d.getHours().toString().padStart(2, '0')}h`
+    if (gran === 'day') return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`
+    if (gran === 'week') {
+      // Lunes de esa semana
+      const day = d.getDay()
+      const diff = day === 0 ? -6 : 1 - day
+      const mon = new Date(d)
+      mon.setDate(d.getDate() + diff)
+      return `${mon.getDate().toString().padStart(2, '0')}/${(mon.getMonth() + 1).toString().padStart(2, '0')}`
+    }
+    return `${MONTH_LABELS[d.getMonth()]} ${d.getFullYear()}`
   }
-  return months
+
+  // Generar labels vacíos en orden para todo el rango.
+  const buckets: Record<string, number> = {}
+  const order: string[] = []
+  const cursor = new Date(from)
+  while (cursor <= to) {
+    const k = keyOf(cursor)
+    if (!(k in buckets)) {
+      buckets[k] = 0
+      order.push(k)
+    }
+    if (gran === 'hour') cursor.setHours(cursor.getHours() + 1)
+    else if (gran === 'day') cursor.setDate(cursor.getDate() + 1)
+    else if (gran === 'week') cursor.setDate(cursor.getDate() + 7)
+    else cursor.setMonth(cursor.getMonth() + 1)
+  }
+
+  for (const item of items) {
+    const d = new Date(item.date)
+    if (d < from || d > to) continue
+    const k = keyOf(d)
+    if (!(k in buckets)) continue // fuera del grid generado
+    buckets[k] += aggregation === 'sum' ? (item.amount ?? 0) : 1
+  }
+
+  return order.map((k) => ({ label: k, value: buckets[k] }))
 }
 
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '—'
-  const [year, month, day] = dateStr.split('T')[0].split('-')
-  return `${day}/${month}/${year}`
-}
-
-function statusLabel(status: string): string {
+function periodLabel(preset: string): string {
   const map: Record<string, string> = {
-    active: 'Activo',
-    pending: 'Pendiente',
-    suspended: 'Suspendido',
-    cancelled: 'Cancelado',
+    today: 'Hoy',
+    '7d': 'Últimos 7 días',
+    '15d': 'Últimos 15 días',
+    '1m': 'Último mes',
+    '6m': 'Últimos 6 meses',
+    '1y': 'Último año',
+    custom: 'Rango personalizado',
   }
-  return map[status] ?? status
-}
-
-function statusColor(status: string): CSSProperties {
-  const map: Record<string, CSSProperties> = {
-    active: { background: 'rgba(74,222,128,0.12)', color: 'rgb(74,222,128)', border: '1px solid rgba(74,222,128,0.25)' },
-    pending: { background: 'rgba(251,191,36,0.12)', color: 'rgb(251,191,36)', border: '1px solid rgba(251,191,36,0.25)' },
-    suspended: { background: 'rgba(248,113,113,0.12)', color: 'rgb(248,113,113)', border: '1px solid rgba(248,113,113,0.25)' },
-    cancelled: { background: 'rgba(148,163,184,0.1)', color: 'rgba(148,163,184,0.8)', border: '1px solid rgba(148,163,184,0.2)' },
-  }
-  return map[status] ?? map.cancelled
-}
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  delta,
-  revenueDelta,
-}: {
-  label: string
-  value: string | number
-  delta?: { value: number; label: string }
-  revenueDelta?: number
-}) {
-  return (
-    <div
-      className="rounded-2xl p-5 flex flex-col gap-1"
-      style={{
-        background: 'rgba(255,255,255,0.06)',
-        border: '1px solid rgba(255,255,255,0.10)',
-        fontFamily: 'var(--font-dm-sans)',
-      }}
-    >
-      <span className="text-xs uppercase tracking-[0.14em] font-semibold" style={{ color: 'rgba(255,255,255,0.45)' }}>
-        {label}
-      </span>
-      <span className="text-3xl font-bold text-white mt-1">{value}</span>
-      {delta !== undefined && (
-        <span
-          className="text-xs font-medium"
-          style={{ color: delta.value >= 0 ? '#86efac' : '#f87171' }}
-        >
-          {delta.value >= 0 ? '+' : ''}{delta.value} {delta.label}
-        </span>
-      )}
-      {revenueDelta !== undefined && (
-        <span
-          className="text-xs font-medium"
-          style={{ color: revenueDelta >= 0 ? '#86efac' : '#f87171' }}
-        >
-          {revenueDelta >= 0 ? '+' : ''}${revenueDelta.toLocaleString('es-AR')} vs mes anterior
-        </span>
-      )}
-    </div>
-  )
-}
-
-function BarChart({
-  buckets,
-  valueKey,
-  formatValue,
-}: {
-  buckets: Array<{ label: string; [key: string]: number | string }>
-  valueKey: string
-  formatValue?: (v: number) => string
-}) {
-  const values = buckets.map((b) => Number(b[valueKey]))
-  const maxVal = Math.max(...values, 1)
-
-  return (
-    <div className="flex flex-col gap-3">
-      {buckets.map((b, i) => {
-        const val = values[i]
-        const pct = (val / maxVal) * 100
-        return (
-          <div key={b.label} className="flex items-center gap-3">
-            <span
-              className="text-xs w-16 shrink-0 text-right"
-              style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}
-            >
-              {b.label}
-            </span>
-            <div className="flex-1 h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
-              <div
-                className="h-2 rounded-full transition-all"
-                style={{
-                  width: `${pct}%`,
-                  background: 'linear-gradient(90deg, var(--purple), var(--pink))',
-                  minWidth: val > 0 ? '4px' : '0',
-                }}
-              />
-            </div>
-            <span
-              className="text-xs w-20 shrink-0 text-right"
-              style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}
-            >
-              {formatValue ? formatValue(val) : val}
-            </span>
-          </div>
-        )
-      })}
-    </div>
-  )
+  return map[preset] ?? preset
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function AdminDashboardPage() {
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; to?: string; preset?: string }>
+}) {
+  const sp = await searchParams
+  const { from, to, preset } = parsePeriodParams(sp)
   const supabase = createAdminClient()
 
-  const monthKeys = lastNMonths(6)
-  const sixMonthsAgo = `${monthKeys[0]}-01`
+  const fromIso = from.toISOString()
+  const toIso = to.toISOString()
 
-  const now = new Date()
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const today = todayAR()
-  const in30Days = new Date(Date.now() - 3 * 60 * 60 * 1000 + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  // Rango anterior (mismo tamaño, para deltas)
+  const rangeMs = to.getTime() - from.getTime()
+  const prevFromIso = new Date(from.getTime() - rangeMs).toISOString()
+  const prevToIso = fromIso
 
   const [
-    totalRes,
-    activeRes,
-    revenueMonthRes,
-    affiliatesByMonthRes,
-    revenueByMonthRes,
-    recentRes,
-    expiringRes,
-    leadsTotalRes,
-    leadsThisMonthRes,
-    leadsLastMonthRes,
+    activeCountRes,
+    inactiveCountRes,
+    leadsCountRes,
+    pendingAffiliatesRes,
+    affiliatesByRangeRes,
+    revenueByRangeRes,
+    revenuePrevRangeRes,
+    caidasByRangeRes,
+    leadsByRangeRes,
   ] = await Promise.all([
-    supabase.from('affiliates').select('id', { count: 'exact', head: true }),
+    // Card: Afiliados (activos totales — no depende del rango)
     supabase.from('affiliates').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-    supabase.from('payments').select('amount, paid_at').eq('mp_status', 'approved').gte('paid_at', startOfMonth),
-    supabase.from('affiliates').select('created_at').gte('created_at', sixMonthsAgo),
-    supabase.from('payments').select('amount, paid_at').eq('mp_status', 'approved').gte('paid_at', sixMonthsAgo),
-    supabase
-      .from('affiliates')
-      .select('id, nombre, apellido, status, created_at')
-      .order('created_at', { ascending: false })
-      .limit(6),
-    supabase
-      .from('affiliates')
-      .select('id, nombre, apellido, cobertura_hasta')
-      .eq('status', 'active')
-      .gte('cobertura_hasta', today)
-      .lte('cobertura_hasta', in30Days)
-      .order('cobertura_hasta', { ascending: true })
-      .limit(5),
-    // Leads KPIs — solo cuenta los que siguen siendo leads (no convertidos a affiliate).
-    // Las filas convertidas se mantienen en la tabla para histórico, pero no suman al pipeline activo.
-    supabase.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'partial'),
-    supabase
-      .from('leads')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'partial')
-      .gte('created_at', startOfMonth),
-    supabase
-      .from('leads')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'partial')
-      .gte('created_at', new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString())
-      .lt('created_at', startOfMonth),
+    // Card: Afiliados inactivos (suspended + cancelled totales)
+    supabase.from('affiliates').select('id', { count: 'exact', head: true }).in('status', ['suspended', 'cancelled']),
+    // Card: Leads (leads partial/abandoned + affiliates pending — no depende del rango)
+    supabase.from('leads').select('id', { count: 'exact', head: true }).in('status', ['partial', 'abandoned']),
+    supabase.from('affiliates').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    // Charts (todos filtrados por rango del periodo)
+    supabase.from('affiliates').select('created_at, status').gte('created_at', fromIso).lte('created_at', toIso),
+    supabase.from('payments').select('amount, paid_at').eq('mp_status', 'approved').gte('paid_at', fromIso).lte('paid_at', toIso),
+    supabase.from('payments').select('amount, paid_at').eq('mp_status', 'approved').gte('paid_at', prevFromIso).lte('paid_at', prevToIso),
+    supabase.from('affiliates').select('updated_at, status').in('status', ['suspended', 'cancelled']).gte('updated_at', fromIso).lte('updated_at', toIso),
+    supabase.from('leads').select('created_at').in('status', ['partial', 'abandoned']).gte('created_at', fromIso).lte('created_at', toIso),
   ])
 
-  // ── Stat totals ──────────────────────────────────────────────────────────
-  const totalCount = totalRes.count ?? 0
-  const activeCount = activeRes.count ?? 0
+  const activeCount = activeCountRes.count ?? 0
+  const inactiveCount = inactiveCountRes.count ?? 0
+  const leadsCount = (leadsCountRes.count ?? 0) + (pendingAffiliatesRes.count ?? 0)
 
-  const thisMonthRevenue = (revenueMonthRes.data ?? []).reduce(
-    (sum, row) => sum + (row.amount ?? 0),
-    0
+  const currentRevenue = (revenueByRangeRes.data ?? []).reduce((s, r) => s + (r.amount ?? 0), 0)
+  const prevRevenue = (revenuePrevRangeRes.data ?? []).reduce((s, r) => s + (r.amount ?? 0), 0)
+  const revenueDelta = currentRevenue - prevRevenue
+
+  // Charts
+  const affiliatesActive = (affiliatesByRangeRes.data ?? []).filter((a) => a.status === 'active')
+  const nuevosAfiliadosBuckets = bucketize(
+    affiliatesActive.map((a) => ({ date: a.created_at })),
+    from, to, 'count'
+  )
+  const ingresosBuckets = bucketize(
+    (revenueByRangeRes.data ?? []).map((p) => ({ date: p.paid_at ?? '', amount: p.amount })),
+    from, to, 'sum'
+  )
+  const caidasBuckets = bucketize(
+    (caidasByRangeRes.data ?? []).map((c) => ({ date: c.updated_at ?? '' })),
+    from, to, 'count'
+  )
+  const leadsBuckets = bucketize(
+    (leadsByRangeRes.data ?? []).map((l) => ({ date: l.created_at })),
+    from, to, 'count'
   )
 
-  // ── Monthly buckets ──────────────────────────────────────────────────────
-  const affiliateCountMap: Record<string, number> = {}
-  for (const key of monthKeys) affiliateCountMap[key] = 0
-  for (const row of affiliatesByMonthRes.data ?? []) {
-    const key = row.created_at.slice(0, 7)
-    if (key in affiliateCountMap) affiliateCountMap[key]++
-  }
-
-  const revenueSumMap: Record<string, number> = {}
-  for (const key of monthKeys) revenueSumMap[key] = 0
-  for (const row of revenueByMonthRes.data ?? []) {
-    const key = (row.paid_at ?? '').slice(0, 7)
-    if (key in revenueSumMap) revenueSumMap[key] += row.amount ?? 0
-  }
-
-  const affiliateBuckets: MonthBucket[] = monthKeys.map((key) => ({
-    month: key,
-    label: formatMonth(key),
-    count: affiliateCountMap[key],
-  }))
-
-  const revenueBuckets: RevenueBucket[] = monthKeys.map((key) => ({
-    month: key,
-    label: formatMonth(key),
-    total: Math.round(revenueSumMap[key]),
-  }))
-
-  // ── Recent affiliates ────────────────────────────────────────────────────
-  const recentAffiliates: RecentAffiliate[] = (recentRes.data ?? []) as RecentAffiliate[]
-
-  // ── Expiring coverage ────────────────────────────────────────────────────
-  const expiringAffiliates = (expiringRes.data ?? []) as Array<{
-    id: string
-    nombre: string
-    apellido: string
-    cobertura_hasta: string
-  }>
-
-  // ── Month-over-month deltas ──────────────────────────────────────────────
-  const thisMonthKey = monthKeys[5]
-  const prevMonthKey = monthKeys[4]
-  const newThisMonth = affiliateBuckets.find((b) => b.month === thisMonthKey)?.count ?? 0
-  const newLastMonth = affiliateBuckets.find((b) => b.month === prevMonthKey)?.count ?? 0
-  const revenueLastMonth = revenueBuckets.find((b) => b.month === prevMonthKey)?.total ?? 0
-
-  // ── Leads (solo los que siguen "partial" — los convertidos se cuentan como afiliados) ──
-  const leadsActiveCount = leadsTotalRes.count ?? 0
-  const leadsThisMonth = leadsThisMonthRes.count ?? 0
-  const leadsLastMonth = leadsLastMonthRes.count ?? 0
-
-  // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div
-      className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10"
-      style={{ fontFamily: 'var(--font-dm-sans)' }}
-    >
+    <div className="max-w-7xl mx-auto px-4 sm:px-6" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+      <div className="section-heading">
+        <h1>Dashboard</h1>
+        <p>Resumen general de afiliados, ingresos y leads del periodo seleccionado ({periodLabel(preset)}).</p>
+      </div>
+
+      <PeriodFilter defaultPreset="6m" />
+
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '20px 0' }} />
+
       {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
-        <StatCard label="Total afiliados" value={totalCount} />
-        <StatCard label="Activos" value={activeCount} />
-        <StatCard
-          label="Leads activos"
-          value={leadsActiveCount}
-          delta={{ value: leadsThisMonth - leadsLastMonth, label: 'vs mes anterior' }}
-        />
-        <StatCard
-          label="Nuevos este mes"
-          value={newThisMonth}
-          delta={{ value: newThisMonth - newLastMonth, label: 'vs mes anterior' }}
-        />
-        <StatCard
-          label="Ingresos este mes"
-          value={`$${thisMonthRevenue.toLocaleString('es-AR')}`}
-          revenueDelta={thisMonthRevenue - revenueLastMonth}
-        />
-      </div>
-
-      {/* Charts row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
-        {/* New affiliates chart */}
-        <div
-          className="rounded-2xl p-5"
-          style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.10)',
-          }}
-        >
-          <p className="text-xs uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>Nuevos afiliados</p>
-          <p className="text-base font-bold text-white mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Últimos 6 meses</p>
-          <BarChart
-            buckets={affiliateBuckets.map((b) => ({ label: b.label, value: b.count }))}
-            valueKey="value"
-          />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 40 }}>
+        <div className="stat-card">
+          <span className="stat-label">Afiliados</span>
+          <span className="stat-value">{activeCount}</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Activos</span>
         </div>
-
-        {/* Monthly revenue chart */}
-        <div
-          className="rounded-2xl p-5"
-          style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.10)',
-          }}
-        >
-          <p className="text-xs uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>Ingresos mensuales</p>
-          <p className="text-base font-bold text-white mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Últimos 6 meses</p>
-          <BarChart
-            buckets={revenueBuckets.map((b) => ({ label: b.label, value: b.total }))}
-            valueKey="value"
-            formatValue={(v) => `$${v.toLocaleString('es-AR')}`}
-          />
+        <div className="stat-card">
+          <span className="stat-label">Ingresos del periodo</span>
+          <span className="stat-value">${currentRevenue.toLocaleString('es-AR')}</span>
+          <span className={`stat-delta ${revenueDelta >= 0 ? 'positive' : 'negative'}`}>
+            {revenueDelta >= 0 ? '+' : ''}${revenueDelta.toLocaleString('es-AR')} vs periodo anterior
+          </span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Afiliados inactivos</span>
+          <span className="stat-value">{inactiveCount}</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap' }}>
+            Pagaron y luego se suspendieron o cancelaron
+          </span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Leads</span>
+          <span className="stat-value">{leadsCount}</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Incompletos + pendientes de pago</span>
         </div>
       </div>
 
-      {/* Expiring coverage */}
-      {expiringAffiliates.length > 0 && (
-        <div
-          className="rounded-2xl p-5 mb-10"
-          style={{
-            background: 'rgba(251,191,36,0.06)',
-            border: '1px solid rgba(251,191,36,0.2)',
-          }}
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgb(251,191,36)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-            <p className="text-base font-semibold" style={{ color: 'rgb(251,191,36)' }}>
-              Coberturas por vencer (próximos 30 días)
-            </p>
-          </div>
-          <div className="flex flex-col divide-y" style={{ borderColor: 'rgba(251,191,36,0.1)' }}>
-            {expiringAffiliates.map((a) => (
-              <Link
-                key={a.id}
-                href={`/admin/afiliados/${a.id}`}
-                className="flex items-center justify-between py-2.5 gap-4 hover:opacity-80 transition-opacity"
-              >
-                <span className="text-sm font-medium text-white">
-                  {a.nombre} {a.apellido}
-                </span>
-                <span className="text-sm font-mono shrink-0" style={{ color: 'rgb(251,191,36)' }}>
-                  {formatDate(a.cobertura_hasta)}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Recent affiliates */}
-      <div
-        className="rounded-2xl p-5"
-        style={{
-          background: 'rgba(255,255,255,0.06)',
-          border: '1px solid rgba(255,255,255,0.10)',
-        }}
-      >
-        <p className="text-xs uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>Afiliados recientes</p>
-        <p className="text-base font-bold text-white mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Últimos registros</p>
-
-        {recentAffiliates.length === 0 ? (
-          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
-            No hay afiliados registrados.
-          </p>
-        ) : (
-          <div className="flex flex-col divide-y" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-            {recentAffiliates.map((a) => (
-              <Link
-                key={a.id}
-                href={`/admin/afiliados/${a.id}`}
-                className="flex items-center justify-between py-3 gap-4 transition-colors hover:bg-white/[0.03] -mx-2 px-2 rounded-lg"
-              >
-                <span className="text-sm font-medium text-white">
-                  {a.nombre} {a.apellido}
-                </span>
-
-                <div className="flex items-center gap-3 shrink-0">
-                  <span
-                    className="text-xs font-medium px-2.5 py-1 rounded-full"
-                    style={statusColor(a.status)}
-                  >
-                    {statusLabel(a.status)}
-                  </span>
-                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                    {formatDate(a.created_at)}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+      {/* Charts */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 40 }}>
+        <BarLineChart caption="Nuevos afiliados" data={nuevosAfiliadosBuckets} format="int" />
+        <BarLineChart caption="Ingresos mensuales" data={ingresosBuckets} format="money" />
+        <BarLineChart caption="Caídas" data={caidasBuckets} format="int" />
+        <BarLineChart caption="Leads" data={leadsBuckets} format="int" />
       </div>
     </div>
   )
