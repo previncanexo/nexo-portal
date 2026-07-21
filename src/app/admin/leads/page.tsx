@@ -4,48 +4,55 @@ import { createAdminClient } from '@/lib/supabase/admin'
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Leads — Admin Nexo' }
 
-interface LeadRow {
+/**
+ * Vista unificada de leads:
+ *   - Incompletos: filas en `leads` con status IN (partial, abandoned)
+ *     → gente que abrió el onboarding y NO terminó de cargar los datos.
+ *   - Completos:   filas en `affiliates` con status='pending'
+ *     → gente que terminó el onboarding pero NO completó el pago en MP.
+ * Los `leads.status='converted'` se excluyen porque su affiliate ya
+ * apareció en la lista de Completos (evita duplicados).
+ */
+
+interface UnifiedLead {
   id: string
-  para_quien: string
+  tipo: 'lead' | 'affiliate'
+  fecha: string
+  para_quien: string | null
   nombre: string
   apellido: string
   email: string
-  whatsapp: string
+  whatsapp: string | null
   dni: string | null
   ciudad: string | null
-  status: string
+  estado: 'Incompleto' | 'Completo'
   affiliate_id: string | null
-  utm_source: string | null
-  utm_medium: string | null
-  utm_campaign: string | null
-  created_at: string
 }
 
-function statusBadge(status: string) {
-  const map: Record<string, { bg: string; color: string; label: string }> = {
-    partial: { bg: 'rgba(251,191,36,0.18)', color: '#fbbf24', label: 'Parcial' },
-    converted: { bg: 'rgba(74,222,128,0.18)', color: '#4ade80', label: 'Convertido' },
-    abandoned: { bg: 'rgba(248,113,113,0.18)', color: '#f87171', label: 'Abandonado' },
-  }
-  const v = map[status] ?? { bg: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', label: status }
+function estadoBadge(estado: 'Incompleto' | 'Completo') {
+  const isCompleto = estado === 'Completo'
   return (
     <span
       className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
-      style={{ background: v.bg, color: v.color }}
+      style={{
+        background: isCompleto ? 'rgba(74,222,128,0.18)' : 'rgba(251,191,36,0.18)',
+        color:      isCompleto ? '#4ade80'               : '#fbbf24',
+      }}
     >
-      {v.label}
+      {estado}
     </span>
   )
 }
 
-function paraQuienBadge(para_quien: string) {
+function paraQuienBadge(para_quien: string | null) {
+  if (!para_quien) return <span style={{ color: 'rgba(255,255,255,0.3)' }}>—</span>
   const isMe = para_quien === 'para_mi'
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium"
       style={{
         background: isMe ? 'rgba(134,96,239,0.15)' : 'rgba(238,92,208,0.15)',
-        color: isMe ? '#a08af2' : '#ee5cd0',
+        color:      isMe ? '#a08af2'              : '#ee5cd0',
       }}
     >
       {isMe ? 'Para mí' : 'Para otra persona'}
@@ -66,26 +73,68 @@ function fmtDate(iso: string) {
 
 export default async function LeadsPage() {
   const supabase = createAdminClient()
-  const { data, error } = await supabase
+
+  // Query 1: leads incompletos (abandonaron el onboarding antes del final)
+  const incompletos = supabase
     .from('leads')
-    .select('*')
+    .select('id, para_quien, nombre, apellido, email, whatsapp, dni, ciudad, affiliate_id, created_at')
+    .in('status', ['partial', 'abandoned'])
     .order('created_at', { ascending: false })
     .limit(500)
 
-  if (error) {
+  // Query 2: affiliates pending = leads completos (terminaron onboarding, no pagaron)
+  const completos = supabase
+    .from('affiliates')
+    .select('id, nombre, apellido, email, whatsapp, dni, ciudad, created_at')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(500)
+
+  const [incRes, comRes] = await Promise.all([incompletos, completos])
+
+  if (incRes.error || comRes.error) {
     return (
       <div className="text-center py-20" style={{ color: 'rgba(255,255,255,0.5)' }}>
-        Error al cargar leads: {error.message}
+        Error al cargar leads: {(incRes.error || comRes.error)?.message}
       </div>
     )
   }
 
-  const leads = (data ?? []) as LeadRow[]
+  const rows: UnifiedLead[] = [
+    ...(incRes.data ?? []).map((l): UnifiedLead => ({
+      id: l.id,
+      tipo: 'lead',
+      fecha: l.created_at,
+      para_quien: l.para_quien,
+      nombre: l.nombre,
+      apellido: l.apellido,
+      email: l.email,
+      whatsapp: l.whatsapp,
+      dni: l.dni,
+      ciudad: l.ciudad,
+      estado: 'Incompleto',
+      affiliate_id: l.affiliate_id,
+    })),
+    ...(comRes.data ?? []).map((a): UnifiedLead => ({
+      id: a.id,
+      tipo: 'affiliate',
+      fecha: a.created_at,
+      para_quien: null,
+      nombre: a.nombre,
+      apellido: a.apellido,
+      email: a.email,
+      whatsapp: a.whatsapp,
+      dni: a.dni,
+      ciudad: a.ciudad,
+      estado: 'Completo',
+      affiliate_id: a.id,
+    })),
+  ].sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
+
   const stats = {
-    total: leads.length,
-    partial: leads.filter((l) => l.status === 'partial').length,
-    converted: leads.filter((l) => l.status === 'converted').length,
-    abandoned: leads.filter((l) => l.status === 'abandoned').length,
+    total: rows.length,
+    incompletos: rows.filter((r) => r.estado === 'Incompleto').length,
+    completos:   rows.filter((r) => r.estado === 'Completo').length,
   }
 
   return (
@@ -104,16 +153,15 @@ export default async function LeadsPage() {
           Leads
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)', fontSize: '0.95rem' }}>
-          Captura del onboarding antes de la conversión a afiliado.
+          Incompletos: abandonaron el onboarding. Completos: terminaron pero no pagaron.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-3 gap-3 mb-6">
         {[
-          { label: 'Total', value: stats.total, color: '#fff' },
-          { label: 'Parciales', value: stats.partial, color: '#fbbf24' },
-          { label: 'Convertidos', value: stats.converted, color: '#4ade80' },
-          { label: 'Abandonados', value: stats.abandoned, color: '#f87171' },
+          { label: 'Total',        value: stats.total,       color: '#fff' },
+          { label: 'Incompletos',  value: stats.incompletos, color: '#fbbf24' },
+          { label: 'Completos',    value: stats.completos,   color: '#4ade80' },
         ].map((s) => (
           <div
             key={s.label}
@@ -158,7 +206,7 @@ export default async function LeadsPage() {
                   borderBottom: '1px solid rgba(255,255,255,0.08)',
                 }}
               >
-                {['Fecha', 'Para quién', 'Nombre', 'Email', 'WhatsApp', 'DNI', 'Ciudad', 'Estado', 'Afiliado'].map(
+                {['Fecha', 'Estado', 'Para quién', 'Nombre', 'Email', 'WhatsApp', 'DNI', 'Ciudad', 'Ver'].map(
                   (h) => (
                     <th
                       key={h}
@@ -172,7 +220,7 @@ export default async function LeadsPage() {
               </tr>
             </thead>
             <tbody>
-              {leads.length === 0 ? (
+              {rows.length === 0 ? (
                 <tr>
                   <td
                     colSpan={9}
@@ -183,35 +231,35 @@ export default async function LeadsPage() {
                   </td>
                 </tr>
               ) : (
-                leads.map((l) => (
+                rows.map((r) => (
                   <tr
-                    key={l.id}
+                    key={`${r.tipo}-${r.id}`}
                     style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
                   >
                     <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'rgba(255,255,255,0.65)' }}>
-                      {fmtDate(l.created_at)}
+                      {fmtDate(r.fecha)}
                     </td>
-                    <td className="px-4 py-3">{paraQuienBadge(l.para_quien)}</td>
+                    <td className="px-4 py-3">{estadoBadge(r.estado)}</td>
+                    <td className="px-4 py-3">{paraQuienBadge(r.para_quien)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      {l.nombre} {l.apellido}
+                      {r.nombre} {r.apellido}
                     </td>
                     <td className="px-4 py-3" style={{ color: 'rgba(255,255,255,0.75)' }}>
-                      {l.email}
+                      {r.email}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'rgba(255,255,255,0.75)' }}>
-                      {l.whatsapp}
+                      {r.whatsapp ?? '—'}
                     </td>
                     <td className="px-4 py-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                      {l.dni ?? '—'}
+                      {r.dni ?? '—'}
                     </td>
                     <td className="px-4 py-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                      {l.ciudad ?? '—'}
+                      {r.ciudad ?? '—'}
                     </td>
-                    <td className="px-4 py-3">{statusBadge(l.status)}</td>
                     <td className="px-4 py-3">
-                      {l.affiliate_id ? (
+                      {r.affiliate_id ? (
                         <Link
-                          href={`/admin/afiliados/${l.affiliate_id}`}
+                          href={`/admin/afiliados/${r.affiliate_id}`}
                           style={{ color: '#a08af2', textDecoration: 'underline' }}
                         >
                           Ver
