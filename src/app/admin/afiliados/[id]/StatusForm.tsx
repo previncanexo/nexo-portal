@@ -5,7 +5,7 @@ import { updateAffiliateStatus } from './actions'
 import type { AffiliateStatus } from '@/lib/types'
 
 const STATUS_OPTIONS: { value: AffiliateStatus; label: string }[] = [
-  { value: 'active',    label: 'Afiliado' },
+  { value: 'active',    label: 'Activo' },
   { value: 'pending',   label: 'Pendiente' },
   { value: 'suspended', label: 'Suspendido' },
   { value: 'cancelled', label: 'Cancelado' },
