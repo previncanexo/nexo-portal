@@ -27,30 +27,42 @@ export default function AdminNav() {
   }
 
   return (
-    <div className="fixed top-3 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-      <div className="pointer-events-auto w-full max-w-[960px] flex flex-col">
-        {/* Pill nav */}
+    <div
+      className="fixed top-3 z-50 pointer-events-none"
+      style={{
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '100%',
+        maxWidth: '1280px',
+        padding: '0 16px',
+      }}
+    >
+      <div className="pointer-events-auto w-full flex flex-col">
+        {/* Pill nav — grid 3 columnas: brand | links centrados | logout */}
         <nav
-          className="w-full flex items-center justify-between"
+          className="w-full items-center"
           style={{
+            display: 'grid',
+            gridTemplateColumns: 'auto 1fr auto',
+            gap: '56px',
             background: 'rgba(18,5,61,0.85)',
             backdropFilter: 'blur(24px) saturate(1.4)',
             WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
             border: '1px solid rgba(255,255,255,0.14)',
             borderRadius: '9999px',
             boxShadow: '0 8px 40px rgba(0,0,0,0.24)',
-            padding: '6px 8px 6px 20px',
+            padding: '8px 12px 8px 28px',
           }}
         >
-          {/* Left: logo + badge + nav links */}
-          <div className="flex items-center gap-3">
+          {/* Left: logo + badge */}
+          <div className="flex items-center gap-3" style={{ justifySelf: 'start' }}>
             <Image
               src="/logo.png"
               alt="Previnca Nexo"
               width={100}
-              height={44}
+              height={32}
               sizes="100px"
-              style={{ objectFit: 'contain', height: '44px', width: 'auto' }}
+              style={{ objectFit: 'contain', height: '32px', width: 'auto', transform: 'translateY(-3px)' }}
               priority
             />
             <span
@@ -64,31 +76,36 @@ export default function AdminNav() {
             >
               Admin
             </span>
-
-            <nav className="hidden sm:flex items-center gap-1" aria-label="Navegación admin">
-              {NAV_LINKS.map(({ href, label }) => {
-                const isActive =
-                  href === '/admin' ? pathname === '/admin' : pathname.startsWith(href)
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="text-sm font-medium px-3.5 py-2 rounded-full transition-all"
-                    style={{
-                      fontFamily: 'var(--font-dm-sans)',
-                      color: isActive ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.60)',
-                      background: isActive ? 'rgba(255,255,255,0.10)' : 'transparent',
-                    }}
-                  >
-                    {label}
-                  </Link>
-                )
-              })}
-            </nav>
           </div>
 
+          {/* Center: nav links */}
+          <nav
+            className="hidden sm:flex items-center gap-1"
+            style={{ justifySelf: 'center' }}
+            aria-label="Navegación admin"
+          >
+            {NAV_LINKS.map(({ href, label }) => {
+              const isActive =
+                href === '/admin' ? pathname === '/admin' : pathname.startsWith(href)
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className="text-sm font-medium px-3.5 py-2 rounded-full transition-all"
+                  style={{
+                    fontFamily: 'var(--font-dm-sans)',
+                    color: isActive ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.60)',
+                    background: isActive ? 'rgba(255,255,255,0.10)' : 'transparent',
+                  }}
+                >
+                  {label}
+                </Link>
+              )
+            })}
+          </nav>
+
           {/* Right: hamburger (mobile) + logout */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" style={{ justifySelf: 'end' }}>
             {/* Hamburger — mobile only */}
             <button
               onClick={() => setMobileOpen((o) => !o)}
