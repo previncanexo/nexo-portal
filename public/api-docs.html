@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Nexo Analytics API — Documentación</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css">
+  <style>
+    body { margin: 0; background: #fafafa; }
+    .swagger-ui .topbar { background: #12053d; }
+    .swagger-ui .info .title { color: #12053d; }
+    .header-hint {
+      background: #fef3c7; border-left: 4px solid #f59e0b; padding: 14px 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px;
+      color: #78350f; margin: 0;
+    }
+    .header-hint strong { color: #92400e; }
+    .header-hint code {
+      background: rgba(146,64,14,0.12); padding: 2px 6px; border-radius: 4px;
+      font-family: "SF Mono", Consolas, monospace; font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-hint">
+    🔑 <strong>Autenticación:</strong> todos los endpoints requieren header
+    <code>Authorization: Bearer &lt;ANALYTICS_API_KEY&gt;</code>.
+    Solicitá la clave al administrador del sistema.
+  </div>
+  <div id="swagger-ui"></div>
+
+  <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-standalone-preset.js"></script>
+  <script>
+    const spec = {
+      openapi: "3.0.3",
+      info: {
+        title: "Nexo Analytics API",
+        version: "1.0.0",
+        description: "Endpoints de solo lectura para consumir data de Nexo (leads, afiliados, pagos) desde herramientas de BI como Power BI, Looker Studio, Tableau, etc.\n\n**Todos los endpoints devuelven la tabla completa** (sin paginación por ahora).\n\n**Formato de respuesta**:\n```json\n{ \"count\": N, \"results\": [ ... ] }\n```",
+        contact: { name: "Previnca Nexo" }
+      },
+      servers: [
+        { url: "https://nexo.portal.previncasalud.com.ar", description: "Producción" }
+      ],
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: "http",
+            scheme: "bearer",
+            description: "Bearer token estático. Configurar en Vercel como env var `ANALYTICS_API_KEY`."
+          }
+        },
+        schemas: {
+          Lead: {
+            type: "object",
+            description: "Cada intento de onboarding. Se crea al completar step 1-2 del formulario.",
+            properties: {
+              id: { type: "string", format: "uuid" },
+              para_quien: { type: "string", enum: ["para_mi", "otra_persona"] },
+              nombre: { type: "string" },
+              apellido: { type: "string" },
+              email: { type: "string", format: "email" },
+              whatsapp: { type: "string" },
+              dni: { type: "string", nullable: true, description: "Completado en step 3" },
+              fecha_nacimiento: { type: "string", format: "date", nullable: true },
+              ciudad: { type: "string", nullable: true },
+              domicilio: { type: "string", nullable: true },
+              medio_pago: { type: "string", enum: ["tarjeta", "mp_balance"], nullable: true },
+              mp_email: { type: "string", nullable: true, description: "Email de cuenta MP si difiere del principal" },
+              plan_id: { type: "string", format: "uuid", nullable: true },
+              status: { type: "string", enum: ["partial", "converted", "abandoned"] },
+              affiliate_id: { type: "string", format: "uuid", nullable: true, description: "FK al affiliate cuando el lead se convierte" },
+              utm_source: { type: "string", nullable: true },
+              utm_medium: { type: "string", nullable: true },
+              utm_campaign: { type: "string", nullable: true },
+              referer: { type: "string", nullable: true },
+              fbp: { type: "string", nullable: true, description: "Cookie _fbp para Meta CAPI" },
+              fbc: { type: "string", nullable: true, description: "Cookie _fbc para Meta CAPI" },
+              ga_client_id: { type: "string", nullable: true, description: "Client ID de GA4" },
+              client_user_agent: { type: "string", nullable: true },
+              client_ip: { type: "string", nullable: true },
+              created_at: { type: "string", format: "date-time" },
+              updated_at: { type: "string", format: "date-time" }
+            }
+          },
+          Affiliate: {
+            type: "object",
+            description: "Registros que completaron el checkout. `status='active'` = afiliado con pago confirmado.",
+            properties: {
+              id: { type: "string", format: "uuid", description: "Se usa como external_reference en MP" },
+              nombre: { type: "string" },
+              apellido: { type: "string" },
+              dni: { type: "string" },
+              email: { type: "string", format: "email" },
+              whatsapp: { type: "string", nullable: true },
+              ciudad: { type: "string", nullable: true },
+              domicilio: { type: "string", nullable: true },
+              fecha_nacimiento: { type: "string", format: "date", nullable: true },
+              plan_id: { type: "string", format: "uuid", nullable: true },
+              status: { type: "string", enum: ["pending", "active", "suspended", "cancelled"] },
+              affiliate_number: { type: "string", nullable: true, description: "Auto-generado al pasar a active (max+1)" },
+              farmacia_number: { type: "string", nullable: true, description: "Auto-generado al pasar a active" },
+              cobertura_desde: { type: "string", format: "date", nullable: true },
+              cobertura_hasta: { type: "string", format: "date", nullable: true, description: "Se extiende +1 mes en cada renovación" },
+              user_id: { type: "string", format: "uuid", nullable: true, description: "ID del usuario en Supabase Auth" },
+              mp_subscription_id: { type: "string", nullable: true },
+              mp_payer_id: { type: "integer", format: "int64", nullable: true, description: "ID del pagador en MP" },
+              checkout_url: { type: "string", nullable: true },
+              purchase_event_sent_at: { type: "string", format: "date-time", nullable: true, description: "Guard idempotente para Meta CAPI Purchase" },
+              abandonment_notified_at: { type: "string", format: "date-time", nullable: true },
+              rejection_notified_at: { type: "string", format: "date-time", nullable: true },
+              notes: { type: "string", nullable: true },
+              created_at: { type: "string", format: "date-time" },
+              updated_at: { type: "string", format: "date-time" }
+            }
+          },
+          Payment: {
+            type: "object",
+            description: "Cobros y devoluciones. `type='refund'` implica `amount` negativo (nota de crédito).",
+            properties: {
+              id: { type: "string", format: "uuid" },
+              affiliate_id: { type: "string", format: "uuid", nullable: true },
+              mp_payment_id: { type: "string", nullable: true, description: "ID único de MP. Placeholder `sub-{id}` antes del cobro real" },
+              mp_preference_id: { type: "string", nullable: true, description: "(legacy)" },
+              mp_status: { type: "string", nullable: true, description: "approved / rejected / etc" },
+              amount: { type: "integer", description: "En pesos ARS enteros. Negativo si type=refund" },
+              currency: { type: "string", default: "ARS" },
+              period_from: { type: "string", format: "date", nullable: true },
+              period_to: { type: "string", format: "date", nullable: true },
+              paid_at: { type: "string", format: "date-time", nullable: true },
+              created_at: { type: "string", format: "date-time" },
+              type: { type: "string", enum: ["payment", "refund"] }
+            }
+          },
+          Error: {
+            type: "object",
+            properties: { error: { type: "string" } }
+          }
+        }
+      },
+      security: [{ bearerAuth: [] }],
+      paths: {
+        "/api/analytics/leads": {
+          get: {
+            tags: ["Analytics"],
+            summary: "Dump completo de leads",
+            description: "Devuelve todos los registros de la tabla `leads` ordenados por `created_at` descendente.",
+            responses: {
+              "200": {
+                description: "OK",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        count: { type: "integer" },
+                        results: { type: "array", items: { $ref: "#/components/schemas/Lead" } }
+                      }
+                    }
+                  }
+                }
+              },
+              "401": { description: "Token inválido o ausente", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+              "500": { description: "Error interno" }
+            }
+          }
+        },
+        "/api/analytics/affiliates": {
+          get: {
+            tags: ["Analytics"],
+            summary: "Dump completo de affiliates",
+            description: "Devuelve todos los registros de la tabla `affiliates` ordenados por `created_at` descendente.",
+            responses: {
+              "200": {
+                description: "OK",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        count: { type: "integer" },
+                        results: { type: "array", items: { $ref: "#/components/schemas/Affiliate" } }
+                      }
+                    }
+                  }
+                }
+              },
+              "401": { description: "Token inválido o ausente" },
+              "500": { description: "Error interno" }
+            }
+          }
+        },
+        "/api/analytics/payments": {
+          get: {
+            tags: ["Analytics"],
+            summary: "Dump completo de payments",
+            description: "Devuelve todos los registros de la tabla `payments` ordenados por `created_at` descendente.",
+            responses: {
+              "200": {
+                description: "OK",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        count: { type: "integer" },
+                        results: { type: "array", items: { $ref: "#/components/schemas/Payment" } }
+                      }
+                    }
+                  }
+                }
+              },
+              "401": { description: "Token inválido o ausente" },
+              "500": { description: "Error interno" }
+            }
+          }
+        }
+      }
+    };
+
+    window.onload = () => {
+      SwaggerUIBundle({
+        spec,
+        dom_id: "#swagger-ui",
+        deepLinking: true,
+        presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset.slice(1)],
+        layout: "BaseLayout",
+        tryItOutEnabled: true,
+        persistAuthorization: true
+      });
+    };
+  </script>
+</body>
+</html>

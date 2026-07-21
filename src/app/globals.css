@@ -107,3 +107,483 @@
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.3); opacity: 0.6; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADMIN REDESIGN — clases nuevas del rediseño 2026-07
+   Traducción del mock estático (nexo-front-portal/) al portal real.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Scrollbar global (dark theme con gradiente purple/pink) */
+.portal-dark * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(134,96,239,0.55) transparent;
+}
+.portal-dark *::-webkit-scrollbar { width: 8px; height: 8px; }
+.portal-dark *::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 9999px; }
+.portal-dark *::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--purple), var(--pink));
+  border-radius: 9999px;
+  border: 1px solid rgba(20,10,40,0.4);
+}
+.portal-dark *::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #9a78f5, #f36fda);
+}
+.portal-dark *::-webkit-scrollbar-corner { background: transparent; }
+
+/* Header de sección del admin (título + descripción + línea divisora) */
+.section-heading {
+  margin-top: 40px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-family: var(--font-dm-sans);
+}
+.section-heading h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  font-family: var(--font-dm-sans);
+  margin-bottom: 6px;
+}
+.section-heading p {
+  color: rgba(255,255,255,0.55);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Stat card estándar del admin (dark, con label uppercase + valor grande + descripción) */
+.stat-card {
+  border-radius: 16px;
+  padding: 20px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  font-family: var(--font-dm-sans);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-card .stat-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+}
+.stat-card .stat-value {
+  font-size: 30px;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 4px;
+}
+.stat-card .stat-delta { font-size: 12px; font-weight: 500; }
+.stat-card .stat-delta.positive { color: #86efac; }
+.stat-card .stat-delta.negative { color: #f87171; }
+
+/* Selector de periodo (barra sin recuadro) */
+.period-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: nowrap;
+  padding: 0;
+  font-family: var(--font-dm-sans);
+}
+
+/* Grupo de chips (filtros rápidos, date range wrapper, etc.) */
+.chip-group {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.chip-group button {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  color: rgba(255,255,255,0.70);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: var(--font-dm-sans);
+  white-space: nowrap;
+  text-align: center;
+}
+.chip-group button.active {
+  background: rgba(134,96,239,0.25);
+  color: white;
+  border-color: rgba(134,96,239,0.50);
+}
+.chip-group button:hover:not(.active) { color: rgba(255,255,255,0.85); }
+
+/* Chips de estado */
+.chip {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+.chip-active { color: #16a34a; background: rgba(22,163,74,0.12); border: 1px solid rgba(22,163,74,0.25); }
+.chip-pending { color: #b45309; background: rgba(180,83,9,0.1); border: 1px solid rgba(180,83,9,0.22); }
+.chip-suspended { color: #c2410c; background: rgba(194,65,12,0.1); border: 1px solid rgba(194,65,12,0.22); }
+.chip-cancelled { color: #b91c1c; background: rgba(185,28,28,0.1); border: 1px solid rgba(185,28,28,0.22); }
+.chip-approved { color: #16a34a; background: rgba(22,163,74,0.1); border: 1px solid rgba(22,163,74,0.2); }
+.chip-rejected { color: #dc2626; background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.2); }
+.chip-completo { color: #60a5fa; background: rgba(96,165,250,0.18); }
+.chip-incompleto { color: #fbbf24; background: rgba(251,191,36,0.18); }
+.chip-para-mi { color: #a08af2; background: rgba(134,96,239,0.15); }
+.chip-para-otro { color: #ee5cd0; background: rgba(238,92,208,0.15); }
+
+/* Input dark reutilizable */
+.input-dark {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-family: var(--font-dm-sans);
+}
+.input-dark::placeholder { color: rgba(255,255,255,0.35); }
+
+/* Tabla dark (Afiliados, Leads, Pagos, Seguro Hogar) */
+.table-dark {
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  backdrop-filter: blur(20px);
+}
+.table-dark table {
+  width: 100%;
+  font-size: 14px;
+  color: #fff;
+  font-family: var(--font-dm-sans);
+  border-collapse: collapse;
+}
+.table-dark thead tr {
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.table-dark th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.45);
+}
+.table-dark td { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.table-dark tr:last-child td { border-bottom: none; }
+
+/* Botón "Ver detalle" en tablas */
+.btn-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(134,96,239,0.15);
+  color: #a08af2;
+  border: 1px solid rgba(134,96,239,0.35);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-dm-sans);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.12s;
+}
+.btn-detail:hover { background: rgba(134,96,239,0.25); color: #c4b1ff; }
+
+/* Botones acción */
+.btn-primary-admin {
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 600;
+  background: linear-gradient(to right, var(--purple), var(--pink));
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(134,96,239,0.35);
+  font-family: var(--font-dm-sans);
+}
+.btn-ghost-admin {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.9);
+  cursor: pointer;
+  font-family: var(--font-dm-sans);
+}
+
+/* Chart card (dashboard) */
+.chart-card {
+  border-radius: 16px;
+  padding: 20px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  font-family: var(--font-dm-sans);
+}
+.chart-card .chart-caption {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 4px;
+}
+.chart-card .chart-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0;
+  font-family: var(--font-dm-sans);
+}
+.chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.chart-body { min-height: 260px; display: flex; flex-direction: column; justify-content: center; }
+
+/* Toggle barras/línea */
+.chart-toggle {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  flex-shrink: 0;
+}
+.chart-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-dm-sans);
+  transition: all 0.15s;
+}
+.chart-toggle button svg { width: 14px; height: 14px; }
+.chart-toggle button.active {
+  background: linear-gradient(90deg, var(--purple), var(--pink));
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(134,96,239,0.35);
+}
+.chart-toggle button:hover:not(.active) { color: rgba(255,255,255,0.85); }
+
+/* Barras horizontales del bar chart */
+.bar-row { display: flex; align-items: center; gap: 16px; }
+.bar-row + .bar-row { margin-top: 20px; }
+.bar-row .bar-label {
+  font-size: 13px;
+  width: 72px;
+  flex-shrink: 0;
+  text-align: right;
+  color: rgba(255,255,255,0.55);
+  font-weight: 500;
+}
+.bar-row .bar-track { flex: 1; height: 16px; border-radius: 9999px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.bar-row .bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--purple), var(--pink));
+  box-shadow: 0 2px 8px rgba(134,96,239,0.30);
+}
+.bar-row .bar-value {
+  font-size: 13px;
+  width: 90px;
+  flex-shrink: 0;
+  text-align: right;
+  color: rgba(255,255,255,0.75);
+  font-weight: 600;
+}
+
+/* SVG line chart */
+.line-chart-svg { width: 100%; height: 220px; overflow: visible; }
+.line-chart-svg .grid-line { stroke: rgba(255,255,255,0.06); stroke-width: 1; }
+.line-chart-svg .axis-label { fill: rgba(255,255,255,0.45); font-size: 11px; font-family: var(--font-dm-sans); }
+.line-chart-svg .line-area { fill: url(#areaGradient); opacity: 0.6; }
+.line-chart-svg .line-stroke {
+  fill: none;
+  stroke: url(#lineGradient);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.line-chart-svg .line-dot { fill: #fff; stroke: var(--purple); stroke-width: 2; }
+
+/* Dropdown custom (multi-select con checkboxes) */
+.dd {
+  position: relative;
+  font-family: var(--font-dm-sans);
+  display: flex;
+  flex-direction: column;
+}
+.dd-trigger {
+  width: 100%;
+  height: 100%;
+  padding: 12px 44px 12px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  background-color: rgba(255,255,255,0.06);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a08af2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.90);
+  cursor: pointer;
+  font-family: var(--font-dm-sans);
+  text-align: left;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dd-trigger:hover {
+  background-color: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.20);
+}
+.dd.open > .dd-trigger {
+  background-color: rgba(134,96,239,0.15);
+  border-color: rgba(134,96,239,0.55);
+  box-shadow: 0 0 0 3px rgba(134,96,239,0.15);
+}
+.dd .dd-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  max-width: 100%;
+}
+.dd-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: rgba(20, 10, 40, 0.97);
+  backdrop-filter: blur(24px) saturate(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 14px;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.25);
+  padding: 6px;
+  z-index: 40;
+  max-height: 320px;
+  overflow-y: auto;
+  display: none;
+  animation: dd-fade-in 0.12s ease-out;
+}
+@keyframes dd-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.dd.open > .dd-menu { display: block; }
+.dd-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: 9px;
+  color: rgba(255,255,255,0.80);
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-dm-sans);
+  transition: all 0.1s;
+}
+.dd-menu button:hover {
+  background: rgba(134,96,239,0.18);
+  color: #fff;
+}
+.dd-menu button.selected {
+  background: linear-gradient(90deg, rgba(134,96,239,0.28), rgba(238,92,208,0.14));
+  color: #fff;
+  font-weight: 600;
+}
+.dd-menu button .check {
+  margin-left: auto;
+  opacity: 0;
+  color: var(--purple);
+}
+.dd-menu button.selected .check { opacity: 1; }
+
+/* Multi-select: cada `.check` se muestra como checkbox visual */
+.dd[data-multi] .dd-menu button .check {
+  opacity: 1;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border-radius: 5px;
+  border: 1.5px solid rgba(255,255,255,0.28);
+  background: transparent;
+  color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+  transition: all 0.12s;
+}
+.dd[data-multi] .dd-menu button.selected .check {
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(134,96,239,0.35);
+}
+.dd[data-multi] .dd-menu button.selected {
+  background: transparent;
+  color: #fff;
+}
+.dd[data-multi] .dd-menu button.selected:hover { background: rgba(134,96,239,0.14); }
+
+/* Inputs date: mejorar look del calendar picker nativo */
+.portal-dark input[type="date"] {
+  color-scheme: dark;
+  cursor: pointer;
+}
+.portal-dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: brightness(0) saturate(100%) invert(56%) sepia(76%) saturate(2678%) hue-rotate(230deg) brightness(101%) contrast(93%);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  margin-left: 4px;
+  transition: all 0.15s;
+  opacity: 0.9;
+}
+.portal-dark input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  background: rgba(134,96,239,0.25);
+  opacity: 1;
+}

@@ -57,6 +57,38 @@ export interface ServiceConsumption {
   created_at: string
 }
 
+export type LeadStatus = 'partial' | 'converted' | 'abandoned'
+
+export interface Lead {
+  id: string
+  para_quien: 'para_mi' | 'otra_persona' | null
+  nombre: string
+  apellido: string
+  email: string
+  whatsapp: string | null
+  dni: string | null
+  fecha_nacimiento: string | null
+  ciudad: string | null
+  domicilio: string | null
+  medio_pago: 'tarjeta' | 'mp_balance' | null
+  mp_email: string | null
+  plan_id: string | null
+  status: LeadStatus
+  affiliate_id: string | null
+  // Trazabilidad de campaña (persistida por api/leads en la creación)
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  referer: string | null
+  // Trazabilidad técnica (persistida al finalizar stage 2 para el webhook MP)
+  fbp: string | null
+  fbc: string | null
+  ga_client_id: string | null
+  client_user_agent: string | null
+  client_ip: string | null
+  created_at: string
+}
+
 export interface CreateAffiliatePayload {
   nombre: string
   apellido: string
