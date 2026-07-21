@@ -78,7 +78,7 @@ export default function AfiliadosClient({ affiliates, plans, initialStatus, limi
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [statusFilter, setStatusFilter] = useState<AffiliateStatus | 'all'>(
-    (initialStatus as AffiliateStatus) ?? 'all'
+    (initialStatus as AffiliateStatus) ?? 'active'
   )
   const [planFilter, setPlanFilter] = useState<string>('all')
   const [search, setSearch] = useState('')
