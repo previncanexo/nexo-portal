@@ -37,11 +37,25 @@ export default async function AfiliadosPage({
     )
   }
 
+  // Traer trazabilidad de campaña desde los leads convertidos a estos affiliates
+  const affiliateIds = (data ?? []).map((a) => a.id)
+  const { data: leadsData } = affiliateIds.length > 0
+    ? await supabase
+        .from('leads')
+        .select('affiliate_id, utm_source, utm_medium, utm_campaign, referer, fbp, fbc, ga_client_id, client_user_agent, client_ip')
+        .in('affiliate_id', affiliateIds)
+    : { data: [] }
+
+  const trazMap = Object.fromEntries(
+    (leadsData ?? []).filter((l) => l.affiliate_id).map((l) => [l.affiliate_id!, l])
+  )
+
   return (
     <Suspense fallback={null}>
       <AfiliadosClient
         affiliates={(data ?? []) as Affiliate[]}
         plans={(plansData ?? []) as Plan[]}
+        trazMap={trazMap}
         initialStatus={params.status}
         limitReached={limitReached}
       />
