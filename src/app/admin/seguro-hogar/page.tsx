@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { parsePeriodParams } from '@/components/admin/PeriodFilter'
 import SeguroHogarClient, { type SolicitudRow } from './SeguroHogarClient'
@@ -30,5 +31,9 @@ export default async function SeguroHogarPage({
     )
   }
 
-  return <SeguroHogarClient rows={(data ?? []) as unknown as SolicitudRow[]} />
+  return (
+    <Suspense fallback={null}>
+      <SeguroHogarClient rows={(data ?? []) as unknown as SolicitudRow[]} />
+    </Suspense>
+  )
 }

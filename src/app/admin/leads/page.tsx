@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { parsePeriodParams } from '@/components/admin/PeriodFilter'
 import LeadsClient, { type UnifiedLead } from './LeadsClient'
@@ -129,5 +130,9 @@ export default async function LeadsPage({
     })),
   ].sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
 
-  return <LeadsClient rows={rows} />
+  return (
+    <Suspense fallback={null}>
+      <LeadsClient rows={rows} />
+    </Suspense>
+  )
 }
