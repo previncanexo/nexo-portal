@@ -40,7 +40,7 @@ export default function AdminNav() {
       <div className="pointer-events-auto w-full flex flex-col">
         {/* Pill nav — grid 3 columnas: brand | links centrados | logout */}
         <nav
-          className="w-full items-center"
+          className="admin-nav-pill w-full items-center"
           style={{
             display: 'grid',
             gridTemplateColumns: 'auto 1fr auto',

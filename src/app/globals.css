@@ -153,20 +153,30 @@
 /* Fuerza DM Sans para TODO el admin (portal-dark). Piso el @layer base
    de Tailwind que setea DM Serif Display para h1/h2/h3. Los form
    controls (input, button, textarea, select) NO heredan font-family
-   por default en algunos navegadores, hay que forzarles explícitamente. */
+   por default en algunos navegadores. Uso !important para ganarle a
+   cualquier reset/utility de Tailwind. */
 .portal-dark,
 .portal-dark *,
+.portal-dark a,
 .portal-dark button,
 .portal-dark input,
 .portal-dark select,
 .portal-dark textarea {
-  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
-  font-style: normal;
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif !important;
+  font-style: normal !important;
 }
 .portal-dark input::placeholder,
 .portal-dark textarea::placeholder {
-  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
-  font-style: normal;
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif !important;
+  font-style: normal !important;
+}
+
+/* AdminNav está fixed pero es hijo de .portal-dark en el DOM. Forzar
+   por si algún reset de Tailwind está pisando. */
+.admin-nav-pill,
+.admin-nav-pill * {
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif !important;
+  font-style: normal !important;
 }
 .section-heading p {
   color: rgba(255,255,255,0.55);
