@@ -75,13 +75,12 @@ function bucketize(
 
 function periodLabel(preset: string): string {
   const map: Record<string, string> = {
-    today: 'Hoy',
     '7d': 'Últimos 7 días',
     '15d': 'Últimos 15 días',
     '1m': 'Último mes',
     '6m': 'Últimos 6 meses',
     '1y': 'Último año',
-    custom: 'Rango personalizado',
+    custom: '',
   }
   return map[preset] ?? preset
 }
@@ -162,7 +161,7 @@ export default async function AdminDashboardPage({
     <div className="max-w-7xl mx-auto px-4 sm:px-6" style={{ fontFamily: 'var(--font-dm-sans)' }}>
       <div className="section-heading">
         <h1>Dashboard</h1>
-        <p>Resumen general de afiliados, ingresos y leads del periodo seleccionado ({periodLabel(preset)}).</p>
+        <p>Resumen general de afiliados, ingresos y leads del periodo seleccionado{periodLabel(preset) ? ` (${periodLabel(preset)})` : ''}.</p>
       </div>
 
       <Suspense fallback={<div style={{ height: 48 }} />}>

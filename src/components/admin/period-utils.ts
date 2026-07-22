@@ -4,10 +4,9 @@
  * durante la query.
  */
 
-export type Preset = 'today' | '7d' | '15d' | '1m' | '6m' | '1y' | 'custom'
+export type Preset = '7d' | '15d' | '1m' | '6m' | '1y' | 'custom'
 
 export const PRESETS: { value: Preset; label: string; days: number }[] = [
-  { value: 'today', label: 'Hoy',      days: 0 },
   { value: '7d',    label: '7 días',   days: 7 },
   { value: '15d',   label: '15 días',  days: 15 },
   { value: '1m',    label: '1 mes',    days: 30 },

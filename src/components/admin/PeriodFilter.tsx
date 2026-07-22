@@ -22,7 +22,6 @@ function isoDay(date: Date): string {
 function presetToRange(preset: Preset): { from: string; to: string } {
   const today = new Date()
   const to = isoDay(today)
-  if (preset === 'today') return { from: to, to }
   const days = PRESETS.find((p) => p.value === preset)?.days ?? 180
   const fromDate = new Date(today.getTime() - days * 24 * 60 * 60 * 1000)
   return { from: isoDay(fromDate), to }
