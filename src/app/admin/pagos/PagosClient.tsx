@@ -220,6 +220,7 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
               )}
               {filtered.map((p) => {
                 const chip = STATUS_CHIP[p.mp_status] ?? { label: p.mp_status, className: 'chip' }
+                const isRefund = p.type === 'refund' || p.amount < 0
                 return (
                   <tr key={p.id} style={{ cursor: 'pointer' }} onClick={() => setDetail(p)}>
                     <td style={{ color: 'rgba(255,255,255,0.65)', whiteSpace: 'nowrap' }}>
@@ -239,8 +240,19 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
                         <span style={{ color: 'rgba(255,255,255,0.4)' }}>—</span>
                       )}
                     </td>
-                    <td style={{ fontWeight: 700, color: '#fff', whiteSpace: 'nowrap' }}>
-                      {formatAmount(p.amount, p.currency)}
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <span style={{ fontWeight: 700, color: isRefund ? '#f87171' : '#fff' }}>
+                        {isRefund && '− '}{formatAmount(Math.abs(p.amount), p.currency)}
+                      </span>
+                      {isRefund && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 8, padding: '3px 8px', borderRadius: 9999, background: 'rgba(248,113,113,0.15)', color: '#f87171', border: '1px solid rgba(248,113,113,0.30)', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="1 4 1 10 7 10" />
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                          </svg>
+                          Reembolso
+                        </span>
+                      )}
                     </td>
                     <td>
                       <span className={chip.className}>{chip.label}</span>
@@ -283,6 +295,7 @@ function PagoDetailModal({ pago: p, onClose }: { pago: PaymentRow; onClose: () =
 
   const chip = STATUS_CHIP[p.mp_status] ?? { label: p.mp_status, className: 'chip' }
   const af = p.affiliate
+  const isRefund = p.type === 'refund' || p.amount < 0
 
   return (
     <div
@@ -298,16 +311,31 @@ function PagoDetailModal({ pago: p, onClose }: { pago: PaymentRow; onClose: () =
 
         <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', maxHeight: '85vh' }}>
           {/* Aside pago */}
-          <aside style={{ background: 'linear-gradient(160deg, rgba(134,96,239,0.22) 0%, rgba(238,92,208,0.10) 60%, rgba(20,10,40,0.4) 100%)', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: '1px solid rgba(255,255,255,0.08)', overflowY: 'auto' }}>
-            <div style={{ width: 72, height: 72, borderRadius: 20, background: 'linear-gradient(135deg, var(--purple), var(--pink))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 8px 32px rgba(134,96,239,0.45)' }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="6" width="20" height="12" rx="2" ry="2" />
-                <line x1="2" y1="10" x2="22" y2="10" />
-              </svg>
+          <aside style={{ background: isRefund
+              ? 'linear-gradient(160deg, rgba(248,113,113,0.22) 0%, rgba(238,92,208,0.10) 60%, rgba(20,10,40,0.4) 100%)'
+              : 'linear-gradient(160deg, rgba(134,96,239,0.22) 0%, rgba(238,92,208,0.10) 60%, rgba(20,10,40,0.4) 100%)',
+            padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: '1px solid rgba(255,255,255,0.08)', overflowY: 'auto' }}>
+            <div style={{ width: 72, height: 72, borderRadius: 20, background: isRefund
+                ? 'linear-gradient(135deg, #f87171, #ee5cd0)'
+                : 'linear-gradient(135deg, var(--purple), var(--pink))',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: isRefund ? '0 8px 32px rgba(248,113,113,0.45)' : '0 8px 32px rgba(134,96,239,0.45)' }}>
+              {isRefund ? (
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="1 4 1 10 7 10" />
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                </svg>
+              ) : (
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="6" width="20" height="12" rx="2" ry="2" />
+                  <line x1="2" y1="10" x2="22" y2="10" />
+                </svg>
+              )}
             </div>
             <div>
-              <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 6 }}>Pago</p>
-              <p style={{ fontSize: 30, fontWeight: 700, color: '#fff', lineHeight: 1.1, marginBottom: 6 }}>{formatAmount(p.amount, p.currency)}</p>
+              <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 6 }}>{isRefund ? 'Reembolso' : 'Pago'}</p>
+              <p style={{ fontSize: 30, fontWeight: 700, color: isRefund ? '#f87171' : '#fff', lineHeight: 1.1, marginBottom: 6 }}>
+                {isRefund && '− '}{formatAmount(Math.abs(p.amount), p.currency)}
+              </p>
               <p style={{ fontFamily: 'monospace', color: '#a08af2', fontWeight: 700, fontSize: 13, marginBottom: 14 }}>{p.id.slice(0, 8)}</p>
               <span className={chip.className}>{chip.label}</span>
             </div>
