@@ -249,6 +249,7 @@ function LeadDetailModal({ lead: l, onClose }: { lead: UnifiedLead; onClose: () 
 
   return createPortal(
     <div
+      className="portal-dark"
       style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
