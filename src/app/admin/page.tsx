@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
-import PeriodFilter, { parsePeriodParams } from '@/components/admin/PeriodFilter'
+import PeriodFilter from '@/components/admin/PeriodFilter'
+import { parsePeriodParams } from '@/components/admin/period-utils'
 import BarLineChart from '@/components/admin/BarLineChart'
 
 export const dynamic = 'force-dynamic'

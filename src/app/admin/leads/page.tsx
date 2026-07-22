@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { parsePeriodParams } from '@/components/admin/PeriodFilter'
+import { parsePeriodParams } from '@/components/admin/period-utils'
 import LeadsClient, { type UnifiedLead } from './LeadsClient'
 
 export const dynamic = 'force-dynamic'
