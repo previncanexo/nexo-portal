@@ -41,7 +41,7 @@
   }
   html { font-size: 16px; }
   body {
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
     background: #0D0520;
     color: #fff;
     overflow-x: hidden;

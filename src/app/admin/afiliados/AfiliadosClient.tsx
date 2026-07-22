@@ -531,10 +531,6 @@ function DetailModal({
             )}
 
             <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', paddingTop: 20, paddingBottom: 8, borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 'auto' }}>
-              <button onClick={onDelete} className="btn-ghost-admin" style={{ background: 'rgba(220,38,38,0.10)', border: '1px solid rgba(220,38,38,0.30)', color: '#f87171' }}>
-                Eliminar
-              </button>
-              <button onClick={onClose} className="btn-ghost-admin">Cerrar</button>
               <Link href={`/admin/afiliados/${a.id}`} className="btn-primary-admin" style={{ padding: '10px 24px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
                 Ver ficha completa →
               </Link>
