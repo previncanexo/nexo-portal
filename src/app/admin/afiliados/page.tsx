@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Affiliate, Plan } from '@/lib/types'
-import { parsePeriodParams } from '@/components/admin/PeriodFilter'
+import { parsePeriodParams } from '@/components/admin/period-utils'
 import AfiliadosClient from './AfiliadosClient'
 
 export const dynamic = 'force-dynamic'
