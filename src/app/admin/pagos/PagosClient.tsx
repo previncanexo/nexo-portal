@@ -59,14 +59,52 @@ function initials(nombre: string, apellido: string): string {
   return ((nombre[0] || '') + (apellido[0] || '')).toUpperCase()
 }
 
+/** Conciliar: para cada refund (o payment con amount<0), busca y cancela
+ *  el payment approved más reciente con mismo afiliado y mismo monto
+ *  absoluto, anterior a la fecha del refund. Devuelve el Set de IDs
+ *  cancelados (incluye tanto el refund como su payment original). */
+function reconcileRefunds(payments: PaymentRow[]): Set<string> {
+  const cancelled = new Set<string>()
+  const refunds = payments.filter((p) => p.type === 'refund' || p.amount < 0)
+
+  for (const refund of refunds) {
+    const targetAmount = Math.abs(refund.amount)
+    const affId = refund.affiliate?.id
+    if (!affId) continue
+    const refundDate = new Date(refund.paid_at ?? refund.created_at).getTime()
+    const candidates = payments
+      .filter((p) =>
+        p.id !== refund.id &&
+        !cancelled.has(p.id) &&
+        p.mp_status === 'approved' &&
+        p.amount > 0 &&
+        p.affiliate?.id === affId &&
+        Math.abs(p.amount) === targetAmount &&
+        new Date(p.paid_at ?? p.created_at).getTime() <= refundDate
+      )
+      .sort((a, b) => new Date(b.paid_at ?? b.created_at).getTime() - new Date(a.paid_at ?? a.created_at).getTime())
+
+    if (candidates.length > 0) {
+      cancelled.add(candidates[0].id)
+      cancelled.add(refund.id)
+    }
+  }
+  return cancelled
+}
+
 export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string[]>([])
+  const [showRefunded, setShowRefunded] = useState(false)
   const [detail, setDetail] = useState<PaymentRow | null>(null)
+
+  const cancelledIds = useMemo(() => reconcileRefunds(payments), [payments])
+  const cancelledPairs = cancelledIds.size / 2
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
     return payments.filter((p) => {
+      if (!showRefunded && cancelledIds.has(p.id)) return false
       if (statusFilter.length > 0 && !statusFilter.includes(p.mp_status)) return false
       if (q) {
         const haystack = [
@@ -79,13 +117,13 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
       }
       return true
     })
-  }, [payments, search, statusFilter])
+  }, [payments, search, statusFilter, showRefunded, cancelledIds])
 
   const totalApproved = useMemo(
-    () => filtered.filter((p) => p.mp_status === 'approved').reduce((s, p) => s + p.amount, 0),
+    () => filtered.filter((p) => p.mp_status === 'approved' && p.amount > 0).reduce((s, p) => s + p.amount, 0),
     [filtered]
   )
-  const countApproved = filtered.filter((p) => p.mp_status === 'approved').length
+  const countApproved = filtered.filter((p) => p.mp_status === 'approved' && p.amount > 0).length
 
   function exportCSV() {
     const headers = ['Fecha', 'Afiliado', 'N° Afiliado', 'Monto', 'Moneda', 'Estado', 'ID MP']
@@ -116,7 +154,23 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6" style={{ fontFamily: 'var(--font-dm-sans)' }}>
       <div className="section-heading">
         <h1>Pagos</h1>
-        <p>Historial de cobros de MercadoPago. Filtrá por periodo o estado para conciliar.</p>
+        <p>
+          Historial de cobros de MercadoPago (ya conciliado — payments cancelados por reembolso se ocultan).
+          {cancelledPairs > 0 && (
+            <>
+              {' '}
+              <button
+                type="button"
+                onClick={() => setShowRefunded((s) => !s)}
+                style={{ background: 'transparent', border: 'none', color: '#a08af2', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: 14 }}
+              >
+                {showRefunded
+                  ? `Ocultar ${cancelledPairs} conciliado${cancelledPairs > 1 ? 's' : ''}`
+                  : `Ver ${cancelledPairs} conciliado${cancelledPairs > 1 ? 's' : ''}`}
+              </button>
+            </>
+          )}
+        </p>
       </div>
 
       <PeriodFilter defaultPreset="6m" />
