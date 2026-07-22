@@ -63,14 +63,28 @@ function exportCSV(list: Affiliate[]) {
   URL.revokeObjectURL(url)
 }
 
+interface Traz {
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  referer: string | null
+  fbp: string | null
+  fbc: string | null
+  ga_client_id: string | null
+  client_user_agent: string | null
+  client_ip: string | null
+}
+
 export default function AfiliadosClient({
   affiliates,
   plans,
+  trazMap,
   initialStatus,
   limitReached,
 }: {
   affiliates: Affiliate[]
   plans: Plan[]
+  trazMap: Record<string, Traz>
   initialStatus?: string
   limitReached?: boolean
 }) {
@@ -338,6 +352,7 @@ export default function AfiliadosClient({
         <DetailModal
           affiliate={detailAffiliate}
           plans={plans}
+          traz={trazMap[detailAffiliate.id] ?? null}
           onClose={() => setDetailAffiliate(null)}
           onDelete={() => { setDeleteTarget(detailAffiliate); setDetailAffiliate(null) }}
         />
@@ -390,11 +405,13 @@ export default function AfiliadosClient({
 function DetailModal({
   affiliate: a,
   plans,
+  traz,
   onClose,
   onDelete,
 }: {
   affiliate: Affiliate
   plans: Plan[]
+  traz: Traz | null
   onClose: () => void
   onDelete: () => void
 }) {
@@ -412,14 +429,14 @@ function DetailModal({
       style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ maxWidth: 960, width: '100%', maxHeight: '92vh', overflow: 'hidden', padding: 0, background: 'rgba(20,10,40,0.97)', borderRadius: 24, position: 'relative', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+      <div style={{ maxWidth: 960, width: '100%', maxHeight: '85vh', overflow: 'hidden', padding: 0, background: 'rgba(20,10,40,0.97)', borderRadius: 24, position: 'relative', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
         <button
           onClick={onClose}
           aria-label="Cerrar"
           style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)', width: 34, height: 34, borderRadius: 9999, cursor: 'pointer', fontSize: 18, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}
         >×</button>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', height: '92vh', maxHeight: '92vh' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', maxHeight: '85vh' }}>
           {/* Aside identidad */}
           <aside style={{ background: 'linear-gradient(160deg, rgba(134,96,239,0.20) 0%, rgba(238,92,208,0.10) 60%, rgba(20,10,40,0.4) 100%)', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: '1px solid rgba(255,255,255,0.08)', overflowY: 'auto' }}>
             <div style={{ width: 72, height: 72, borderRadius: 20, background: 'linear-gradient(135deg, var(--purple), var(--pink))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 28, fontWeight: 700, boxShadow: '0 8px 32px rgba(134,96,239,0.45)' }}>
@@ -468,6 +485,48 @@ function DetailModal({
                 {a.mp_subscription_id && <Field label="Suscripción MP" value={a.mp_subscription_id} />}
               </div>
             </div>
+
+            {traz && (traz.utm_source || traz.utm_campaign || traz.referer) && (
+              <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 3v18h18" /><path d="M7 12l3-3 4 4 5-5" />
+                  </svg>
+                  <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Trazabilidad de campaña</p>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
+                  <Field label="Origen (utm_source)" value={traz.utm_source} />
+                  <Field label="Medio (utm_medium)" value={traz.utm_medium} />
+                  <Field label="Campaña (utm_campaign)" value={traz.utm_campaign} />
+                  <Field label="Referer" value={traz.referer} />
+                </div>
+              </div>
+            )}
+
+            {traz && (traz.fbp || traz.fbc || traz.ga_client_id || traz.client_ip || traz.client_user_agent) && (
+              <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+                  </svg>
+                  <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Trazabilidad técnica</p>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
+                    <Field label="IP cliente" value={traz.client_ip} />
+                    <Field label="GA client_id" value={traz.ga_client_id} />
+                    <Field label="Facebook fbp" value={traz.fbp} />
+                    <Field label="Facebook fbc" value={traz.fbc} />
+                  </div>
+                  {traz.client_user_agent && (
+                    <div style={{ marginTop: 14 }}>
+                      <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>User Agent</p>
+                      <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{traz.client_user_agent}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', paddingTop: 20, paddingBottom: 8, borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 'auto' }}>
               <button onClick={onDelete} className="btn-ghost-admin" style={{ background: 'rgba(220,38,38,0.10)', border: '1px solid rgba(220,38,38,0.30)', color: '#f87171' }}>
