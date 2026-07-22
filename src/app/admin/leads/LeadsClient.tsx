@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import PeriodFilter from '@/components/admin/PeriodFilter'
 import CustomDropdown from '@/components/admin/CustomDropdown'
@@ -246,7 +247,7 @@ function LeadDetailModal({ lead: l, onClose }: { lead: UnifiedLead; onClose: () 
   const hasCampaña = l.utm_source || l.utm_medium || l.utm_campaign
   const hasTecnica = l.fbp || l.fbc || l.ga_client_id || l.client_ip || l.client_user_agent
 
-  return (
+  return createPortal(
     <div
       style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
@@ -360,7 +361,8 @@ function LeadDetailModal({ lead: l, onClose }: { lead: UnifiedLead; onClose: () 
           </section>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

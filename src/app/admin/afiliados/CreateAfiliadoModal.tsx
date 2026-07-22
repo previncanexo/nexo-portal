@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { CreateAffiliatePayload, CreateAffiliateResponse, Plan } from '@/lib/types'
 
 interface Props {
@@ -130,7 +131,7 @@ export default function CreateAfiliadoModal({ plans, onClose, onCreated }: Props
     }
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
@@ -404,6 +405,7 @@ export default function CreateAfiliadoModal({ plans, onClose, onCreated }: Props
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

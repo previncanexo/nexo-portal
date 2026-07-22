@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { formatDateAR } from '@/lib/dateUtils'
 import PeriodFilter from '@/components/admin/PeriodFilter'
@@ -346,7 +347,7 @@ function PagoDetailModal({ pago: p, onClose }: { pago: PaymentRow; onClose: () =
   const af = p.affiliate
   const isRefund = p.type === 'refund' || p.amount < 0
 
-  return (
+  return createPortal(
     <div
       style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
@@ -456,7 +457,8 @@ function PagoDetailModal({ pago: p, onClose }: { pago: PaymentRow; onClose: () =
           </section>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

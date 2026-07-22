@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { deleteAffiliate } from './actions'
 
@@ -31,7 +32,7 @@ export default function DeleteAfiliadoButton({ affiliateId, nombre }: { affiliat
         Eliminar afiliado
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
@@ -73,7 +74,8 @@ export default function DeleteAfiliadoButton({ affiliateId, nombre }: { affiliat
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

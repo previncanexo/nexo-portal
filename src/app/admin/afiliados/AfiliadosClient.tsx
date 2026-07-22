@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Affiliate, AffiliateStatus, Plan } from '@/lib/types'
@@ -359,7 +360,7 @@ export default function AfiliadosClient({
       )}
 
       {/* Modal Eliminar */}
-      {deleteTarget && (
+      {deleteTarget && createPortal(
         <div
           style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
           onClick={(e) => { if (e.target === e.currentTarget && !isPendingDelete) setDeleteTarget(null) }}
@@ -394,7 +395,8 @@ export default function AfiliadosClient({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
@@ -424,7 +426,7 @@ function DetailModal({
   const chip = STATUS_CHIP[a.status] ?? { label: a.status, className: 'chip' }
   const planName = a.plan_id ? plans.find((p) => p.id === a.plan_id)?.name ?? '—' : '—'
 
-  return (
+  return createPortal(
     <div
       style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
@@ -540,7 +542,8 @@ function DetailModal({
           </section>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
