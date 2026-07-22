@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { parsePeriodParams } from '@/components/admin/PeriodFilter'
 import PagosClient from './PagosClient'
@@ -41,5 +42,9 @@ export default async function PagosPage({
     return p
   })
 
-  return <PagosClient payments={payments as never} />
+  return (
+    <Suspense fallback={null}>
+      <PagosClient payments={payments as never} />
+    </Suspense>
+  )
 }

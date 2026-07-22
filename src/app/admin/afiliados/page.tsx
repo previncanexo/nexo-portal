@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Affiliate, Plan } from '@/lib/types'
 import { parsePeriodParams } from '@/components/admin/PeriodFilter'
@@ -37,11 +38,13 @@ export default async function AfiliadosPage({
   }
 
   return (
-    <AfiliadosClient
-      affiliates={(data ?? []) as Affiliate[]}
-      plans={(plansData ?? []) as Plan[]}
-      initialStatus={params.status}
-      limitReached={limitReached}
-    />
+    <Suspense fallback={null}>
+      <AfiliadosClient
+        affiliates={(data ?? []) as Affiliate[]}
+        plans={(plansData ?? []) as Plan[]}
+        initialStatus={params.status}
+        limitReached={limitReached}
+      />
+    </Suspense>
   )
 }
