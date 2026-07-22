@@ -240,22 +240,21 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
                         <span style={{ color: 'rgba(255,255,255,0.4)' }}>—</span>
                       )}
                     </td>
-                    <td style={{ whiteSpace: 'nowrap' }}>
-                      <span style={{ fontWeight: 700, color: isRefund ? '#f87171' : '#fff' }}>
-                        {isRefund && '− '}{formatAmount(Math.abs(p.amount), p.currency)}
-                      </span>
-                      {isRefund && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 8, padding: '3px 8px', borderRadius: 9999, background: 'rgba(248,113,113,0.15)', color: '#f87171', border: '1px solid rgba(248,113,113,0.30)', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <td style={{ fontWeight: 700, whiteSpace: 'nowrap', color: isRefund ? '#f87171' : '#fff' }}>
+                      {isRefund && '− '}{formatAmount(Math.abs(p.amount), p.currency)}
+                    </td>
+                    <td>
+                      {isRefund ? (
+                        <span className="chip" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#f87171', background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.30)' }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="1 4 1 10 7 10" />
                             <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
                           </svg>
                           Reembolso
                         </span>
+                      ) : (
+                        <span className={chip.className}>{chip.label}</span>
                       )}
-                    </td>
-                    <td>
-                      <span className={chip.className}>{chip.label}</span>
                     </td>
                     <td style={{ fontSize: 12, fontFamily: 'monospace', color: 'rgba(255,255,255,0.55)' }}>
                       {p.mp_payment_id ?? '—'}
