@@ -245,11 +245,7 @@ export default function PagosClient({ payments }: { payments: PaymentRow[] }) {
                     </td>
                     <td>
                       {isRefund ? (
-                        <span className="chip" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#f87171', background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.30)' }}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="1 4 1 10 7 10" />
-                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-                          </svg>
+                        <span className="chip" style={{ color: '#f87171', background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.30)' }}>
                           Reembolso
                         </span>
                       ) : (
