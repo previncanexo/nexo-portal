@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import PeriodFilter, { parsePeriodParams } from '@/components/admin/PeriodFilter'
 import BarLineChart from '@/components/admin/BarLineChart'
@@ -125,7 +126,7 @@ export default async function AdminDashboardPage({
     supabase.from('affiliates').select('created_at, status').gte('created_at', fromIso).lte('created_at', toIso),
     supabase.from('payments').select('amount, paid_at').eq('mp_status', 'approved').gte('paid_at', fromIso).lte('paid_at', toIso),
     supabase.from('payments').select('amount, paid_at').eq('mp_status', 'approved').gte('paid_at', prevFromIso).lte('paid_at', prevToIso),
-    supabase.from('affiliates').select('updated_at, status').in('status', ['suspended', 'cancelled']).gte('updated_at', fromIso).lte('updated_at', toIso),
+    supabase.from('affiliates').select('created_at, status').in('status', ['suspended', 'cancelled']).gte('created_at', fromIso).lte('created_at', toIso),
     supabase.from('leads').select('created_at').in('status', ['partial', 'abandoned']).gte('created_at', fromIso).lte('created_at', toIso),
   ])
 
@@ -148,7 +149,7 @@ export default async function AdminDashboardPage({
     from, to, 'sum'
   )
   const caidasBuckets = bucketize(
-    (caidasByRangeRes.data ?? []).map((c) => ({ date: c.updated_at ?? '' })),
+    (caidasByRangeRes.data ?? []).map((c) => ({ date: c.created_at ?? '' })),
     from, to, 'count'
   )
   const leadsBuckets = bucketize(
@@ -163,7 +164,9 @@ export default async function AdminDashboardPage({
         <p>Resumen general de afiliados, ingresos y leads del periodo seleccionado ({periodLabel(preset)}).</p>
       </div>
 
-      <PeriodFilter defaultPreset="6m" />
+      <Suspense fallback={<div style={{ height: 48 }} />}>
+        <PeriodFilter defaultPreset="6m" />
+      </Suspense>
 
       <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '20px 0' }} />
 
