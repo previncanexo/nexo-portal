@@ -17,14 +17,15 @@ export default async function PagosPage({
 
   const supabase = createAdminClient()
 
-  // Filtrar por paid_at (para pagos aprobados) o created_at (para no aprobados)
-  // Usamos or() para que ambos entren en el rango cuando corresponda.
+  // Filtrar por created_at (siempre existe). paid_at puede ser null en pagos
+  // pending/rejected, así que filtrar por él excluiría esos casos.
   const { data } = await supabase
     .from('payments')
     .select(
       '*, affiliate:affiliates(id, nombre, apellido, affiliate_number, email, whatsapp, plan_id, mp_subscription_id)'
     )
-    .or(`and(paid_at.gte.${fromIso},paid_at.lte.${toIso}),and(paid_at.is.null,created_at.gte.${fromIso},created_at.lte.${toIso})`)
+    .gte('created_at', fromIso)
+    .lte('created_at', toIso)
     .order('created_at', { ascending: false })
     .limit(500)
 
