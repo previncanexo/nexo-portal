@@ -131,19 +131,31 @@
 .portal-dark *::-webkit-scrollbar-corner { background: transparent; }
 
 /* Header de sección del admin (título + descripción + línea divisora) */
+.portal-dark .section-heading,
 .section-heading {
   margin-top: 40px;
   margin-bottom: 20px;
   padding-bottom: 20px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
-  font-family: var(--font-dm-sans);
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
 }
+/* Especificidad .portal-dark para ganarle al @layer base { h1,h2,h3 } de Tailwind */
+.portal-dark .section-heading h1,
 .section-heading h1 {
   font-size: 28px;
   font-weight: 700;
   color: #fff;
-  font-family: var(--font-dm-sans);
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  font-style: normal;
   margin-bottom: 6px;
+}
+
+/* Fuerza DM Sans para TODO el admin (portal-dark). Piso el @layer base
+   de Tailwind que setea DM Serif Display para h1/h2/h3. */
+.portal-dark,
+.portal-dark * {
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  font-style: normal;
 }
 .section-heading p {
   color: rgba(255,255,255,0.55);
