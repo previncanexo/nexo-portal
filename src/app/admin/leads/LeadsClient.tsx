@@ -375,7 +375,7 @@ function LeadDetailModal({ lead: l, onClose }: { lead: UnifiedLead; onClose: () 
 
             {hasTecnica && (
               <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <SectionTitle icon="monitor">Trazabilidad técnica</SectionTitle>
+                <SectionTitle icon="monitor">Datos de huella digital</SectionTitle>
                 <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
                     <Field label="IP cliente" value={l.client_ip} />
