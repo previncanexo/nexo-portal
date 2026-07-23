@@ -22,7 +22,12 @@ interface CreateLeadInput {
   utm_source?: string
   utm_medium?: string
   utm_campaign?: string
+  utm_term?: string
+  utm_content?: string
+  fbclid?: string
+  gclid?: string
   referer?: string
+  landing_url?: string
   /** ID compartido con el pixel para dedup CAPI ↔ pixel */
   event_id?: string
   /** URL donde ocurrió el evento (window.location.href del browser) */
@@ -43,7 +48,7 @@ export async function POST(req: Request) {
     return jsonWithCors({ success: false, error: 'Body inválido' }, { status: 400, origin })
   }
 
-  const { para_quien, nombre, apellido, email, whatsapp, utm_source, utm_medium, utm_campaign, referer, event_id, event_source_url } = body
+  const { para_quien, nombre, apellido, email, whatsapp, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url, event_id, event_source_url } = body
 
   // Validaciones de campos obligatorios
   if (!para_quien || !nombre || !apellido || !email || !whatsapp) {
@@ -101,7 +106,12 @@ export async function POST(req: Request) {
       utm_source: utm_source || null,
       utm_medium: utm_medium || null,
       utm_campaign: utm_campaign || null,
+      utm_term: utm_term || null,
+      utm_content: utm_content || null,
+      fbclid: fbclid || null,
+      gclid: gclid || null,
       referer: referer || null,
+      landing_url: landing_url || null,
     })
     .select('id')
     .single()

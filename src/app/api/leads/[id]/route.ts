@@ -32,6 +32,18 @@ interface FinalizeLeadInput {
   /** GA4 client_id parseado del cookie `_ga` en el browser — necesario para
    *  atribuir el Purchase server-side al mismo usuario en el webhook MP. */
   ga_client_id?: string
+  /** Atribución: repetidos aquí por si la sesión perdió el POST inicial y
+   *  los captura recién en el PATCH. El backend solo escribe si son truthy
+   *  para no pisar first-touch. */
+  utm_source?: string
+  utm_medium?: string
+  utm_campaign?: string
+  utm_term?: string
+  utm_content?: string
+  fbclid?: string
+  gclid?: string
+  referer?: string
+  landing_url?: string
 }
 
 export async function OPTIONS(req: Request) {
@@ -82,7 +94,7 @@ export async function PATCH(
     return jsonWithCors({ success: false, error: 'Body inválido' }, { status: 400, origin })
   }
 
-  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, plan_id, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id } = body
+  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, plan_id, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url } = body
 
   // Identificadores del browser para CAPI Purchase / GA4 purchase server-side
   // (en el webhook MP no podremos leerlos — se persisten en el affiliate).
@@ -214,6 +226,8 @@ export async function PATCH(
   const MP_PLAN_ID = process.env.MP_PLAN_ID || '2efbdb5cfbf34e77b3f117f8852fa7eb'
   const payerEmail = medio_pago === 'mp_balance' && mp_email ? mp_email.trim() : lead.email
 
+  // Paso donde estamos, para logging estructurado si algo falla y disparamos rollback
+  let failStep: 'checkout_url' | 'lead_data' | 'lead_converted' | 'email' | 'capi' = 'checkout_url'
   try {
     const checkoutUrlObj = new URL('https://www.mercadopago.com.ar/subscriptions/checkout')
     checkoutUrlObj.searchParams.set('preapproval_plan_id', MP_PLAN_ID)
@@ -227,36 +241,50 @@ export async function PATCH(
       .eq('id', affiliate.id)
     // mp_subscription_id se completa cuando llega el webhook subscription_preapproval:authorized
 
-    // 7. Marcar lead como converted, asociarlo al affiliate y guardar datos del paso 2
-    await supabase
-      .from('leads')
-      .update({
-        status: 'converted',
-        affiliate_id: affiliate.id,
-        dni: dni.trim(),
-        fecha_nacimiento,
-        ciudad,
-        domicilio,
-        medio_pago,
-        mp_email: mp_email?.trim() || null,
-        plan_id: plan?.id ?? null,
-        // IDs del browser para Meta CAPI / GA4 Purchase server-side (los lee el webhook MP)
-        fbp: fb.fbp ?? null,
-        fbc: fb.fbc ?? null,
-        ga_client_id: ga_client_id ?? null,
-        client_user_agent: clientUserAgent ?? null,
-        client_ip: clientIp ?? null,
-      })
-      .eq('id', leadId)
+    // Guardar datos del paso 2 en el lead SIN marcarlo converted todavía.
+    // Marcar converted es lo último — si algo posterior revienta y rollback
+    // borra el affiliate, la FK on-delete-set-null dejaba antes el lead
+    // huérfano (status=converted + affiliate_id=null), invisible en el panel.
+    failStep = 'lead_data'
+    // Atribución: solo se pisa lo previo si viene truthy en este PATCH
+    // (respeta first-touch cuando el POST inicial ya la persistió).
+    const leadUpdate: Record<string, unknown> = {
+      dni: dni.trim(),
+      fecha_nacimiento,
+      ciudad,
+      domicilio,
+      medio_pago,
+      mp_email: mp_email?.trim() || null,
+      plan_id: plan?.id ?? null,
+      // IDs del browser para Meta CAPI / GA4 Purchase server-side (los lee el webhook MP)
+      fbp: fb.fbp ?? null,
+      fbc: fb.fbc ?? null,
+      ga_client_id: ga_client_id ?? null,
+      client_user_agent: clientUserAgent ?? null,
+      client_ip: clientIp ?? null,
+    }
+    if (utm_source) leadUpdate.utm_source = utm_source
+    if (utm_medium) leadUpdate.utm_medium = utm_medium
+    if (utm_campaign) leadUpdate.utm_campaign = utm_campaign
+    if (utm_term) leadUpdate.utm_term = utm_term
+    if (utm_content) leadUpdate.utm_content = utm_content
+    if (fbclid) leadUpdate.fbclid = fbclid
+    if (gclid) leadUpdate.gclid = gclid
+    if (referer) leadUpdate.referer = referer
+    if (landing_url) leadUpdate.landing_url = landing_url
 
-    // 8. Email "completá tu pago" — fire-and-forget
+    await supabase.from('leads').update(leadUpdate).eq('id', leadId)
+
+    // Email "completá tu pago" — fire-and-forget
+    failStep = 'email'
     sendPendingConfirmationEmail({
       nombre: lead.nombre,
       email: lead.email,
       checkoutUrl,
     }).catch((err) => console.error('[api/leads] sendPendingConfirmationEmail:', err))
 
-    // 9. CAPI: CompleteRegistration + InitiateCheckout (fire-and-forget)
+    // CAPI: CompleteRegistration + InitiateCheckout (fire-and-forget)
+    failStep = 'capi'
     if (event_id_complete_registration || event_id_initiate_checkout) {
       const userData = {
         email: lead.email,
@@ -303,17 +331,40 @@ export async function PATCH(
       sendMetaCapiEvents(events).catch(() => {})
     }
 
+    // Recién ahora marcar el lead como converted y asociarlo al affiliate:
+    // todos los pasos que podían fallar ya pasaron.
+    failStep = 'lead_converted'
+    await supabase
+      .from('leads')
+      .update({ status: 'converted', affiliate_id: affiliate.id })
+      .eq('id', leadId)
+
     return jsonWithCors(
       { success: true, leadId, affiliateId: affiliate.id, checkoutUrl },
       { status: 200, origin }
     )
   } catch (err: unknown) {
     const e = err as { message?: string; cause?: unknown; apiResponse?: unknown }
-    console.error('[api/leads/finalize] MP error:', e?.message ?? err, JSON.stringify(e?.cause ?? e?.apiResponse ?? ''))
+    console.error('[api/leads/finalize] rollback triggered', JSON.stringify({
+      step: failStep,
+      leadId,
+      affiliateId: affiliate.id,
+      message: e?.message ?? String(err),
+      cause: e?.cause ?? e?.apiResponse ?? null,
+    }))
 
-    // Rollback: borrar el affiliate creado (el webhook todavía no se enteró de nada)
+    // Rollback en dos partes: borrar el affiliate y revertir el lead.
+    // La FK leads.affiliate_id tiene ON DELETE SET NULL, así que borrar
+    // el affiliate solo ya deja el lead con affiliate_id=null; pero si el
+    // status quedó tocado, además hay que devolverlo a 'partial' para que
+    // vuelva a aparecer en /admin/leads como incompleto y el usuario pueda
+    // reintentar el onboarding.
     try {
       await supabase.from('affiliates').delete().eq('id', affiliate.id)
+      await supabase
+        .from('leads')
+        .update({ status: 'partial', affiliate_id: null })
+        .eq('id', leadId)
     } catch (rollbackErr) {
       console.error('[api/leads/finalize] rollback error:', rollbackErr)
     }

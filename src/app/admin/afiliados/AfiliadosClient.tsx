@@ -35,19 +35,31 @@ function initials(nombre: string, apellido: string): string {
   return ((nombre[0] || '') + (apellido[0] || '')).toUpperCase()
 }
 
-function exportCSV(list: Affiliate[]) {
+function exportCSV(list: Affiliate[], trazMap: Record<string, Traz>, plans: Plan[]) {
+  const planName = (id: string | null) => id ? plans.find((p) => p.id === id)?.name ?? '' : ''
   const headers = [
     'N° Afiliado', 'Nombre', 'Apellido', 'DNI', 'Email',
-    'WhatsApp', 'Ciudad', 'Fecha nacimiento', 'Estado',
-    'Cobertura desde', 'Cobertura hasta', 'Fecha registro',
+    'WhatsApp', 'Ciudad', 'Domicilio', 'Fecha nacimiento', 'Plan', 'Estado',
+    'Cobertura desde', 'Cobertura hasta', 'Fecha registro', 'Suscripción MP',
+    'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+    'fbclid', 'gclid', 'referer', 'landing_url',
+    'fbp', 'fbc', 'ga_client_id', 'client_ip', 'client_user_agent',
   ]
-  const rows = list.map((a) => [
-    a.affiliate_number, a.nombre, a.apellido, a.dni, a.email,
-    a.whatsapp ?? '', a.ciudad ?? '', a.fecha_nacimiento ?? '',
-    STATUS_CHIP[a.status]?.label ?? a.status,
-    a.cobertura_desde ?? '', a.cobertura_hasta ?? '',
-    a.created_at ? new Date(a.created_at).toLocaleDateString('es-AR') : '',
-  ])
+  const rows = list.map((a) => {
+    const t = trazMap[a.id] ?? null
+    return [
+      a.affiliate_number, a.nombre, a.apellido, a.dni, a.email,
+      a.whatsapp ?? '', a.ciudad ?? '', a.domicilio ?? '', a.fecha_nacimiento ?? '',
+      planName(a.plan_id),
+      STATUS_CHIP[a.status]?.label ?? a.status,
+      a.cobertura_desde ?? '', a.cobertura_hasta ?? '',
+      a.created_at ? new Date(a.created_at).toLocaleDateString('es-AR') : '',
+      a.mp_subscription_id ?? '',
+      t?.utm_source ?? '', t?.utm_medium ?? '', t?.utm_campaign ?? '', t?.utm_term ?? '', t?.utm_content ?? '',
+      t?.fbclid ?? '', t?.gclid ?? '', t?.referer ?? '', t?.landing_url ?? '',
+      t?.fbp ?? '', t?.fbc ?? '', t?.ga_client_id ?? '', t?.client_ip ?? '', t?.client_user_agent ?? '',
+    ]
+  })
 
   const csv = [headers, ...rows]
     .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
@@ -68,7 +80,12 @@ interface Traz {
   utm_source: string | null
   utm_medium: string | null
   utm_campaign: string | null
+  utm_term: string | null
+  utm_content: string | null
+  fbclid: string | null
+  gclid: string | null
   referer: string | null
+  landing_url: string | null
   fbp: string | null
   fbc: string | null
   ga_client_id: string | null
@@ -214,7 +231,7 @@ export default function AfiliadosClient({
           <button
             className="btn-ghost-admin"
             style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}
-            onClick={() => exportCSV(filtered)}
+            onClick={() => exportCSV(filtered, trazMap, plans)}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -490,7 +507,7 @@ function DetailModal({
               </div>
             </div>
 
-            {traz && (traz.utm_source || traz.utm_campaign || traz.referer) && (
+            {traz && (traz.utm_source || traz.utm_medium || traz.utm_campaign || traz.utm_term || traz.utm_content || traz.fbclid || traz.gclid || traz.referer || traz.landing_url) && (
               <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -498,11 +515,23 @@ function DetailModal({
                   </svg>
                   <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Trazabilidad de campaña</p>
                 </div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
-                  <Field label="Origen (utm_source)" value={traz.utm_source} />
-                  <Field label="Medio (utm_medium)" value={traz.utm_medium} />
-                  <Field label="Campaña (utm_campaign)" value={traz.utm_campaign} />
-                  <Field label="Referer" value={traz.referer} />
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
+                    <Field label="Origen (utm_source)" value={traz.utm_source} />
+                    <Field label="Medio (utm_medium)" value={traz.utm_medium} />
+                    <Field label="Campaña (utm_campaign)" value={traz.utm_campaign} />
+                    <Field label="Término (utm_term)" value={traz.utm_term} />
+                    <Field label="Contenido (utm_content)" value={traz.utm_content} />
+                    <Field label="Facebook click ID (fbclid)" value={traz.fbclid} />
+                    <Field label="Google click ID (gclid)" value={traz.gclid} />
+                    <Field label="Referer" value={traz.referer} />
+                  </div>
+                  {traz.landing_url && (
+                    <div style={{ marginTop: 14 }}>
+                      <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Landing URL</p>
+                      <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{traz.landing_url}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

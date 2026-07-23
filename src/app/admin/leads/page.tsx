@@ -32,7 +32,7 @@ export default async function LeadsPage({
   const incompletos = supabase
     .from('leads')
     .select(
-      'id, status, para_quien, nombre, apellido, email, whatsapp, dni, fecha_nacimiento, ciudad, domicilio, medio_pago, mp_email, plan_id, affiliate_id, utm_source, utm_medium, utm_campaign, referer, fbp, fbc, ga_client_id, client_user_agent, client_ip, created_at'
+      'id, status, para_quien, nombre, apellido, email, whatsapp, dni, fecha_nacimiento, ciudad, domicilio, medio_pago, mp_email, plan_id, affiliate_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url, fbp, fbc, ga_client_id, client_user_agent, client_ip, created_at'
     )
     .in('status', ['partial', 'abandoned'])
     .gte('created_at', fromIso)
@@ -65,6 +65,19 @@ export default async function LeadsPage({
 
   const plansMap = new Map((plansData.data ?? []).map((p) => [p.id, p.name]))
 
+  // Traer trazabilidad de los leads convertidos a los affiliates 'pending'
+  // (los "completos"). Sin este join los "completos" aparecen sin atribución.
+  const completoIds = (comRes.data ?? []).map((a) => a.id)
+  const { data: completoLeads } = completoIds.length > 0
+    ? await supabase
+        .from('leads')
+        .select('affiliate_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url, fbp, fbc, ga_client_id, client_user_agent, client_ip, medio_pago, mp_email')
+        .in('affiliate_id', completoIds)
+    : { data: [] }
+  const trazByAff = new Map(
+    (completoLeads ?? []).filter((l) => l.affiliate_id).map((l) => [l.affiliate_id!, l])
+  )
+
   const rows: UnifiedLead[] = [
     ...(incRes.data ?? []).map((l): UnifiedLead => ({
       id: l.id,
@@ -90,44 +103,57 @@ export default async function LeadsPage({
       utm_source: l.utm_source,
       utm_medium: l.utm_medium,
       utm_campaign: l.utm_campaign,
+      utm_term: l.utm_term,
+      utm_content: l.utm_content,
+      fbclid: l.fbclid,
+      gclid: l.gclid,
       referer: l.referer,
+      landing_url: l.landing_url,
       fbp: l.fbp,
       fbc: l.fbc,
       ga_client_id: l.ga_client_id,
       client_user_agent: l.client_user_agent,
       client_ip: l.client_ip,
     })),
-    ...(comRes.data ?? []).map((a): UnifiedLead => ({
-      id: a.id,
-      tipo: 'affiliate',
-      status: 'pending',
-      estado: 'Completo',
-      estadoKey: 'completo',
-      fecha: a.created_at,
-      para_quien: null,
-      nombre: a.nombre,
-      apellido: a.apellido,
-      email: a.email,
-      whatsapp: a.whatsapp,
-      dni: a.dni,
-      fecha_nacimiento: a.fecha_nacimiento,
-      ciudad: a.ciudad,
-      domicilio: a.domicilio,
-      medio_pago: null,
-      mp_email: null,
-      plan_id: a.plan_id,
-      plan_name: a.plan_id ? plansMap.get(a.plan_id) ?? null : null,
-      affiliate_id: a.id,
-      utm_source: null,
-      utm_medium: null,
-      utm_campaign: null,
-      referer: null,
-      fbp: null,
-      fbc: null,
-      ga_client_id: null,
-      client_user_agent: null,
-      client_ip: null,
-    })),
+    ...(comRes.data ?? []).map((a): UnifiedLead => {
+      const t = trazByAff.get(a.id) ?? null
+      return {
+        id: a.id,
+        tipo: 'affiliate',
+        status: 'pending',
+        estado: 'Completo',
+        estadoKey: 'completo',
+        fecha: a.created_at,
+        para_quien: null,
+        nombre: a.nombre,
+        apellido: a.apellido,
+        email: a.email,
+        whatsapp: a.whatsapp,
+        dni: a.dni,
+        fecha_nacimiento: a.fecha_nacimiento,
+        ciudad: a.ciudad,
+        domicilio: a.domicilio,
+        medio_pago: t?.medio_pago ?? null,
+        mp_email: t?.mp_email ?? null,
+        plan_id: a.plan_id,
+        plan_name: a.plan_id ? plansMap.get(a.plan_id) ?? null : null,
+        affiliate_id: a.id,
+        utm_source: t?.utm_source ?? null,
+        utm_medium: t?.utm_medium ?? null,
+        utm_campaign: t?.utm_campaign ?? null,
+        utm_term: t?.utm_term ?? null,
+        utm_content: t?.utm_content ?? null,
+        fbclid: t?.fbclid ?? null,
+        gclid: t?.gclid ?? null,
+        referer: t?.referer ?? null,
+        landing_url: t?.landing_url ?? null,
+        fbp: t?.fbp ?? null,
+        fbc: t?.fbc ?? null,
+        ga_client_id: t?.ga_client_id ?? null,
+        client_user_agent: t?.client_user_agent ?? null,
+        client_ip: t?.client_ip ?? null,
+      }
+    }),
   ].sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
 
   return (
