@@ -527,8 +527,9 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
 
           {/* Aviso */}
           <p className="text-xs leading-relaxed rounded-xl px-3 py-2.5" style={{ color: 'rgba(255,255,255,0.60)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'var(--font-dm-sans)' }}>
-            Servicio adicional. Se cobra aparte de tu cobertura Previnca Nexo. El turno se reserva
-            en DOC24, donde elegís al profesional y la franja disponible.
+            Es un servicio adicional a tu cobertura Previnca Nexo y se contrata de manera
+            independiente. Reservá tu turno desde DOC24, donde podés elegir el profesional, el
+            día y el horario que mejor se adapten a vos.
           </p>
         </div>
 
@@ -579,6 +580,8 @@ function SeguroHogarModal({ service, onClose }: { service: ServiceItem; onClose:
         </div>
 
         <div className="px-6 py-5 max-h-[60vh] overflow-y-auto flex flex-col gap-4">
+          <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
+
           {SEGURO_PLANES.map((p) => (
             <div key={p.id} className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
               <div className="flex items-center justify-between mb-1">
@@ -756,7 +759,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       ? [{
           id: 'psicologia',
           title: 'Psicología On Demand',
-          subtitle: 'Sesiones con profesionales, a tu ritmo',
+          subtitle: 'Tu bienestar emocional, cuando lo necesitás.',
           badge: 'Pago aparte',
           badgeColor: '#0d9488',
           badgeBg: 'rgba(13,148,136,0.10)',
@@ -767,7 +770,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
           glowColor: 'rgba(13,148,136,0.16)',
           theme: TEAL,
           Icon: IconPsicologia,
-          description: 'Accedé a sesiones de psicología con profesionales, de forma simple y online. Es un servicio adicional, independiente de tu cobertura Previnca Nexo, que se abona por separado.',
+          description: 'Accedé a sesiones de psicología online con profesionales, de forma simple y cuando lo necesites. Es un beneficio adicional a tu plan Previnca Nexo, que podés contratar de manera independiente.',
           bullets: [
             'Sesiones con profesionales',
             'Reservás tu turno online',
@@ -779,7 +782,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       ? [{
           id: 'seguro-hogar',
           title: 'Seguros del Hogar On Demand',
-          subtitle: 'Cobertura para tu hogar, se contrata aparte',
+          subtitle: 'Protegé tu hogar cuando lo necesites.',
           badge: 'Pago aparte',
           badgeColor: '#0d9488',
           badgeBg: 'rgba(13,148,136,0.10)',
@@ -790,7 +793,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
           glowColor: 'rgba(13,148,136,0.16)',
           theme: TEAL,
           Icon: IconHogar,
-          description: 'Asegurá tu hogar con planes pensados para Rosario y la región. Es un producto adicional, independiente de tu cobertura Previnca Nexo, que se contrata y abona por separado.',
+          description: 'Contá con una cobertura para proteger tu hogar frente a imprevistos. Es un servicio adicional a tu cobertura Previnca Nexo, que podés contratar de manera independiente.',
           bullets: [
             'Incendio, Responsabilidad Civil y más',
             'Producto adicional, se contrata aparte',
