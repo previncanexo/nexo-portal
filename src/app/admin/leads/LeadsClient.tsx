@@ -281,11 +281,13 @@ function LeadDetailModal({ lead: l, onClose }: { lead: UnifiedLead; onClose: () 
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
   }, [onClose])
-
-  const hasCampaña = l.utm_source || l.utm_medium || l.utm_campaign || l.utm_term || l.utm_content || l.fbclid || l.gclid || l.referer || l.landing_url
-  const hasTecnica = l.fbp || l.fbc || l.ga_client_id || l.client_ip || l.client_user_agent
 
   return createPortal(
     <div
@@ -349,49 +351,41 @@ function LeadDetailModal({ lead: l, onClose }: { lead: UnifiedLead; onClose: () 
               </div>
             </div>
 
-            {hasCampaña && (
-              <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <SectionTitle icon="chart">Trazabilidad de campaña</SectionTitle>
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
-                    <Field label="Origen (utm_source)" value={l.utm_source} />
-                    <Field label="Medio (utm_medium)" value={l.utm_medium} />
-                    <Field label="Campaña (utm_campaign)" value={l.utm_campaign} />
-                    <Field label="Término (utm_term)" value={l.utm_term} />
-                    <Field label="Contenido (utm_content)" value={l.utm_content} />
-                    <Field label="Facebook click ID (fbclid)" value={l.fbclid} />
-                    <Field label="Google click ID (gclid)" value={l.gclid} />
-                    <Field label="Referer" value={l.referer} />
-                  </div>
-                  {l.landing_url && (
-                    <div style={{ marginTop: 14 }}>
-                      <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Landing URL</p>
-                      <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{l.landing_url}</p>
-                    </div>
-                  )}
+            <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <SectionTitle icon="chart">Datos de trazabilidad</SectionTitle>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
+                  <Field label="Origen (utm_source)" value={l.utm_source} />
+                  <Field label="Medio (utm_medium)" value={l.utm_medium} />
+                  <Field label="Campaña (utm_campaign)" value={l.utm_campaign} />
+                  <Field label="Término (utm_term)" value={l.utm_term} />
+                  <Field label="Contenido (utm_content)" value={l.utm_content} />
+                  <Field label="Facebook click ID (fbclid)" value={l.fbclid} />
+                  <Field label="Google click ID (gclid)" value={l.gclid} />
+                  <Field label="Referer" value={l.referer} />
+                </div>
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Landing URL</p>
+                  <p style={{ color: l.landing_url ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{l.landing_url || '—'}</p>
                 </div>
               </div>
-            )}
+            </div>
 
-            {hasTecnica && (
-              <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <SectionTitle icon="monitor">Datos de huella digital</SectionTitle>
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
-                    <Field label="IP cliente" value={l.client_ip} />
-                    <Field label="GA client_id" value={l.ga_client_id} />
-                    <Field label="Facebook fbp" value={l.fbp} />
-                    <Field label="Facebook fbc" value={l.fbc} />
-                  </div>
-                  {l.client_user_agent && (
-                    <div style={{ marginTop: 14 }}>
-                      <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>User Agent</p>
-                      <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{l.client_user_agent}</p>
-                    </div>
-                  )}
+            <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <SectionTitle icon="monitor">Datos de huella digital</SectionTitle>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
+                  <Field label="IP cliente" value={l.client_ip} />
+                  <Field label="GA client_id" value={l.ga_client_id} />
+                  <Field label="Facebook fbp" value={l.fbp} />
+                  <Field label="Facebook fbc" value={l.fbc} />
+                </div>
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>User Agent</p>
+                  <p style={{ color: l.client_user_agent ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{l.client_user_agent || '—'}</p>
                 </div>
               </div>
-            )}
+            </div>
 
             <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', paddingTop: 20, paddingBottom: 8, borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 'auto' }}>
               <button onClick={onClose} className="btn-ghost-admin">Cerrar</button>
