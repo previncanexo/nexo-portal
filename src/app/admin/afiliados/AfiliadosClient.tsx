@@ -91,6 +91,13 @@ interface Traz {
   ga_client_id: string | null
   client_user_agent: string | null
   client_ip: string | null
+  medio_pago: string | null
+  mp_email: string | null
+}
+
+const MEDIO_PAGO_LABEL: Record<string, string> = {
+  tarjeta: 'Tarjeta',
+  mp_balance: 'Saldo Mercado Pago',
 }
 
 export default function AfiliadosClient({
@@ -493,7 +500,7 @@ function DetailModal({
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
-                <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Datos personales</p>
+                <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Datos del onboarding</p>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px 24px' }}>
                 <Field label="Email" value={a.email} />
@@ -502,64 +509,69 @@ function DetailModal({
                 <Field label="Fecha nacimiento" value={a.fecha_nacimiento ? formatDate(a.fecha_nacimiento) : null} />
                 <Field label="Ciudad" value={a.ciudad} />
                 <Field label="Domicilio" value={a.domicilio} />
-                <Field label="Fecha de creación" value={formatDateTime(a.created_at)} />
-                {a.mp_subscription_id && <Field label="Suscripción MP" value={a.mp_subscription_id} />}
               </div>
             </div>
 
-            {traz && (traz.utm_source || traz.utm_medium || traz.utm_campaign || traz.utm_term || traz.utm_content || traz.fbclid || traz.gclid || traz.referer || traz.landing_url) && (
-              <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 3v18h18" /><path d="M7 12l3-3 4 4 5-5" />
-                  </svg>
-                  <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Trazabilidad de campaña</p>
-                </div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
-                    <Field label="Origen (utm_source)" value={traz.utm_source} />
-                    <Field label="Medio (utm_medium)" value={traz.utm_medium} />
-                    <Field label="Campaña (utm_campaign)" value={traz.utm_campaign} />
-                    <Field label="Término (utm_term)" value={traz.utm_term} />
-                    <Field label="Contenido (utm_content)" value={traz.utm_content} />
-                    <Field label="Facebook click ID (fbclid)" value={traz.fbclid} />
-                    <Field label="Google click ID (gclid)" value={traz.gclid} />
-                    <Field label="Referer" value={traz.referer} />
-                  </div>
-                  {traz.landing_url && (
-                    <div style={{ marginTop: 14 }}>
-                      <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Landing URL</p>
-                      <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{traz.landing_url}</p>
-                    </div>
-                  )}
-                </div>
+            <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                </svg>
+                <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Datos de Mercado Pago</p>
               </div>
-            )}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
+                <Field label="Suscripción MP" value={a.mp_subscription_id} />
+                <Field label="Medio de pago" value={traz?.medio_pago ? MEDIO_PAGO_LABEL[traz.medio_pago] ?? traz.medio_pago : null} />
+                <Field label="Email MP (si aplica)" value={traz?.mp_email ?? null} />
+                <Field label="Fecha de creación" value={formatDateTime(a.created_at)} />
+              </div>
+            </div>
 
-            {traz && (traz.fbp || traz.fbc || traz.ga_client_id || traz.client_ip || traz.client_user_agent) && (
-              <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
-                  </svg>
-                  <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Trazabilidad técnica</p>
+            <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 3v18h18" /><path d="M7 12l3-3 4 4 5-5" />
+                </svg>
+                <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Datos de trazabilidad</p>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
+                  <Field label="Origen (utm_source)" value={traz?.utm_source ?? null} />
+                  <Field label="Medio (utm_medium)" value={traz?.utm_medium ?? null} />
+                  <Field label="Campaña (utm_campaign)" value={traz?.utm_campaign ?? null} />
+                  <Field label="Término (utm_term)" value={traz?.utm_term ?? null} />
+                  <Field label="Contenido (utm_content)" value={traz?.utm_content ?? null} />
+                  <Field label="Facebook click ID (fbclid)" value={traz?.fbclid ?? null} />
+                  <Field label="Google click ID (gclid)" value={traz?.gclid ?? null} />
+                  <Field label="Referer" value={traz?.referer ?? null} />
                 </div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
-                    <Field label="IP cliente" value={traz.client_ip} />
-                    <Field label="GA client_id" value={traz.ga_client_id} />
-                    <Field label="Facebook fbp" value={traz.fbp} />
-                    <Field label="Facebook fbc" value={traz.fbc} />
-                  </div>
-                  {traz.client_user_agent && (
-                    <div style={{ marginTop: 14 }}>
-                      <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>User Agent</p>
-                      <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{traz.client_user_agent}</p>
-                    </div>
-                  )}
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Landing URL</p>
+                  <p style={{ color: traz?.landing_url ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{traz?.landing_url || '—'}</p>
                 </div>
               </div>
-            )}
+            </div>
+
+            <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+                </svg>
+                <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Trazabilidad técnica</p>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
+                  <Field label="IP cliente" value={traz?.client_ip ?? null} />
+                  <Field label="GA client_id" value={traz?.ga_client_id ?? null} />
+                  <Field label="Facebook fbp" value={traz?.fbp ?? null} />
+                  <Field label="Facebook fbc" value={traz?.fbc ?? null} />
+                </div>
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>User Agent</p>
+                  <p style={{ color: traz?.client_user_agent ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{traz?.client_user_agent || '—'}</p>
+                </div>
+              </div>
+            </div>
 
             <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', paddingTop: 20, paddingBottom: 8, borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 'auto' }}>
               <Link href={`/admin/afiliados/${a.id}`} className="btn-primary-admin" style={{ padding: '10px 24px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>

@@ -42,7 +42,7 @@ export default async function AfiliadosPage({
   const { data: leadsData } = affiliateIds.length > 0
     ? await supabase
         .from('leads')
-        .select('affiliate_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url, fbp, fbc, ga_client_id, client_user_agent, client_ip')
+        .select('affiliate_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url, fbp, fbc, ga_client_id, client_user_agent, client_ip, medio_pago, mp_email')
         .in('affiliate_id', affiliateIds)
     : { data: [] }
 
