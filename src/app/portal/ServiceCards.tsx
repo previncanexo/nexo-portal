@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import type { Affiliate } from '@/lib/types'
 import { registerPsicologiaClick, registerSeguroHogarSolicitud } from './actions'
 
@@ -10,11 +11,34 @@ const PSICOLOGIA_URL = process.env.NEXT_PUBLIC_PSICOLOGIA_URL
 // `agendaUrl` queda vacío hasta que DOC24 confirme si expone un link por profesional.
 // Mientras tanto todos caen a PSICOLOGIA_URL y la UI lo aclara: se elige el profesional
 // dentro de DOC24. Cuando existan los links, sólo se completa este campo.
-const PSICOLOGOS: { id: string; nombre: string; iniciales: string; dias: string; franja: string; agendaUrl?: string }[] = [
+// `foto` y `descripcion` son opcionales y se completan a medida que el cliente los envía.
+// Sin `foto` cae al placeholder de iniciales; sin `descripcion` no se muestra "Ver perfil".
+const PSICOLOGOS: {
+  id: string
+  nombre: string
+  iniciales: string
+  dias: string
+  franja: string
+  agendaUrl?: string
+  foto?: string
+  descripcion?: string[]
+}[] = [
   { id: 'reimers', nombre: 'Lic. Lorena Reimers', iniciales: 'LR', dias: 'Lunes y Miércoles', franja: '13:30 – 17:30' },
   { id: 'blanco', nombre: 'Lic. Laura Blanco', iniciales: 'LB', dias: 'Martes', franja: '08:30 – 11:00' },
   { id: 'aragues', nombre: 'Lic. María Camila Aragues', iniciales: 'MA', dias: 'Miércoles', franja: '10:00 – 11:30' },
-  { id: 'medina', nombre: 'Lic. Rocío Medina', iniciales: 'RM', dias: 'Jueves', franja: '09:00 – 11:30' },
+  {
+    id: 'medina',
+    nombre: 'Lic. Rocío Medina',
+    iniciales: 'RM',
+    dias: 'Jueves',
+    franja: '09:00 – 11:30',
+    foto: '/psicologos/rocio-medina.webp',
+    descripcion: [
+      'Soy Rocío, psicóloga especializada en la atención de personas adultas.',
+      'Trabajo desde un enfoque gestáltico, ofreciendo un espacio de escucha, confianza y acompañamiento, donde puedas explorar lo que estás atravesando, comprenderte mejor y desarrollar recursos que favorezcan tu bienestar emocional.',
+      'Acompaño procesos relacionados con ansiedad, estrés, autoestima, duelos y dificultades vinculares, respetando los tiempos, las necesidades y la singularidad de cada persona.',
+    ],
+  },
   { id: 'estigarribia', nombre: 'Lic. Censo Estigarribia', iniciales: 'CE', dias: 'Viernes', franja: '13:00 – 17:00' },
 ]
 
@@ -440,6 +464,8 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
 
 /* ── Modal Psicología On Demand ── */
 function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
+  // Un solo perfil abierto a la vez: el modal ya scrollea en 60vh y varios abiertos lo vuelven ilegible.
+  const [perfilAbierto, setPerfilAbierto] = useState<string | null>(null)
   const acento = service.theme?.solid ?? 'var(--purple)'
   const gradiente = service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))'
   return (
@@ -497,32 +523,68 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
             <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
               Equipo profesional · videoconsulta de 30 min
             </p>
-            {PSICOLOGOS.map((p) => (
-              <div key={p.id} className="rounded-2xl p-3 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
-                <div
-                  className="w-12 h-12 rounded-full flex flex-col items-center justify-center shrink-0"
-                  style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.18)', border: `1px dashed ${service.theme?.borderHover ?? 'rgba(255,255,255,0.25)'}`, color: acento }}
-                  aria-label={`Foto de ${p.nombre} pendiente`}
-                >
-                  <span className="text-xs font-bold leading-none" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.iniciales}</span>
-                  <span className="text-[8px] leading-none mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>foto</span>
+            {PSICOLOGOS.map((p) => {
+              const perfilVisible = perfilAbierto === p.id
+              return (
+                <div key={p.id} className="rounded-2xl p-3 flex flex-col gap-2.5" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                  <div className="flex items-center gap-3">
+                    {p.foto ? (
+                      <Image
+                        src={p.foto}
+                        alt={`Foto de ${p.nombre}`}
+                        width={96}
+                        height={96}
+                        className="w-12 h-12 rounded-full object-cover shrink-0"
+                        style={{ border: `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.25)'}` }}
+                      />
+                    ) : (
+                      <div
+                        className="w-12 h-12 rounded-full flex flex-col items-center justify-center shrink-0"
+                        style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.18)', border: `1px dashed ${service.theme?.borderHover ?? 'rgba(255,255,255,0.25)'}`, color: acento }}
+                        aria-label={`Foto de ${p.nombre} pendiente`}
+                      >
+                        <span className="text-xs font-bold leading-none" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.iniciales}</span>
+                        <span className="text-[8px] leading-none mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>foto</span>
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-white leading-tight truncate" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.nombre}</p>
+                      <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.50)', fontFamily: 'var(--font-dm-sans)' }}>{p.dias} · {p.franja}</p>
+                      {p.descripcion && (
+                        <button
+                          onClick={() => setPerfilAbierto(perfilVisible ? null : p.id)}
+                          aria-expanded={perfilVisible}
+                          className="text-[11px] font-semibold mt-1 text-left"
+                          style={{ color: acento, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+                        >
+                          {perfilVisible ? 'Ocultar perfil ▲' : 'Ver perfil ▼'}
+                        </button>
+                      )}
+                    </div>
+                    <a
+                      href={p.agendaUrl ?? PSICOLOGIA_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => { void registerPsicologiaClick() }}
+                      className="shrink-0 px-3 py-2 rounded-xl text-xs font-semibold text-center active:scale-95"
+                      style={{ background: gradiente, color: 'white', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}
+                    >
+                      Reservar
+                    </a>
+                  </div>
+
+                  {perfilVisible && p.descripcion && (
+                    <div className="flex flex-col gap-2 pt-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                      {p.descripcion.map((parrafo, i) => (
+                        <p key={i} className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.62)', fontFamily: 'var(--font-dm-sans)' }}>
+                          {parrafo}
+                        </p>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-white leading-tight truncate" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.nombre}</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.50)', fontFamily: 'var(--font-dm-sans)' }}>{p.dias} · {p.franja}</p>
-                </div>
-                <a
-                  href={p.agendaUrl ?? PSICOLOGIA_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => { void registerPsicologiaClick() }}
-                  className="shrink-0 px-3 py-2 rounded-xl text-xs font-semibold text-center active:scale-95"
-                  style={{ background: gradiente, color: 'white', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}
-                >
-                  Reservar
-                </a>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           {/* Aviso */}
