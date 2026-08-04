@@ -11,8 +11,9 @@ const PSICOLOGIA_URL = process.env.NEXT_PUBLIC_PSICOLOGIA_URL
 // `agendaUrl` queda vacío hasta que DOC24 confirme si expone un link por profesional.
 // Mientras tanto todos caen a PSICOLOGIA_URL y la UI lo aclara: se elige el profesional
 // dentro de DOC24. Cuando existan los links, sólo se completa este campo.
-// `foto` y `descripcion` son opcionales y se completan a medida que el cliente los envía.
-// Sin `foto` cae al placeholder de iniciales; sin `descripcion` no se muestra "Ver perfil".
+// `foto`, `especialidad` y `descripcion` son opcionales y se completan a medida que el cliente
+// los envía. Sin `foto` cae al placeholder de iniciales; sin `descripcion` no se muestra
+// "Ver perfil"; sin `especialidad` no se muestra esa línea.
 const PSICOLOGOS: {
   id: string
   nombre: string
@@ -21,11 +22,34 @@ const PSICOLOGOS: {
   franja: string
   agendaUrl?: string
   foto?: string
+  especialidad?: string
   descripcion?: string[]
 }[] = [
-  { id: 'reimers', nombre: 'Lic. Lorena Reimers', iniciales: 'LR', dias: 'Lunes y Miércoles', franja: '13:30 – 17:30' },
-  { id: 'blanco', nombre: 'Lic. Laura Blanco', iniciales: 'LB', dias: 'Martes', franja: '08:30 – 11:00' },
-  { id: 'aragues', nombre: 'Lic. María Camila Aragues', iniciales: 'MA', dias: 'Miércoles', franja: '10:00 – 11:30' },
+  {
+    id: 'blanco',
+    nombre: 'Lic. Laura Blanco',
+    iniciales: 'LB',
+    dias: 'Martes',
+    franja: '08:30 – 11:00',
+    foto: '/psicologos/laura-blanco.webp',
+    especialidad: 'Clínica · Adolescentes, adultos y psicogerontología',
+    descripcion: [
+      'Psicóloga Clínica con sólida formación en el abordaje de la Salud Mental y el bienestar emocional.',
+      'Atención de adolescentes y adultos. Psicogerontología. Evaluaciones psicodiagnósticas y abordaje interdisciplinario.',
+    ],
+  },
+  {
+    id: 'aragues',
+    nombre: 'Lic. María Camila Aragues',
+    iniciales: 'MA',
+    dias: 'Miércoles',
+    franja: '10:00 – 11:30',
+    foto: '/psicologos/camila-aragues.webp',
+    especialidad: 'Orientación psicoanalítica · Adultos',
+    descripcion: [
+      'Psicóloga clínica especializada en la atención de personas adultas, con orientación psicoanalítica.',
+    ],
+  },
   {
     id: 'medina',
     nombre: 'Lic. Rocío Medina',
@@ -33,13 +57,26 @@ const PSICOLOGOS: {
     dias: 'Jueves',
     franja: '09:00 – 11:30',
     foto: '/psicologos/rocio-medina.webp',
+    especialidad: 'Enfoque gestáltico · Adultos',
     descripcion: [
       'Soy Rocío, psicóloga especializada en la atención de personas adultas.',
       'Trabajo desde un enfoque gestáltico, ofreciendo un espacio de escucha, confianza y acompañamiento, donde puedas explorar lo que estás atravesando, comprenderte mejor y desarrollar recursos que favorezcan tu bienestar emocional.',
       'Acompaño procesos relacionados con ansiedad, estrés, autoestima, duelos y dificultades vinculares, respetando los tiempos, las necesidades y la singularidad de cada persona.',
     ],
   },
-  { id: 'estigarribia', nombre: 'Lic. Censo Estigarribia', iniciales: 'CE', dias: 'Viernes', franja: '13:00 – 17:00' },
+  {
+    id: 'estigarribia',
+    nombre: 'Lic. Celso Estigarribia',
+    iniciales: 'CE',
+    dias: 'Viernes',
+    franja: '13:00 – 17:00',
+    foto: '/psicologos/celso-estigarribia.webp',
+    especialidad: 'Clínica · Evaluaciones psicodiagnósticas',
+    descripcion: [
+      'Acompaño procesos relacionados con ansiedad, depresión, duelos y dificultades vinculares.',
+      'También realizo evaluaciones psicodiagnósticas, adaptadas a las necesidades de cada persona.',
+    ],
+  },
 ]
 
 const SEGURO_HOGAR_URL = process.env.NEXT_PUBLIC_SEGURO_HOGAR_URL
@@ -549,6 +586,9 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-white leading-tight truncate" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.nombre}</p>
+                      {p.especialidad && (
+                        <p className="text-[11px] mt-0.5 leading-snug" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>{p.especialidad}</p>
+                      )}
                       <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.50)', fontFamily: 'var(--font-dm-sans)' }}>{p.dias} · {p.franja}</p>
                       {p.descripcion && (
                         <button
