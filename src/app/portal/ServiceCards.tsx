@@ -1083,7 +1083,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     // se muestra igual en modo "Próximamente" para captar interés antes del lanzamiento.
     {
       id: 'arbol-de-vida',
-      title: 'Árbol de Vida',
+      title: 'Árbol de Vida On Demand',
       subtitle: 'Cremación ecológica · Cochería Caramuto',
       badge: ARBOL_VIDA_URL ? 'Pago aparte' : 'Próximamente',
       badgeColor: ARBOL_VIDA_URL ? '#0d9488' : '#d97706',
