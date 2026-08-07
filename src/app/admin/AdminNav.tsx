@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: '/admin/leads', label: 'Leads' },
   { href: '/admin/pagos', label: 'Pagos' },
   { href: '/admin/seguro-hogar', label: 'Seguro de Hogar' },
+  { href: '/admin/arbol-de-vida', label: 'Árbol de Vida' },
 ]
 
 export default function AdminNav() {
