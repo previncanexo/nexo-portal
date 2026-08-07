@@ -123,3 +123,42 @@ export async function registerSeguroHogarSolicitud(
     console.error('[seguro-hogar-solicitud]', err)
   }
 }
+
+// Registro del interés en Árbol de Vida (Cochería Caramuto).
+// Mientras el producto está en "Próximamente" este es el único evento del flujo
+// (no hay redirección todavía), así que devuelve si se pudo registrar para que la
+// UI no confirme un aviso que nunca quedó guardado.
+// Se deduplica por afiliado: la lista de espera no gana nada con la misma persona repetida.
+export async function registerArbolVidaSolicitud(): Promise<boolean> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return false
+
+    const admin = createAdminClient()
+    const { data: affiliate } = await admin
+      .from('affiliates')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (affiliate?.id) {
+      const { data: existente } = await admin
+        .from('arbol_vida_solicitudes')
+        .select('id')
+        .eq('affiliate_id', affiliate.id)
+        .limit(1)
+        .maybeSingle()
+      if (existente) return true
+    }
+
+    const { error } = await admin.from('arbol_vida_solicitudes').insert({
+      affiliate_id: affiliate?.id ?? null,
+    })
+    if (error) throw error
+    return true
+  } catch (err) {
+    console.error('[arbol-vida-solicitud]', err)
+    return false
+  }
+}
