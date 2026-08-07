@@ -243,11 +243,15 @@ export async function POST(req: NextRequest) {
       const pa = preApproval as unknown as MPPreApprovalExt
 
       if (preApproval.status === 'authorized') {
-        // Match #1: por mp_subscription_id ya guardado (renovación / re-notificación).
+        // Match #1: affiliate YA activo con este mp_subscription_id (re-notificación
+        // idempotente). Filtramos por status='active' — el mp_subscription_id ahora
+        // se persiste al alta en el PATCH, así que un match sin filtro por status
+        // haría early return sobre un affiliate pending y saltearía la activación.
         const { data: alreadyActive } = await supabase
           .from('affiliates')
           .select('id')
           .eq('mp_subscription_id', subId)
+          .eq('status', 'active')
           .maybeSingle()
         if (alreadyActive) {
           return NextResponse.json({ ok: true })
