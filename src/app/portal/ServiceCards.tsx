@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import type { Affiliate } from '@/lib/types'
-import { registerPsicologiaClick, registerSeguroHogarSolicitud } from './actions'
+import { registerPsicologiaClick, registerSeguroHogarSolicitud, registerArbolVidaSolicitud } from './actions'
 
 const PSICOLOGIA_URL = process.env.NEXT_PUBLIC_PSICOLOGIA_URL
 
@@ -109,6 +109,29 @@ const SEGURO_COBERTURA_COMPLETA = [
   { nombre: 'Seg. Técnico — Línea Blanca', monto: '$900.000', detalle: '' },
 ]
 
+// Árbol de Vida — Cochería Caramuto. Todavía no hay link de contratación: mientras
+// ARBOL_VIDA_URL esté vacío la card sale como "Próximamente" y el botón registra el
+// interés (lista de espera). Cuando llegue el link, sólo se setea la variable de
+// entorno y el mismo botón pasa a "Contratar" + redirección, sin tocar código.
+const ARBOL_VIDA_URL = process.env.NEXT_PUBLIC_ARBOL_VIDA_URL
+
+const ARBOL_VIDA_PRECIO = '$4.500'
+
+const ARBOL_VIDA_COBERTURA = [
+  'Cremación ecológica',
+  'Parcela',
+  'Árbol',
+  'Urna biodegradable',
+  'Ceremonia personalizada',
+  'Sin costo de mantenimiento',
+]
+
+const ARBOL_VIDA_CONDICIONES = [
+  { titulo: 'Carencia', detalle: '60 días desde la contratación' },
+  { titulo: 'Edad de ingreso', detalle: 'Hasta 65 años' },
+  { titulo: 'Inicio de cobertura', detalle: 'El 1er día del mes siguiente a la contratación' },
+]
+
 const SEGURO_LEGAL = 'Cobertura sujeta a los términos y condiciones de la póliza correspondiente a la contratación, brindada por la compañía SAN CRISTÓBAL SEGUROS, CUIT 34-50004533-9, inscripta en la Superintendencia de Seguros de la Nación (SSN) mediante Nro. 0192. PREVINCA SERVICIOS SOCIALES S.A.C.I.F.I.Y.A., CUIT 30-54026445-3, interviene como Agente Institorio de la aseguradora inscripto en el Registro de Agentes Institorios de la SSN bajo el N° 233.'
 
 // Tema de acento para las cards "aparte" (Psicología y Seguro): teal, distinto del violeta de marca.
@@ -185,6 +208,17 @@ function IconHogar() {
       <path d="M3 10.5 12 3l9 7.5" />
       <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" />
       <path d="M9.5 21v-6h5v6" />
+    </svg>
+  )
+}
+
+function IconArbolVida() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22v-6" />
+      <path d="M12 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z" />
+      <path d="m12 15-2.5-2.5" />
+      <path d="m12 12 2.5-2.5" />
     </svg>
   )
 }
@@ -754,12 +788,155 @@ function SeguroHogarModal({ service, onClose }: { service: ServiceItem; onClose:
   )
 }
 
+/* ── Modal Árbol de Vida (plan único + condiciones + CTA "Próximamente") ── */
+function ArbolVidaModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
+  const [avisoEstado, setAvisoEstado] = useState<'inicial' | 'enviando' | 'listo' | 'error'>('inicial')
+  const acento = service.theme?.solid ?? 'var(--purple)'
+  const gradiente = service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))'
+
+  async function pedirAviso() {
+    if (avisoEstado === 'enviando' || avisoEstado === 'listo') return
+    setAvisoEstado('enviando')
+    const ok = await registerArbolVidaSolicitud()
+    setAvisoEstado(ok ? 'listo' : 'error')
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background: 'rgba(5,2,25,0.78)', backdropFilter: 'blur(12px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-3xl overflow-hidden"
+        style={{
+          background: 'rgba(18,5,61,0.88)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06) inset',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: gradiente, color: 'white' }}>
+            <service.Icon />
+          </div>
+          <div>
+            <p className="font-bold text-white text-base leading-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>{service.title}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>{service.subtitle}</p>
+          </div>
+        </div>
+
+        <div className="px-6 py-5 max-h-[60vh] overflow-y-auto flex flex-col gap-4">
+          <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
+
+          {/* Precio */}
+          <div
+            className="rounded-2xl px-4 py-3.5 flex flex-col gap-1"
+            style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.12)', border: `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.14)'}` }}
+          >
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
+              Valor del servicio
+            </p>
+            <p className="text-3xl font-extrabold leading-none" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>
+              {ARBOL_VIDA_PRECIO}
+              <span className="text-sm font-normal" style={{ color: 'rgba(255,255,255,0.5)' }}>/mes</span>
+            </p>
+          </div>
+
+          {/* Cobertura */}
+          <div className="flex flex-col gap-2.5">
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
+              Qué incluye
+            </p>
+            <ul className="flex flex-col gap-1.5">
+              {ARBOL_VIDA_COBERTURA.map((c, i) => (
+                <li key={i} className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.68)', fontFamily: 'var(--font-dm-sans)' }}>
+                  <span style={{ color: acento }}>✔</span>{c}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Condiciones */}
+          <div className="flex flex-col gap-2">
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
+              Condiciones
+            </p>
+            {ARBOL_VIDA_CONDICIONES.map((c, i) => (
+              <div key={i} className="rounded-xl px-3 py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <span className="text-xs font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>{c.titulo}</span>
+                <p className="text-[11px] mt-0.5 leading-snug" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>{c.detalle}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA: si todavía no hay link de contratación, el botón anota en la lista de espera */}
+          {ARBOL_VIDA_URL ? (
+            <a
+              href={ARBOL_VIDA_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => { void registerArbolVidaSolicitud() }}
+              className="block w-full py-3 rounded-2xl text-sm font-semibold text-center active:scale-95"
+              style={{ background: gradiente, color: 'white', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}
+            >
+              Contratar
+            </a>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <button
+                onClick={pedirAviso}
+                disabled={avisoEstado === 'enviando' || avisoEstado === 'listo'}
+                className="w-full py-3 rounded-2xl text-sm font-semibold active:scale-95"
+                style={{
+                  background: avisoEstado === 'listo' ? (service.theme?.soft ?? 'rgba(134,96,239,0.18)') : gradiente,
+                  color: avisoEstado === 'listo' ? acento : 'white',
+                  border: avisoEstado === 'listo' ? `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.25)'}` : 'none',
+                  cursor: avisoEstado === 'listo' ? 'default' : 'pointer',
+                  opacity: avisoEstado === 'enviando' ? 0.7 : 1,
+                  fontFamily: 'var(--font-dm-sans)',
+                }}
+              >
+                {avisoEstado === 'listo' ? '✔ Te avisamos cuando esté disponible' : avisoEstado === 'enviando' ? 'Enviando...' : 'Próximamente'}
+              </button>
+              <p className="text-[11px] leading-snug text-center" style={{ color: avisoEstado === 'error' ? '#fca5a5' : 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
+                {avisoEstado === 'listo'
+                  ? 'Quedaste anotado. Te contactamos apenas se habilite la contratación.'
+                  : avisoEstado === 'error'
+                    ? 'No pudimos registrar tu interés. Probá de nuevo en un momento.'
+                    : 'Tocá y te avisamos apenas se habilite la contratación.'}
+              </p>
+            </div>
+          )}
+
+          <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
+            Servicio prestado por Cochería Caramuto. Es un servicio adicional a tu cobertura Previnca Nexo y se contrata de manera independiente.
+          </p>
+        </div>
+
+        <div className="px-5 pb-6 pt-1">
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-2xl text-sm font-semibold active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.50)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ── Componente principal ── */
 export default function ServiceCards({ affiliate }: ServiceCardsProps) {
   const [farmaciaModalOpen, setFarmaciaModalOpen] = useState(false)
   const [urgenciasModalOpen, setUrgenciasModalOpen] = useState(false)
   const [psicologiaModalOpen, setPsicologiaModalOpen] = useState(false)
   const [seguroHogarModalOpen, setSeguroHogarModalOpen] = useState(false)
+  const [arbolVidaModalOpen, setArbolVidaModalOpen] = useState(false)
   const [infoService, setInfoService] = useState<ServiceItem | null>(null)
 
   const services: ServiceItem[] = [
@@ -902,6 +1079,29 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
           ],
         }]
       : []),
+    // A diferencia de Psicología y Seguro de Hogar, esta card NO depende de su URL:
+    // se muestra igual en modo "Próximamente" para captar interés antes del lanzamiento.
+    {
+      id: 'arbol-de-vida',
+      title: 'Árbol de Vida',
+      subtitle: 'Cremación ecológica · Cochería Caramuto',
+      badge: ARBOL_VIDA_URL ? 'Pago aparte' : 'Próximamente',
+      badgeColor: ARBOL_VIDA_URL ? '#0d9488' : '#d97706',
+      badgeBg: ARBOL_VIDA_URL ? 'rgba(13,148,136,0.10)' : 'rgba(217,119,6,0.10)',
+      buttonLabel: 'Ver cobertura',
+      buttonAction: 'modal' as const,
+      accentColor: 'white',
+      accentBg: 'rgba(13,148,136,0.10)',
+      glowColor: 'rgba(13,148,136,0.16)',
+      theme: TEAL,
+      Icon: IconArbolVida,
+      description: 'Una despedida distinta: cremación ecológica y un árbol plantado en tu parcela, como forma de seguir presente. Es un servicio adicional a tu cobertura Previnca Nexo, que podés contratar de manera independiente.',
+      bullets: [
+        'Cremación ecológica, parcela y árbol',
+        'Sin costo de mantenimiento',
+        'Servicio adicional, se contrata aparte',
+      ],
+    },
   ]
 
   function handleAction(service: ServiceItem) {
@@ -909,6 +1109,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       setInfoService(service)
     } else if (service.buttonAction === 'modal') {
       if (service.id === 'seguro-hogar') setSeguroHogarModalOpen(true)
+      else if (service.id === 'arbol-de-vida') setArbolVidaModalOpen(true)
       else if (service.id === 'psicologia') setPsicologiaModalOpen(true)
       else if (service.id === 'urgencias') setUrgenciasModalOpen(true)
       else setFarmaciaModalOpen(true)
@@ -999,6 +1200,12 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
         <PsicologiaModal
           service={services.find((s) => s.id === 'psicologia')!}
           onClose={() => setPsicologiaModalOpen(false)}
+        />
+      )}
+      {arbolVidaModalOpen && (
+        <ArbolVidaModal
+          service={services.find((s) => s.id === 'arbol-de-vida')!}
+          onClose={() => setArbolVidaModalOpen(false)}
         />
       )}
     </>
