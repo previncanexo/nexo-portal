@@ -469,6 +469,32 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Renovaciones mensuales de una suscripción: MP dispara este topic distinto
+    // en cada cobro recurrente. Traemos el authorized_payment para obtener el
+    // payment.id embebido y lo convertimos en un evento 'payment' — reutiliza
+    // toda la lógica existente (dedup, extender cobertura, emails).
+    if (body.type === 'subscription_authorized_payment' && body.data?.id) {
+      try {
+        const authRes = await fetch(
+          `https://api.mercadopago.com/authorized_payments/${body.data.id}`,
+          { headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` } },
+        )
+        if (authRes.ok) {
+          const authPayment = await authRes.json()
+          const paymentId = authPayment?.payment?.id
+          if (paymentId) {
+            body = { type: 'payment', data: { id: String(paymentId) } }
+          } else {
+            console.warn('[mp-webhook] subscription_authorized_payment sin payment.id embebido — status:', authPayment?.status, 'id:', body.data.id)
+          }
+        } else {
+          console.error('[mp-webhook] GET /authorized_payments/', body.data.id, 'failed with', authRes.status)
+        }
+      } catch (err) {
+        console.error('[mp-webhook] error fetching authorized_payment:', err)
+      }
+    }
+
     if (body.type === 'payment' && body.data?.id) {
       const paymentClient = new Payment(mpClient)
       const payment = await paymentClient.get({ id: Number(body.data.id) })
