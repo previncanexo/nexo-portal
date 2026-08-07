@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   sendAbandonedFormEmail,
-  sendAbandonedPaymentEmail,
+  sendPendingConfirmationEmail,
   sendInternalAbandonedEmail,
 } from '@/lib/emails'
 
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
         console.error('[abandoned-recovery] no se pudo marcar abandonment_notified_at para', aff.id, updateErr.message)
         continue // no enviar; se reintenta en la próxima corrida
       }
-      await sendAbandonedPaymentEmail({
+      await sendPendingConfirmationEmail({
         nombre: aff.nombre,
         email: aff.email,
         checkoutUrl: aff.checkout_url as string,

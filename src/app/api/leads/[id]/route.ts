@@ -12,7 +12,6 @@
 import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { corsHeaders, jsonWithCors } from '@/lib/cors'
-import { sendPendingConfirmationEmail } from '@/lib/emails'
 import { sendMetaCapiEvents, extractFbCookies, extractClientIp } from '@/lib/meta-capi'
 
 interface FinalizeLeadInput {
@@ -297,13 +296,10 @@ export async function PATCH(
 
     await supabase.from('leads').update(leadUpdate).eq('id', leadId)
 
-    // Email "completá tu pago" — fire-and-forget
-    failStep = 'email'
-    sendPendingConfirmationEmail({
-      nombre: lead.nombre,
-      email: lead.email,
-      checkoutUrl,
-    }).catch((err) => console.error('[api/leads] sendPendingConfirmationEmail:', err))
+    // Email "completá tu pago" NO se dispara acá: se difiere al cron
+    // /api/cron/abandoned-recovery (corre cada 30 min) que lo manda cuando
+    // el affiliate lleva +1h en pending sin activarse. Evita spamear al
+    // usuario que se está por redirigir al checkout de MP.
 
     // CAPI: CompleteRegistration + InitiateCheckout (fire-and-forget)
     failStep = 'capi'
