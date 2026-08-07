@@ -253,20 +253,34 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ ok: true })
         }
 
-        // Match #2: por payer (activación inicial). Ya no confiamos en
-        // external_reference — MP no lo persistía correctamente con hosted
-        // checkout de plan template. Ahora resolvemos el affiliate por:
-        //   1. DNI extraído del CUIT del pagador (más fuerte)
-        //   2. payer_email == affiliate.email
-        //   3. payer_email == lead.mp_email (caso "para otra persona")
-        const payerInfo = await getPayerInfoFromSub(process.env.MP_ACCESS_TOKEN!, subId)
-        if (!payerInfo.email && !payerInfo.dni) {
-          console.warn('[mp-webhook] no se pudo obtener payer info para sub', subId)
-          return NextResponse.json({ ok: true })
+        // Match #2: por external_reference (source of truth con sub sin plan).
+        // MP ahora respeta external_reference 1:1 porque las subs se crean sin
+        // plan template. Payer info se resuelve solo para persistir mp_payer_id
+        // (trazabilidad) — no bloquea la activación si viene vacía.
+        //
+        // Fallback: matching por DNI/email del pagador para subs legacy que se
+        // crearon con plan template (external_reference pisado por MP).
+        const affSelect = 'id, status, user_id, nombre, apellido, dni, email, whatsapp, ciudad, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name, price), purchase_event_sent_at'
+        let affiliate: PendingAffiliate | null = null
+        if (pa.external_reference) {
+          const { data: byExtRef } = await supabase
+            .from('affiliates')
+            .select(affSelect)
+            .eq('id', pa.external_reference)
+            .eq('status', 'pending')
+            .maybeSingle()
+          if (byExtRef) affiliate = byExtRef as PendingAffiliate
         }
-        const affiliate = await findPendingAffiliate(supabase, payerInfo)
+        const payerInfo = await getPayerInfoFromSub(process.env.MP_ACCESS_TOKEN!, subId)
         if (!affiliate) {
-          console.warn('[mp-webhook] no hay affiliate pending para payer', payerInfo, 'sub=', subId)
+          if (!payerInfo.email && !payerInfo.dni) {
+            console.warn('[mp-webhook] sin external_reference match y sin payer info para sub', subId)
+            return NextResponse.json({ ok: true })
+          }
+          affiliate = await findPendingAffiliate(supabase, payerInfo)
+        }
+        if (!affiliate) {
+          console.warn('[mp-webhook] no hay affiliate pending — external_ref=', pa.external_reference, 'payer=', payerInfo, 'sub=', subId)
           return NextResponse.json({ ok: true })
         }
         const affiliateId = affiliate.id
