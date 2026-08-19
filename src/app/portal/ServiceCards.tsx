@@ -1,10 +1,83 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import type { Affiliate } from '@/lib/types'
 import { registerPsicologiaClick } from './actions'
 
 const PSICOLOGIA_URL = process.env.NEXT_PUBLIC_PSICOLOGIA_URL
+
+// Equipo de psicología (fuente: doc consolidada del servicio, julio 2026).
+// `agendaUrl` queda vacío hasta que DOC24 confirme si expone un link por profesional.
+// Mientras tanto todos caen a PSICOLOGIA_URL y la UI lo aclara: se elige el profesional
+// dentro de DOC24. Cuando existan los links, sólo se completa este campo.
+// `foto`, `especialidad` y `descripcion` son opcionales y se completan a medida que el cliente
+// los envía. Sin `foto` cae al placeholder de iniciales; sin `descripcion` no se muestra
+// "Ver perfil"; sin `especialidad` no se muestra esa línea.
+const PSICOLOGOS: {
+  id: string
+  nombre: string
+  iniciales: string
+  dias: string
+  franja: string
+  agendaUrl?: string
+  foto?: string
+  especialidad?: string
+  descripcion?: string[]
+}[] = [
+  {
+    id: 'blanco',
+    nombre: 'Lic. Laura Blanco',
+    iniciales: 'LB',
+    dias: 'Martes',
+    franja: '08:30 – 11:00',
+    foto: '/psicologos/laura-blanco.webp',
+    especialidad: 'Clínica · Adolescentes, adultos y psicogerontología',
+    descripcion: [
+      'Psicóloga Clínica con sólida formación en el abordaje de la Salud Mental y el bienestar emocional.',
+      'Atención de adolescentes y adultos. Psicogerontología. Evaluaciones psicodiagnósticas y abordaje interdisciplinario.',
+    ],
+  },
+  {
+    id: 'aragues',
+    nombre: 'Lic. María Camila Aragues',
+    iniciales: 'MA',
+    dias: 'Miércoles',
+    franja: '10:00 – 11:30',
+    foto: '/psicologos/camila-aragues.webp',
+    especialidad: 'Orientación psicoanalítica · Adultos',
+    descripcion: [
+      'Psicóloga clínica especializada en la atención de personas adultas, con orientación psicoanalítica.',
+    ],
+  },
+  {
+    id: 'medina',
+    nombre: 'Lic. Rocío Medina',
+    iniciales: 'RM',
+    dias: 'Jueves',
+    franja: '09:00 – 11:30',
+    foto: '/psicologos/rocio-medina.webp',
+    especialidad: 'Enfoque gestáltico · Adultos',
+    descripcion: [
+      'Soy Rocío, psicóloga especializada en la atención de personas adultas.',
+      'Trabajo desde un enfoque gestáltico, ofreciendo un espacio de escucha, confianza y acompañamiento, donde puedas explorar lo que estás atravesando, comprenderte mejor y desarrollar recursos que favorezcan tu bienestar emocional.',
+      'Acompaño procesos relacionados con ansiedad, estrés, autoestima, duelos y dificultades vinculares, respetando los tiempos, las necesidades y la singularidad de cada persona.',
+    ],
+  },
+  {
+    id: 'estigarribia',
+    nombre: 'Lic. Celso Estigarribia',
+    iniciales: 'CE',
+    dias: 'Viernes',
+    franja: '13:00 – 17:00',
+    foto: '/psicologos/celso-estigarribia.webp',
+    especialidad: 'Clínica · Evaluaciones psicodiagnósticas',
+    descripcion: [
+      'Acompaño procesos relacionados con ansiedad, depresión, duelos y dificultades vinculares.',
+      'También realizo evaluaciones psicodiagnósticas, adaptadas a las necesidades de cada persona.',
+    ],
+  },
+]
 
 const SEGURO_HOGAR_URL = process.env.NEXT_PUBLIC_SEGURO_HOGAR_URL
 
@@ -398,6 +471,10 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
 
 /* ── Modal Psicología On Demand ── */
 function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
+  // Un solo perfil abierto a la vez: el modal ya scrollea en 60vh y varios abiertos lo vuelven ilegible.
+  const [perfilAbierto, setPerfilAbierto] = useState<string | null>(null)
+  const acento = service.theme?.solid ?? 'var(--purple)'
+  const gradiente = service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))'
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
@@ -405,7 +482,7 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-3xl overflow-hidden"
+        className="w-full max-w-md rounded-3xl overflow-hidden"
         style={{
           background: 'rgba(18,5,61,0.88)',
           border: '1px solid rgba(255,255,255,0.12)',
@@ -416,7 +493,7 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}>
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: gradiente, color: 'white' }}>
             <service.Icon />
           </div>
           <div>
@@ -425,34 +502,110 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
           </div>
         </div>
 
-        <div className="px-6 py-5 max-h-[55vh] overflow-y-auto flex flex-col gap-4">
+        <div className="px-6 py-5 max-h-[60vh] overflow-y-auto flex flex-col gap-4">
           <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
-          <ul className="flex flex-col gap-2.5">
-            {service.bullets.map((bullet, i) => (
-              <li key={i} className="flex items-start gap-2.5">
-                <span className="text-sm mt-px shrink-0" style={{ color: 'var(--pink)' }}>✔</span>
-                <span className="text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.68)', fontFamily: 'var(--font-dm-sans)' }}>{bullet}</span>
-              </li>
-            ))}
-          </ul>
+
+          {/* Precio de la sesión: valor de lista tachado + precio para afiliados */}
+          <div
+            className="rounded-2xl px-4 py-3.5 flex flex-col gap-1"
+            style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.12)', border: `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.14)'}` }}
+          >
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
+              Valor de la sesión
+            </p>
+            <div className="flex items-baseline gap-2.5 flex-wrap">
+              <span
+                className="text-base font-medium"
+                style={{ color: 'rgba(255,255,255,0.40)', textDecoration: 'line-through', fontFamily: 'var(--font-dm-sans)' }}
+              >
+                $40.000
+              </span>
+              <span className="text-3xl font-extrabold leading-none" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>
+                $20.000
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2.5">
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
+              Equipo profesional · videoconsulta de 30 min
+            </p>
+            {PSICOLOGOS.map((p) => {
+              const perfilVisible = perfilAbierto === p.id
+              return (
+                <div key={p.id} className="rounded-2xl p-3 flex flex-col gap-2.5" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                  <div className="flex items-center gap-3">
+                    {p.foto ? (
+                      <Image
+                        src={p.foto}
+                        alt={`Foto de ${p.nombre}`}
+                        width={96}
+                        height={96}
+                        className="w-12 h-12 rounded-full object-cover shrink-0"
+                        style={{ border: `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.25)'}` }}
+                      />
+                    ) : (
+                      <div
+                        className="w-12 h-12 rounded-full flex flex-col items-center justify-center shrink-0"
+                        style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.18)', border: `1px dashed ${service.theme?.borderHover ?? 'rgba(255,255,255,0.25)'}`, color: acento }}
+                        aria-label={`Foto de ${p.nombre} pendiente`}
+                      >
+                        <span className="text-xs font-bold leading-none" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.iniciales}</span>
+                        <span className="text-[8px] leading-none mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>foto</span>
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-white leading-tight truncate" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.nombre}</p>
+                      {p.especialidad && (
+                        <p className="text-[11px] mt-0.5 leading-snug" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>{p.especialidad}</p>
+                      )}
+                      <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.50)', fontFamily: 'var(--font-dm-sans)' }}>{p.dias} · {p.franja}</p>
+                      {p.descripcion && (
+                        <button
+                          onClick={() => setPerfilAbierto(perfilVisible ? null : p.id)}
+                          aria-expanded={perfilVisible}
+                          className="text-[11px] font-semibold mt-1 text-left"
+                          style={{ color: acento, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+                        >
+                          {perfilVisible ? 'Ocultar perfil ▲' : 'Ver perfil ▼'}
+                        </button>
+                      )}
+                    </div>
+                    <a
+                      href={p.agendaUrl ?? PSICOLOGIA_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => { void registerPsicologiaClick() }}
+                      className="shrink-0 px-3 py-2 rounded-xl text-xs font-semibold text-center active:scale-95"
+                      style={{ background: gradiente, color: 'white', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}
+                    >
+                      Reservar
+                    </a>
+                  </div>
+
+                  {perfilVisible && p.descripcion && (
+                    <div className="flex flex-col gap-2 pt-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                      {p.descripcion.map((parrafo, i) => (
+                        <p key={i} className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.62)', fontFamily: 'var(--font-dm-sans)' }}>
+                          {parrafo}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
 
           {/* Aviso */}
           <p className="text-xs leading-relaxed rounded-xl px-3 py-2.5" style={{ color: 'rgba(255,255,255,0.60)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'var(--font-dm-sans)' }}>
-            Servicio adicional. Se cobra aparte de tu cobertura Previnca Nexo.
+            Es un servicio adicional a tu cobertura Previnca Nexo y se contrata de manera
+            independiente. Reservá tu turno desde DOC24, donde podés elegir el profesional, el
+            día y el horario que mejor se adapten a vos.
           </p>
         </div>
 
-        <div className="px-5 pb-6 pt-1 flex flex-col gap-2">
-          <a
-            href={PSICOLOGIA_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => { void registerPsicologiaClick() }}
-            className="w-full py-3 rounded-2xl text-sm font-semibold text-center transition-opacity active:scale-95"
-            style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', textDecoration: 'none' }}
-          >
-            Reservar turno
-          </a>
+        <div className="px-5 pb-6 pt-1">
           <button
             onClick={onClose}
             className="w-full py-3 rounded-2xl text-sm font-semibold transition-opacity active:scale-95"
@@ -629,7 +782,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       ? [{
           id: 'psicologia',
           title: 'Psicología On Demand',
-          subtitle: 'Sesiones con profesionales, a tu ritmo',
+          subtitle: 'Tu bienestar emocional, cuando lo necesitás.',
           badge: 'Pago aparte',
           badgeColor: '#0d9488',
           badgeBg: 'rgba(13,148,136,0.10)',
@@ -640,7 +793,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
           glowColor: 'rgba(13,148,136,0.16)',
           theme: TEAL,
           Icon: IconPsicologia,
-          description: 'Accedé a sesiones de psicología con profesionales, de forma simple y online. Es un servicio adicional, independiente de tu cobertura Previnca Nexo, que se abona por separado.',
+          description: 'Accedé a sesiones de psicología online con profesionales, de forma simple y cuando lo necesites. Es un beneficio adicional a tu plan Previnca Nexo, que podés contratar de manera independiente.',
           bullets: [
             'Sesiones con profesionales',
             'Reservás tu turno online',
