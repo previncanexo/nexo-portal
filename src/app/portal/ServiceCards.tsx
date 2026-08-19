@@ -1,12 +1,115 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import type { Affiliate } from '@/lib/types'
-import { registerPsicologiaClick } from './actions'
+import { registerPsicologiaClick, registerSeguroHogarSolicitud } from './actions'
 
 const PSICOLOGIA_URL = process.env.NEXT_PUBLIC_PSICOLOGIA_URL
 
+// Equipo de psicología (fuente: doc consolidada del servicio, julio 2026).
+// `agendaUrl` queda vacío hasta que DOC24 confirme si expone un link por profesional.
+// Mientras tanto todos caen a PSICOLOGIA_URL y la UI lo aclara: se elige el profesional
+// dentro de DOC24. Cuando existan los links, sólo se completa este campo.
+// `foto`, `especialidad` y `descripcion` son opcionales y se completan a medida que el cliente
+// los envía. Sin `foto` cae al placeholder de iniciales; sin `descripcion` no se muestra
+// "Ver perfil"; sin `especialidad` no se muestra esa línea.
+const PSICOLOGOS: {
+  id: string
+  nombre: string
+  iniciales: string
+  dias: string
+  franja: string
+  agendaUrl?: string
+  foto?: string
+  especialidad?: string
+  descripcion?: string[]
+}[] = [
+  {
+    id: 'blanco',
+    nombre: 'Lic. Laura Blanco',
+    iniciales: 'LB',
+    dias: 'Martes',
+    franja: '08:30 – 11:00',
+    foto: '/psicologos/laura-blanco.webp',
+    especialidad: 'Clínica · Adolescentes, adultos y psicogerontología',
+    descripcion: [
+      'Psicóloga Clínica con sólida formación en el abordaje de la Salud Mental y el bienestar emocional.',
+      'Atención de adolescentes y adultos. Psicogerontología. Evaluaciones psicodiagnósticas y abordaje interdisciplinario.',
+    ],
+  },
+  {
+    id: 'aragues',
+    nombre: 'Lic. María Camila Aragues',
+    iniciales: 'MA',
+    dias: 'Miércoles',
+    franja: '10:00 – 11:30',
+    foto: '/psicologos/camila-aragues.webp',
+    especialidad: 'Orientación psicoanalítica · Adultos',
+    descripcion: [
+      'Psicóloga clínica especializada en la atención de personas adultas, con orientación psicoanalítica.',
+    ],
+  },
+  {
+    id: 'medina',
+    nombre: 'Lic. Rocío Medina',
+    iniciales: 'RM',
+    dias: 'Jueves',
+    franja: '09:00 – 11:30',
+    foto: '/psicologos/rocio-medina.webp',
+    especialidad: 'Enfoque gestáltico · Adultos',
+    descripcion: [
+      'Soy Rocío, psicóloga especializada en la atención de personas adultas.',
+      'Trabajo desde un enfoque gestáltico, ofreciendo un espacio de escucha, confianza y acompañamiento, donde puedas explorar lo que estás atravesando, comprenderte mejor y desarrollar recursos que favorezcan tu bienestar emocional.',
+      'Acompaño procesos relacionados con ansiedad, estrés, autoestima, duelos y dificultades vinculares, respetando los tiempos, las necesidades y la singularidad de cada persona.',
+    ],
+  },
+  {
+    id: 'estigarribia',
+    nombre: 'Lic. Celso Estigarribia',
+    iniciales: 'CE',
+    dias: 'Viernes',
+    franja: '13:00 – 17:00',
+    foto: '/psicologos/celso-estigarribia.webp',
+    especialidad: 'Clínica · Evaluaciones psicodiagnósticas',
+    descripcion: [
+      'Acompaño procesos relacionados con ansiedad, depresión, duelos y dificultades vinculares.',
+      'También realizo evaluaciones psicodiagnósticas, adaptadas a las necesidades de cada persona.',
+    ],
+  },
+]
+
 const SEGURO_HOGAR_URL = process.env.NEXT_PUBLIC_SEGURO_HOGAR_URL
+
+const SEGURO_PLANES = [
+  {
+    id: 'hasta_1er_piso' as const,
+    badge: 'Hasta 1er piso',
+    alcance: 'Casas, PB y 1er piso · Solo en Rosario',
+    precio: '$19.000',
+  },
+  {
+    id: 'segundo_piso_plus' as const,
+    badge: '2do piso +',
+    alcance: '2do piso en adelante · Dentro y fuera de Rosario',
+    precio: '$22.000',
+  },
+]
+
+const SEGURO_COBERTURAS_PRINCIPALES = ['Incendio Edificio', 'Responsabilidad Civil', 'Equipos Electrónicos']
+
+// Detalle desplegable: mismas sumas aseguradas para ambos planes; sólo cambia la cuota.
+const SEGURO_COBERTURA_COMPLETA = [
+  { nombre: 'Incendio Edificio', monto: '$80.000.000', detalle: 'Reconstrucción y/o reparación y/o reposición · Incendio Primer Riesgo Absoluto $8.000.000 · Huracán, Vendaval, Ciclón y/o Tornado — Sublímite 100%' },
+  { nombre: 'Incendio Contenido', monto: '$3.200.000', detalle: 'Huracán, Vendaval, Ciclón y/o Tornado — Sublímite 100% · Daños a Equipos Electrónicos por Rayo — Sublímite 100%' },
+  { nombre: 'Cristales, vidrios y espejos', monto: '$700.000', detalle: '' },
+  { nombre: 'Resp. Civil Hechos Privados', monto: '$4.000.000', detalle: '' },
+  { nombre: 'Resp. Civil Linderos', monto: '$6.000.000', detalle: '' },
+  { nombre: 'Seg. Técnico — Eq. Electrónicos', monto: '$800.000', detalle: '' },
+  { nombre: 'Seg. Técnico — Línea Blanca', monto: '$900.000', detalle: '' },
+]
+
+const SEGURO_LEGAL = 'Cobertura sujeta a los términos y condiciones de la póliza correspondiente a la contratación, brindada por la compañía SAN CRISTÓBAL SEGUROS, CUIT 34-50004533-9, inscripta en la Superintendencia de Seguros de la Nación (SSN) mediante Nro. 0192. PREVINCA SERVICIOS SOCIALES S.A.C.I.F.I.Y.A., CUIT 30-54026445-3, interviene como Agente Institorio de la aseguradora inscripto en el Registro de Agentes Institorios de la SSN bajo el N° 233.'
 
 // Tema de acento para las cards "aparte" (Psicología y Seguro): teal, distinto del violeta de marca.
 interface CardTheme {
@@ -398,6 +501,10 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
 
 /* ── Modal Psicología On Demand ── */
 function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
+  // Un solo perfil abierto a la vez: el modal ya scrollea en 60vh y varios abiertos lo vuelven ilegible.
+  const [perfilAbierto, setPerfilAbierto] = useState<string | null>(null)
+  const acento = service.theme?.solid ?? 'var(--purple)'
+  const gradiente = service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))'
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
@@ -405,7 +512,7 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-3xl overflow-hidden"
+        className="w-full max-w-md rounded-3xl overflow-hidden"
         style={{
           background: 'rgba(18,5,61,0.88)',
           border: '1px solid rgba(255,255,255,0.12)',
@@ -416,7 +523,7 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}>
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: gradiente, color: 'white' }}>
             <service.Icon />
           </div>
           <div>
@@ -425,34 +532,110 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
           </div>
         </div>
 
-        <div className="px-6 py-5 max-h-[55vh] overflow-y-auto flex flex-col gap-4">
+        <div className="px-6 py-5 max-h-[60vh] overflow-y-auto flex flex-col gap-4">
           <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
-          <ul className="flex flex-col gap-2.5">
-            {service.bullets.map((bullet, i) => (
-              <li key={i} className="flex items-start gap-2.5">
-                <span className="text-sm mt-px shrink-0" style={{ color: 'var(--pink)' }}>✔</span>
-                <span className="text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.68)', fontFamily: 'var(--font-dm-sans)' }}>{bullet}</span>
-              </li>
-            ))}
-          </ul>
+
+          {/* Precio de la sesión: valor de lista tachado + precio para afiliados */}
+          <div
+            className="rounded-2xl px-4 py-3.5 flex flex-col gap-1"
+            style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.12)', border: `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.14)'}` }}
+          >
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
+              Valor de la sesión
+            </p>
+            <div className="flex items-baseline gap-2.5 flex-wrap">
+              <span
+                className="text-base font-medium"
+                style={{ color: 'rgba(255,255,255,0.40)', textDecoration: 'line-through', fontFamily: 'var(--font-dm-sans)' }}
+              >
+                $40.000
+              </span>
+              <span className="text-3xl font-extrabold leading-none" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>
+                $20.000
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2.5">
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
+              Equipo profesional · videoconsulta de 30 min
+            </p>
+            {PSICOLOGOS.map((p) => {
+              const perfilVisible = perfilAbierto === p.id
+              return (
+                <div key={p.id} className="rounded-2xl p-3 flex flex-col gap-2.5" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                  <div className="flex items-center gap-3">
+                    {p.foto ? (
+                      <Image
+                        src={p.foto}
+                        alt={`Foto de ${p.nombre}`}
+                        width={96}
+                        height={96}
+                        className="w-12 h-12 rounded-full object-cover shrink-0"
+                        style={{ border: `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.25)'}` }}
+                      />
+                    ) : (
+                      <div
+                        className="w-12 h-12 rounded-full flex flex-col items-center justify-center shrink-0"
+                        style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.18)', border: `1px dashed ${service.theme?.borderHover ?? 'rgba(255,255,255,0.25)'}`, color: acento }}
+                        aria-label={`Foto de ${p.nombre} pendiente`}
+                      >
+                        <span className="text-xs font-bold leading-none" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.iniciales}</span>
+                        <span className="text-[8px] leading-none mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>foto</span>
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-white leading-tight truncate" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.nombre}</p>
+                      {p.especialidad && (
+                        <p className="text-[11px] mt-0.5 leading-snug" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>{p.especialidad}</p>
+                      )}
+                      <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.50)', fontFamily: 'var(--font-dm-sans)' }}>{p.dias} · {p.franja}</p>
+                      {p.descripcion && (
+                        <button
+                          onClick={() => setPerfilAbierto(perfilVisible ? null : p.id)}
+                          aria-expanded={perfilVisible}
+                          className="text-[11px] font-semibold mt-1 text-left"
+                          style={{ color: acento, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+                        >
+                          {perfilVisible ? 'Ocultar perfil ▲' : 'Ver perfil ▼'}
+                        </button>
+                      )}
+                    </div>
+                    <a
+                      href={p.agendaUrl ?? PSICOLOGIA_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => { void registerPsicologiaClick() }}
+                      className="shrink-0 px-3 py-2 rounded-xl text-xs font-semibold text-center active:scale-95"
+                      style={{ background: gradiente, color: 'white', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}
+                    >
+                      Reservar
+                    </a>
+                  </div>
+
+                  {perfilVisible && p.descripcion && (
+                    <div className="flex flex-col gap-2 pt-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                      {p.descripcion.map((parrafo, i) => (
+                        <p key={i} className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.62)', fontFamily: 'var(--font-dm-sans)' }}>
+                          {parrafo}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
 
           {/* Aviso */}
           <p className="text-xs leading-relaxed rounded-xl px-3 py-2.5" style={{ color: 'rgba(255,255,255,0.60)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'var(--font-dm-sans)' }}>
-            Servicio adicional. Se cobra aparte de tu cobertura Previnca Nexo.
+            Es un servicio adicional a tu cobertura Previnca Nexo y se contrata de manera
+            independiente. Reservá tu turno desde DOC24, donde podés elegir el profesional, el
+            día y el horario que mejor se adapten a vos.
           </p>
         </div>
 
-        <div className="px-5 pb-6 pt-1 flex flex-col gap-2">
-          <a
-            href={PSICOLOGIA_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => { void registerPsicologiaClick() }}
-            className="w-full py-3 rounded-2xl text-sm font-semibold text-center transition-opacity active:scale-95"
-            style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', textDecoration: 'none' }}
-          >
-            Reservar turno
-          </a>
+        <div className="px-5 pb-6 pt-1">
           <button
             onClick={onClose}
             className="w-full py-3 rounded-2xl text-sm font-semibold transition-opacity active:scale-95"
@@ -466,8 +649,11 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
   )
 }
 
-/* ── Modal Seguro de Hogar (texto breve + "Ver planes") ── */
+/* ── Modal Seguro de Hogar (dos planes + cobertura completa + legal) ── */
 function SeguroHogarModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
+  const [coberturaAbierta, setCoberturaAbierta] = useState(false)
+  const acento = service.theme?.solid ?? 'var(--purple)'
+  const gradiente = service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))'
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
@@ -475,7 +661,7 @@ function SeguroHogarModal({ service, onClose }: { service: ServiceItem; onClose:
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-3xl overflow-hidden"
+        className="w-full max-w-md rounded-3xl overflow-hidden"
         style={{
           background: 'rgba(18,5,61,0.88)',
           border: '1px solid rgba(255,255,255,0.12)',
@@ -486,7 +672,7 @@ function SeguroHogarModal({ service, onClose }: { service: ServiceItem; onClose:
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white' }}>
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: gradiente, color: 'white' }}>
             <service.Icon />
           </div>
           <div>
@@ -495,23 +681,69 @@ function SeguroHogarModal({ service, onClose }: { service: ServiceItem; onClose:
           </div>
         </div>
 
-        <div className="px-6 py-5 flex flex-col gap-3">
+        <div className="px-6 py-5 max-h-[60vh] overflow-y-auto flex flex-col gap-4">
           <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
+
+          {SEGURO_PLANES.map((p) => (
+            <div key={p.id} className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>HOGAR PROTEGIDO</span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.18)', color: acento }}>{p.badge}</span>
+              </div>
+              <p className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>{p.alcance}</p>
+              <p className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.precio}<span className="text-sm font-normal" style={{ color: 'rgba(255,255,255,0.5)' }}>/mes</span></p>
+              <p className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>6 cuotas sin interés</p>
+              <ul className="flex flex-col gap-1.5 mb-3">
+                {SEGURO_COBERTURAS_PRINCIPALES.map((c, i) => (
+                  <li key={i} className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.68)', fontFamily: 'var(--font-dm-sans)' }}>
+                    <span style={{ color: acento }}>✔</span>{c}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={SEGURO_HOGAR_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => { void registerSeguroHogarSolicitud(p.id) }}
+                className="block w-full py-2.5 rounded-xl text-sm font-semibold text-center active:scale-95"
+                style={{ background: gradiente, color: 'white', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}
+              >
+                Contratar
+              </a>
+            </div>
+          ))}
+
+          <button
+            onClick={() => setCoberturaAbierta((v) => !v)}
+            className="text-xs font-semibold text-left"
+            style={{ color: acento, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+          >
+            {coberturaAbierta ? 'Ocultar cobertura completa ▲' : 'Ver cobertura completa ▼'}
+          </button>
+          {coberturaAbierta && (
+            <div className="flex flex-col gap-2.5">
+              <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
+                Sumas aseguradas vigentes — 2026 · iguales para ambos planes
+              </p>
+              {SEGURO_COBERTURA_COMPLETA.map((c, i) => (
+                <div key={i} className="rounded-xl px-3 py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>{c.nombre}</span>
+                    <span className="text-xs font-bold" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>{c.monto}</span>
+                  </div>
+                  {c.detalle && <p className="text-[11px] mt-1 leading-snug" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>{c.detalle}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>{SEGURO_LEGAL}</p>
         </div>
 
-        <div className="px-5 pb-6 pt-1 flex flex-col gap-2">
-          <a
-            href={SEGURO_HOGAR_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full py-3 rounded-2xl text-sm font-semibold text-center transition-opacity active:scale-95"
-            style={{ background: service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', textDecoration: 'none' }}
-          >
-            Ver planes
-          </a>
+        <div className="px-5 pb-6 pt-1">
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-2xl text-sm font-semibold transition-opacity active:scale-95"
+            className="w-full py-3 rounded-2xl text-sm font-semibold active:scale-95"
             style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.50)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
           >
             Cerrar
@@ -629,7 +861,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       ? [{
           id: 'psicologia',
           title: 'Psicología On Demand',
-          subtitle: 'Sesiones con profesionales, a tu ritmo',
+          subtitle: 'Tu bienestar emocional, cuando lo necesitás.',
           badge: 'Pago aparte',
           badgeColor: '#0d9488',
           badgeBg: 'rgba(13,148,136,0.10)',
@@ -640,7 +872,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
           glowColor: 'rgba(13,148,136,0.16)',
           theme: TEAL,
           Icon: IconPsicologia,
-          description: 'Accedé a sesiones de psicología con profesionales, de forma simple y online. Es un servicio adicional, independiente de tu cobertura Previnca Nexo, que se abona por separado.',
+          description: 'Accedé a sesiones de psicología online con profesionales, de forma simple y cuando lo necesites. Es un beneficio adicional a tu plan Previnca Nexo, que podés contratar de manera independiente.',
           bullets: [
             'Sesiones con profesionales',
             'Reservás tu turno online',
@@ -652,7 +884,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       ? [{
           id: 'seguro-hogar',
           title: 'Seguros del Hogar On Demand',
-          subtitle: 'Cobertura para tu hogar, se contrata aparte',
+          subtitle: 'Protegé tu hogar cuando lo necesites.',
           badge: 'Pago aparte',
           badgeColor: '#0d9488',
           badgeBg: 'rgba(13,148,136,0.10)',
@@ -663,7 +895,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
           glowColor: 'rgba(13,148,136,0.16)',
           theme: TEAL,
           Icon: IconHogar,
-          description: 'Asegurá tu hogar con planes pensados para Rosario y la región. Es un producto adicional, independiente de tu cobertura Previnca Nexo, que se contrata y abona por separado.',
+          description: 'Contá con una cobertura para proteger tu hogar frente a imprevistos. Es un servicio adicional a tu cobertura Previnca Nexo, que podés contratar de manera independiente.',
           bullets: [
             'Incendio, Responsabilidad Civil y más',
             'Producto adicional, se contrata aparte',
