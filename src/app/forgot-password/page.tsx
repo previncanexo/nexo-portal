@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
+    <div className="portal-dark min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
       <div className="absolute pointer-events-none" style={{ top: '-80px', left: '-120px', width: '500px', height: '500px', borderRadius: '50%', background: 'var(--purple)', opacity: 0.06, filter: 'blur(130px)' }} />
       <div className="absolute pointer-events-none" style={{ bottom: '-100px', right: '-100px', width: '450px', height: '450px', borderRadius: '50%', background: 'var(--pink)', opacity: 0.05, filter: 'blur(110px)' }} />
       <div className="pointer-events-none fixed inset-0" style={{ opacity: 0.15, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E\")", mixBlendMode: 'overlay' }} />
