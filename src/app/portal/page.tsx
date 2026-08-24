@@ -191,19 +191,17 @@ export default async function PortalPage() {
       )}
 
       {/* Servicios */}
-      <section>
-        <p
-          className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
-          style={{ color: 'rgba(255,255,255,0.70)' }}
-        >
-          Tus servicios
-        </p>
-        {isActive ? (
-          <ServiceCards affiliate={affiliate as Affiliate | null} />
-        ) : (
-          <div
-            className="glass-card px-5 py-6 flex items-center gap-4"
+      {isActive ? (
+        <ServiceCards affiliate={affiliate as Affiliate | null} />
+      ) : (
+        <section>
+          <p
+            className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
+            style={{ color: 'rgba(255,255,255,0.70)' }}
           >
+            Tus servicios
+          </p>
+          <div className="glass-card px-5 py-6 flex items-center gap-4">
             <div
               className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
               style={{ background: 'rgba(251,191,36,0.1)' }}
@@ -221,8 +219,8 @@ export default async function PortalPage() {
               </p>
             </div>
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* Cancelar suscripción */}
       <CancelSection status={status} />
