@@ -8,6 +8,8 @@ import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, 
 import { sendMetaCapiEvents } from '@/lib/meta-capi'
 import { sendGa4Events } from '@/lib/ga4-mp'
 import { addOneMonth, todayAR } from '@/lib/dateUtils'
+import { findPaidIdentityConflict } from '@/lib/affiliateIdentity'
+import { materializeAffiliateFromLead, resolveAffiliateIdFromReference, findCompletedLeadId } from '@/lib/leadConversion'
 
 // -------------------------------------------------------------------------
 // HELPERS — matching por email (en vez de external_reference)
@@ -276,6 +278,16 @@ export async function POST(req: NextRequest) {
           if (byExtRef) affiliate = byExtRef as PendingAffiliate
         }
         const payerInfo = await getPayerInfoFromSub(process.env.MP_ACCESS_TOKEN!, subId)
+
+        // Flujo actual: external_reference es un LEAD — el afiliado se crea
+        // recién acá, con el pago ya autorizado.
+        if (!affiliate && pa.external_reference) {
+          affiliate = await materializeAffiliateFromLead(supabase, pa.external_reference, {
+            mpSubscriptionId: subId,
+            mpPayerId: payerInfo.payerId,
+          }) as PendingAffiliate | null
+        }
+
         if (!affiliate) {
           if (!payerInfo.email && !payerInfo.dni) {
             console.warn('[mp-webhook] sin external_reference match y sin payer info para sub', subId)
@@ -283,8 +295,22 @@ export async function POST(req: NextRequest) {
           }
           affiliate = await findPendingAffiliate(supabase, payerInfo)
         }
+        // Último fallback: lead que terminó el formulario y matchea por sub/DNI/email.
         if (!affiliate) {
-          console.warn('[mp-webhook] no hay affiliate pending — external_ref=', pa.external_reference, 'payer=', payerInfo, 'sub=', subId)
+          const leadId = await findCompletedLeadId(supabase, {
+            dni: payerInfo.dni,
+            email: payerInfo.email,
+            mpSubscriptionId: subId,
+          })
+          if (leadId) {
+            affiliate = await materializeAffiliateFromLead(supabase, leadId, {
+              mpSubscriptionId: subId,
+              mpPayerId: payerInfo.payerId,
+            }) as PendingAffiliate | null
+          }
+        }
+        if (!affiliate) {
+          console.warn('[mp-webhook] no hay affiliate ni lead convertible — external_ref=', pa.external_reference, 'payer=', payerInfo, 'sub=', subId)
           return NextResponse.json({ ok: true })
         }
         const affiliateId = affiliate.id
@@ -292,6 +318,19 @@ export async function POST(req: NextRequest) {
         {
           // scope para conservar la indentación del bloque original de activación
           if (affiliate.status === 'pending') {
+          // Unicidad de afiliado: se aplica recién al activar. Pueden existir N
+          // pendings con el mismo DNI/email, pero un solo afiliado pagado.
+          const dup = await findPaidIdentityConflict(supabase, {
+            dni: affiliate.dni,
+            email: affiliate.email,
+            excludeAffiliateId: affiliateId,
+          })
+          if (dup) {
+            console.error('[mp-webhook] activación bloqueada: ya existe un afiliado pagado con el mismo ' + dup, {
+              affiliateId, dni: affiliate.dni, email: affiliate.email, subId: body.data.id,
+            })
+            return NextResponse.json({ ok: true, skipped: `duplicate_${dup}` })
+          }
           const today = todayAR()
 
           let userId = affiliate.user_id as string | null | undefined
@@ -544,6 +583,21 @@ export async function POST(req: NextRequest) {
             ppa.external_reference = paymentAffiliateId
           }
 
+          // external_reference puede apuntar a un LEAD (flujo actual, el afiliado
+          // todavía no existe) o a un affiliate (subs legacy). Normalizamos a
+          // affiliate id — materializando el afiliado si hace falta — porque de
+          // acá para abajo se usa como FK de payments y de la activación.
+          if (ppa.external_reference) {
+            const resolvedAffiliateId = await resolveAffiliateIdFromReference(supabase, ppa.external_reference, {
+              mpSubscriptionId: mp.subscription_id ? String(mp.subscription_id) : null,
+            })
+            if (!resolvedAffiliateId) {
+              console.error('[mp-webhook] payment aprobado sin afiliado resoluble para ref', ppa.external_reference)
+              return NextResponse.json({ ok: true, skipped: 'unresolved_reference' })
+            }
+            ppa.external_reference = resolvedAffiliateId
+          }
+
           if (ppa.external_reference) {
             const todayStr = todayAR()
 
@@ -573,6 +627,19 @@ export async function POST(req: NextRequest) {
 
             // Activate pending affiliate when first payment is approved
             if (affiliateData?.status === 'pending') {
+              // Unicidad recién al activar: N pendings pueden compartir DNI/email,
+              // pero solo uno puede quedar como afiliado pagado.
+              const dup = await findPaidIdentityConflict(supabase, {
+                dni: affiliateData.dni,
+                email: affiliateData.email,
+                excludeAffiliateId: ppa.external_reference,
+              })
+              if (dup) {
+                console.error('[mp-webhook] activación bloqueada: ya existe un afiliado pagado con el mismo ' + dup, {
+                  affiliateId: ppa.external_reference, dni: affiliateData.dni, email: affiliateData.email,
+                })
+                return NextResponse.json({ ok: true, skipped: `duplicate_${dup}` })
+              }
               const today = todayAR()
 
               let userId = affiliateData.user_id as string | null | undefined
@@ -772,8 +839,11 @@ export async function POST(req: NextRequest) {
         }
 
         if (rejAffiliateId) {
-          // Claim atómico: UPDATE ... WHERE status='pending' AND rejection_notified_at IS NULL.
-          // Solo el primer webhook concurrente que gane el claim envía los emails.
+          // Claim atómico: UPDATE ... WHERE <no notificado>. Solo el primer
+          // webhook concurrente que gane el claim envía los emails.
+          //
+          // La referencia puede ser un affiliate pending (subs legacy) o un
+          // lead 'completed' (flujo actual: un pago rechazado NO crea afiliado).
           const { data: aff } = await supabase
             .from('affiliates')
             .update({ rejection_notified_at: new Date().toISOString() })
@@ -796,7 +866,34 @@ export async function POST(req: NextRequest) {
               whatsapp: aff.whatsapp ?? null,
               dni: aff.dni ?? null,
               affiliateId: aff.id,
+              adminPath: `/admin/afiliados/${aff.id}`,
             })
+          } else {
+            const { data: rejLead } = await supabase
+              .from('leads')
+              .update({ rejection_notified_at: new Date().toISOString() })
+              .eq('id', rejAffiliateId)
+              .in('status', ['completed', 'partial', 'abandoned'])
+              .is('rejection_notified_at', null)
+              .select('id, nombre, apellido, dni, email, whatsapp, checkout_url')
+              .maybeSingle()
+
+            if (rejLead) {
+              await sendPaymentRejectedEmail({
+                nombre: rejLead.nombre,
+                email: rejLead.email,
+                checkoutUrl: rejLead.checkout_url ?? null,
+              })
+              await sendInternalPaymentRejectedEmail({
+                nombre: rejLead.nombre,
+                apellido: rejLead.apellido,
+                email: rejLead.email,
+                whatsapp: rejLead.whatsapp ?? null,
+                dni: rejLead.dni ?? null,
+                affiliateId: rejLead.id,
+                adminPath: '/admin/leads',
+              })
+            }
           }
         }
       }

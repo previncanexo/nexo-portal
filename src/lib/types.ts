@@ -57,7 +57,13 @@ export interface ServiceConsumption {
   created_at: string
 }
 
-export type LeadStatus = 'partial' | 'converted' | 'abandoned'
+/**
+ * partial   → formulario incompleto
+ * completed → formulario completo + checkout de MP generado, sin pagar
+ * converted → pagó → tiene affiliate_id
+ * abandoned → el cron lo dio por perdido
+ */
+export type LeadStatus = 'partial' | 'completed' | 'converted' | 'abandoned'
 
 export interface Lead {
   id: string
@@ -86,6 +92,14 @@ export interface Lead {
   ga_client_id: string | null
   client_user_agent: string | null
   client_ip: string | null
+  // Estado pre-pago: el checkout de MP vive en el lead hasta que el pago
+  // aprobado materializa el afiliado.
+  checkout_url: string | null
+  mp_subscription_id: string | null
+  mp_payer_id: string | null
+  completed_at: string | null
+  abandonment_notified_at: string | null
+  rejection_notified_at: string | null
   created_at: string
 }
 

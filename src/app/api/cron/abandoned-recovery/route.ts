@@ -51,7 +51,48 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // ---- Pasada 2: abandono de PAGO (affiliates pending de +1h, con checkout_url) ----
+  // ---- Pasada 2: abandono de PAGO ----
+  // Flujo actual: leads 'completed' de +1h con checkout generado y sin pagar
+  // (el afiliado todavía no existe — nace recién con el pago aprobado).
+  const { data: pendingPayment, error: payErr } = await supabase
+    .from('leads')
+    .select('id, nombre, apellido, email, whatsapp, checkout_url')
+    .eq('status', 'completed')
+    .lt('created_at', oneHourAgo)
+    .is('abandonment_notified_at', null)
+    .not('checkout_url', 'is', null)
+
+  if (payErr) {
+    console.error('[abandoned-recovery] leads completed error:', payErr.message)
+  } else {
+    for (const lead of pendingPayment ?? []) {
+      const { error: updateErr } = await supabase
+        .from('leads')
+        .update({ abandonment_notified_at: new Date().toISOString() })
+        .eq('id', lead.id)
+      if (updateErr) {
+        console.error('[abandoned-recovery] no se pudo marcar abandonment_notified_at para lead', lead.id, updateErr.message)
+        continue // no enviar; se reintenta en la próxima corrida
+      }
+      await sendPendingConfirmationEmail({
+        nombre: lead.nombre,
+        email: lead.email,
+        checkoutUrl: lead.checkout_url as string,
+      })
+      await sendInternalAbandonedEmail({
+        nombre: lead.nombre,
+        apellido: lead.apellido ?? null,
+        email: lead.email,
+        whatsapp: lead.whatsapp ?? null,
+        etapa: 'pago',
+        adminPath: '/admin/leads',
+      })
+      results.payment++
+    }
+  }
+
+  // Legacy: affiliates 'pending' creados antes de que el embudo pre-pago pasara
+  // a vivir en `leads`. Se puede borrar cuando no queden pendings viejos.
   const { data: affiliates, error: affErr } = await supabase
     .from('affiliates')
     .select('id, nombre, apellido, email, whatsapp, checkout_url')

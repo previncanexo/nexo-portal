@@ -9,12 +9,14 @@ export const metadata = { title: 'Leads — Admin Nexo' }
 /**
  * Vista unificada de leads:
  *   - Incompletos: filas en `leads` con status IN (partial, abandoned)
- *   - Completos:   filas en `affiliates` con status='pending'
+ *   - Completos:   filas en `leads` con status='completed' (terminaron el
+ *                  formulario y tienen checkout de MP, pero no pagaron)
+ *                  + legacy: `affiliates` con status='pending', creados antes
+ *                  de que el embudo pre-pago viviera entero en `leads`.
  *
- * Los leads.status='converted' se excluyen porque su affiliate ya
- * aparece en la lista de Completos (evita duplicados).
+ * Los leads.status='converted' se excluyen: ya pagaron y están en Afiliados.
  *
- * Ambos filtrados por rango del PeriodFilter (created_at).
+ * Todo filtrado por rango del PeriodFilter (created_at).
  */
 export default async function LeadsPage({
   searchParams,
@@ -28,19 +30,19 @@ export default async function LeadsPage({
 
   const supabase = createAdminClient()
 
-  // Query 1: leads incompletos con trazabilidad completa
+  // Query 1: leads del embudo pre-pago (incompletos + completos sin pagar)
   const incompletos = supabase
     .from('leads')
     .select(
       'id, status, para_quien, nombre, apellido, email, whatsapp, dni, fecha_nacimiento, ciudad, domicilio, medio_pago, mp_email, plan_id, affiliate_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url, fbp, fbc, ga_client_id, client_user_agent, client_ip, created_at'
     )
-    .in('status', ['partial', 'abandoned'])
+    .in('status', ['partial', 'completed', 'abandoned'])
     .gte('created_at', fromIso)
     .lte('created_at', toIso)
     .order('created_at', { ascending: false })
     .limit(500)
 
-  // Query 2: affiliates pending (completos = terminaron onboarding, no pagaron)
+  // Query 2 (legacy): affiliates pending de antes del cambio de embudo
   const completos = supabase
     .from('affiliates')
     .select('id, nombre, apellido, email, whatsapp, dni, fecha_nacimiento, ciudad, domicilio, plan_id, created_at')
@@ -83,8 +85,8 @@ export default async function LeadsPage({
       id: l.id,
       tipo: 'lead',
       status: l.status,
-      estado: 'Incompleto',
-      estadoKey: 'incompleto',
+      estado: l.status === 'completed' ? 'Completo' : 'Incompleto',
+      estadoKey: l.status === 'completed' ? 'completo' : 'incompleto',
       fecha: l.created_at,
       para_quien: l.para_quien,
       nombre: l.nombre,

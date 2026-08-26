@@ -4,12 +4,16 @@
  * (para_quien, nombre, apellido, email, whatsapp).
  *
  * Returns: { success: true, leadId: string }
- *  -- o, si el email ya tiene cuenta activa: { success: false, error: 'email_taken' } (409)
+ *  -- o, si el email ya pertenece a un afiliado PAGADO: { success: false, error: 'email_taken' } (409)
+ *
+ * Un email/DNI solo queda reservado una vez pagado: pueden coexistir N leads
+ * (y N affiliates 'pending') con los mismos datos.
  */
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { corsHeaders, jsonWithCors } from '@/lib/cors'
 import { sendMetaCapiEvents, extractFbCookies, extractClientIp } from '@/lib/meta-capi'
+import { findPaidIdentityConflict } from '@/lib/affiliateIdentity'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -79,16 +83,13 @@ export async function POST(req: Request) {
   const supabase = createAdminClient()
   const emailLower = email.trim().toLowerCase()
 
-  // Bloquear si el email ya pertenece a un affiliate no-pending (active/suspended/cancelled)
-  const { data: existingAffiliate } = await supabase
-    .from('affiliates')
-    .select('status')
-    .eq('email', emailLower)
-    .maybeSingle()
+  // Bloquear solo si el email ya pertenece a un affiliate PAGADO (active/suspended).
+  // Los 'pending' no reservan identidad: pueden existir N leads con los mismos datos.
+  const conflict = await findPaidIdentityConflict(supabase, { email: emailLower })
 
-  if (existingAffiliate && existingAffiliate.status !== 'pending') {
+  if (conflict === 'email') {
     return jsonWithCors(
-      { success: false, error: 'email_taken', message: 'Probá registrándote con otro email.' },
+      { success: false, error: 'email_taken', message: 'Ya existe una cuenta activa con ese email. Iniciá sesión en el portal.' },
       { status: 409, origin }
     )
   }
