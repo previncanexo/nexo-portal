@@ -712,6 +712,9 @@ export async function sendPaymentRejectedEmail(args: {
 
 export async function sendInternalPaymentRejectedEmail(args: {
   nombre: string; apellido: string; email: string; whatsapp: string | null; dni: string | null; affiliateId: string
+  /** Ruta del panel a la que apunta el CTA. Default: la ficha del afiliado.
+   *  Un pago rechazado del flujo nuevo todavía no tiene afiliado → /admin/leads. */
+  adminPath?: string
 }): Promise<void> {
   if (!process.env.RESEND_API_KEY) return
   const to = internalRecipients()
@@ -730,7 +733,7 @@ export async function sendInternalPaymentRejectedEmail(args: {
       email: args.email,
       whatsapp: args.whatsapp,
       detalle: args.dni ? `DNI ${args.dni}` : 'Pago no aprobado por MercadoPago',
-      adminUrl: `${appUrl}/admin/afiliados/${args.affiliateId}`,
+      adminUrl: `${appUrl}${args.adminPath ?? `/admin/afiliados/${args.affiliateId}`}`,
     }),
   }).catch((err) => console.error('[internal-payment-rejected-email]', err))
 }

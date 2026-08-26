@@ -3,9 +3,9 @@
 import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { registrationLimiter } from '@/lib/ratelimit'
-import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from 'mercadopago'
+import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import { sendPendingConfirmationEmail } from '@/lib/emails'
-import { addOneMonth } from '@/lib/dateUtils'
+import { findPaidIdentityConflict } from '@/lib/affiliateIdentity'
 
 interface RegisterInput {
   nombre: string
@@ -74,173 +74,121 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
   const supabase = createAdminClient()
 
   // Fetch selected plan or default to cheapest
-  const planQuery = supabase.from('plans').select('id, name, price, mp_plan_id')
+  const planQuery = supabase.from('plans').select('id, name, price')
   const { data: plan } = input.plan_id
     ? await planQuery.eq('id', input.plan_id).maybeSingle()
     : await planQuery.order('price', { ascending: true }).limit(1).maybeSingle()
 
-  // Check if email already exists
-  const { data: existingAffiliate } = await supabase
-    .from('affiliates')
-    .select('id, affiliate_number, user_id, status, mp_subscription_id, nombre, apellido, whatsapp, ciudad, domicilio, fecha_nacimiento')
-    .eq('email', email)
-    .maybeSingle()
-
-  if (existingAffiliate && existingAffiliate.status !== 'pending') {
+  // La identidad (DNI/email) queda reservada solo por afiliados PAGADOS.
+  // Los 'pending' no bloquean: se puede reintentar el alta cuantas veces haga falta.
+  const identityConflict = await findPaidIdentityConflict(supabase, { dni, email })
+  if (identityConflict === 'dni') {
+    return {
+      success: false,
+      error: 'Ya existe una cuenta con ese DNI. Si olvidaste tu contraseña, podés recuperarla desde el login.',
+    }
+  }
+  if (identityConflict === 'email') {
     return {
       success: false,
       error: 'Ya existe una cuenta activa con ese email. Iniciá sesión en el portal.',
     }
   }
 
-  // If pending account exists, resume payment flow instead of creating a new user
-  if (existingAffiliate && existingAffiliate.status === 'pending') {
-    // Only update fields that are currently blank — don't overwrite existing data
-    const updatePayload: Record<string, unknown> = {}
-    if (!existingAffiliate.nombre) updatePayload.nombre = nombre
-    if (!existingAffiliate.apellido) updatePayload.apellido = apellido
-    if (!existingAffiliate.whatsapp) updatePayload.whatsapp = whatsapp
-    if (!existingAffiliate.ciudad) updatePayload.ciudad = ciudad
-    if (!existingAffiliate.domicilio) updatePayload.domicilio = domicilio
-    if (!existingAffiliate.fecha_nacimiento) updatePayload.fecha_nacimiento = fechaNacimiento
-    // always update plan_id in case they changed plan
-    updatePayload.plan_id = plan?.id ?? null
-    updatePayload.updated_at = new Date().toISOString()
+  // Retomar el último intento con checkout vigente en vez de generar otra
+  // suscripción en MP (doble click, reintento desde el email de recuperación).
+  const { data: openLeads } = await supabase
+    .from('leads')
+    .select('id, checkout_url')
+    .eq('email', email)
+    .eq('dni', dni)
+    .eq('status', 'completed')
+    .not('checkout_url', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+  const openLead = openLeads?.[0] ?? null
 
-    await supabase
-      .from('affiliates')
-      .update(updatePayload)
-      .eq('id', existingAffiliate.id)
-
-    try {
-      const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
-      const planClient = new PreApprovalPlan(mpClient)
-      const mpPlan = await planClient.create({
-        body: {
-          reason: plan?.name ?? 'Previnca Nexo',
-          auto_recurring: {
-            frequency: 1,
-            frequency_type: 'months',
-            transaction_amount: plan?.price ?? 19500,
-            currency_id: 'ARS',
-          },
-          back_url: `${appUrl}/registro/exito`,
-          external_reference: existingAffiliate.id,
-        } as any,
-      })
-      if (!mpPlan.init_point) throw new Error('MP no devolvió URL de pago')
-      const checkoutUrl = mpPlan.init_point
-      // Persistir el link de pago para la recuperación de abandono/rechazo.
-      await supabase
-        .from('affiliates')
-        .update({ checkout_url: checkoutUrl })
-        .eq('id', existingAffiliate.id)
-      const mpId = mpPlan.id ? String(mpPlan.id) : undefined
-
-      if (mpId) {
-        await supabase
-          .from('affiliates')
-          .update({ mp_subscription_id: mpId })
-          .eq('id', existingAffiliate.id)
-      }
-
-      // Fire-and-forget — don't block the response
-      sendPendingConfirmationEmail({
-        nombre,
-        email,
-        checkoutUrl,
-      }).catch(() => {})
-
-      return { success: true, checkoutUrl }
-    } catch (err: any) {
-      const mpMessage = err?.message ?? String(err)
-      const mpCause = JSON.stringify(err?.cause ?? err?.error ?? err?.apiResponse ?? '')
-      console.error('[initiatePayment] MP error:', mpMessage, mpCause)
-      return {
-        success: false,
-        error: 'Error al procesar el pago. Por favor intentá de nuevo.',
-      }
-    }
+  if (openLead?.checkout_url) {
+    sendPendingConfirmationEmail({ nombre, email, checkoutUrl: openLead.checkout_url }).catch(() => {})
+    return { success: true, checkoutUrl: openLead.checkout_url }
   }
 
-  // New registration flow — Auth user is NOT created here; it will be created by the webhook after payment
-  const affiliateData: Record<string, unknown> = {
-    nombre, apellido, dni, email,
-    user_id: null,
-    status: 'pending',
-    plan_id: plan?.id ?? null,
-  }
-  if (whatsapp) affiliateData.whatsapp = whatsapp
-  if (ciudad) affiliateData.ciudad = ciudad
-  if (domicilio) affiliateData.domicilio = domicilio
-  if (fecha_nacimiento) affiliateData.fecha_nacimiento = fecha_nacimiento
-
-  const { data: affiliate, error: affiliateError } = await supabase
-    .from('affiliates')
-    .insert(affiliateData)
-    .select('id, affiliate_number')
+  // Nuevo intento: se guarda como LEAD. El afiliado se crea recién cuando MP
+  // confirma el pago (webhook) — hasta entonces se pueden generar todos los
+  // intentos que hagan falta con los mismos datos.
+  const { data: lead, error: leadError } = await supabase
+    .from('leads')
+    .insert({
+      para_quien: 'para_mi',
+      nombre,
+      apellido,
+      email,
+      whatsapp: whatsapp?.trim() || 's/d',
+      dni,
+      fecha_nacimiento: fechaNacimiento,
+      ciudad: ciudad ?? null,
+      domicilio: domicilio ?? null,
+      medio_pago: 'tarjeta',
+      plan_id: plan?.id ?? null,
+      status: 'partial',
+      referer: '/registro',
+    })
+    .select('id')
     .single()
 
-  if (affiliateError) {
-    const isDniDuplicate = (affiliateError as any).code === '23505' &&
-      affiliateError.message.toLowerCase().includes('dni')
+  if (leadError || !lead) {
     return {
       success: false,
-      error: isDniDuplicate
-        ? 'Ya existe una cuenta con ese DNI. Si olvidaste tu contraseña, podés recuperarla desde el login.'
-        : `Error al crear el afiliado: ${affiliateError.message}`,
+      error: `Error al iniciar el registro: ${leadError?.message ?? 'desconocido'}`,
     }
   }
 
-  // Create MP checkout — PreApprovalPlan has no payer_email restriction
+  // Suscripción directa en MP (sin plan template) para que external_reference
+  // viaje intacto en todos los eventos del webhook.
   try {
     const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
-    const planClient = new PreApprovalPlan(mpClient)
-
-    const mpPlan = await planClient.create({
+    const preApprovalClient = new PreApproval(mpClient)
+    const sub = await preApprovalClient.create({
       body: {
         reason: plan?.name ?? 'Previnca Nexo',
+        external_reference: lead.id,
+        payer_email: email,
+        back_url: `${appUrl}/registro/exito`,
+        status: 'pending',
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',
           transaction_amount: plan?.price ?? 19500,
           currency_id: 'ARS',
         },
-        back_url: `${appUrl}/registro/exito`,
-        external_reference: affiliate.id,
-      } as any,
+      },
     })
-    if (!mpPlan.init_point) throw new Error('MP no devolvió URL de pago')
-    const checkoutUrl = mpPlan.init_point
-    // Persistir el link de pago para la recuperación de abandono/rechazo.
-    await supabase
-      .from('affiliates')
-      .update({ checkout_url: checkoutUrl })
-      .eq('id', affiliate.id)
-    const mpId = mpPlan.id ? String(mpPlan.id) : undefined
+    const subExt = sub as unknown as { id?: string; init_point?: string }
+    const checkoutUrl = subExt.init_point
+    if (!checkoutUrl) throw new Error('MP no devolvió URL de pago')
 
-    if (mpId) {
-      await supabase
-        .from('affiliates')
-        .update({ mp_subscription_id: mpId })
-        .eq('id', affiliate.id)
-    }
+    await supabase
+      .from('leads')
+      .update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        checkout_url: checkoutUrl,
+        mp_subscription_id: subExt.id ? String(subExt.id) : null,
+      })
+      .eq('id', lead.id)
 
     // Fire-and-forget — don't block the response
-    sendPendingConfirmationEmail({
-      nombre,
-      email,
-      checkoutUrl,
-    }).catch(() => {})
+    sendPendingConfirmationEmail({ nombre, email, checkoutUrl }).catch(() => {})
 
     return { success: true, checkoutUrl }
   } catch (err: any) {
     const mpMessage = err?.message ?? String(err)
-    const mpCause = JSON.stringify(err?.cause ?? err?.error ?? '')
+    const mpCause = JSON.stringify(err?.cause ?? err?.error ?? err?.apiResponse ?? '')
     console.error('[initiatePayment] MP error:', mpMessage, mpCause)
-    // Rollback: delete the lead record — no Auth user was created, so no user cleanup needed
+    // Rollback: el lead recién creado no llegó a tener checkout — lo borramos
+    // para no ensuciar el panel. No hay afiliado ni usuario de Auth que limpiar.
     try {
-      await supabase.from('affiliates').delete().eq('id', affiliate.id)
+      await supabase.from('leads').delete().eq('id', lead.id)
     } catch (rollbackErr) {
       console.error('[mp] Rollback error:', rollbackErr)
     }

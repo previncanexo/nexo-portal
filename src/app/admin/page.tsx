@@ -119,15 +119,15 @@ export default async function AdminDashboardPage({
     supabase.from('affiliates').select('id', { count: 'exact', head: true }).eq('status', 'active'),
     // Card: Afiliados inactivos (suspended + cancelled totales)
     supabase.from('affiliates').select('id', { count: 'exact', head: true }).in('status', ['suspended', 'cancelled']),
-    // Card: Leads (leads partial/abandoned + affiliates pending — no depende del rango)
-    supabase.from('leads').select('id', { count: 'exact', head: true }).in('status', ['partial', 'abandoned']),
+    // Card: Leads (todo el embudo pre-pago + affiliates pending legacy — no depende del rango)
+    supabase.from('leads').select('id', { count: 'exact', head: true }).in('status', ['partial', 'completed', 'abandoned']),
     supabase.from('affiliates').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     // Charts (todos filtrados por rango del periodo)
     supabase.from('affiliates').select('created_at, status').gte('created_at', fromIso).lte('created_at', toIso),
     supabase.from('payments').select('amount, paid_at').eq('mp_status', 'approved').gte('paid_at', fromIso).lte('paid_at', toIso),
     supabase.from('payments').select('amount, paid_at').eq('mp_status', 'approved').gte('paid_at', prevFromIso).lte('paid_at', prevToIso),
     supabase.from('affiliates').select('created_at, status').in('status', ['suspended', 'cancelled']).gte('created_at', fromIso).lte('created_at', toIso),
-    supabase.from('leads').select('created_at').in('status', ['partial', 'abandoned']).gte('created_at', fromIso).lte('created_at', toIso),
+    supabase.from('leads').select('created_at').in('status', ['partial', 'completed', 'abandoned']).gte('created_at', fromIso).lte('created_at', toIso),
   ])
 
   const activeCount = activeCountRes.count ?? 0

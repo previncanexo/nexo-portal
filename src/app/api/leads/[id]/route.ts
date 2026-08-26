@@ -1,18 +1,21 @@
 /**
  * PATCH /api/leads/[id]
- * Stage 2 del onboarding: completa los datos faltantes del lead, lo transforma
- * en affiliate (status='pending'), crea una preapproval directa en MP (sin plan
- * template) con external_reference=affiliate.id, y devuelve el init_point como
- * URL de pago. Cuando el user autoriza en MP la sub pasa a authorized y llega
- * el webhook que activa al affiliate.
+ * Stage 2 del onboarding: completa los datos del lead, crea una preapproval
+ * directa en MP (sin plan template) con external_reference=lead.id y devuelve
+ * el init_point como URL de pago. El lead queda en status='completed'.
  *
- * Returns: { success: true, leadId, affiliateId, checkoutUrl }
+ * NO se crea ningún affiliate acá: el afiliado se materializa recién cuando MP
+ * confirma el pago (webhook). Hasta entonces se pueden generar tantos leads con
+ * los mismos datos como haga falta.
+ *
+ * Returns: { success: true, leadId, affiliateId: null, checkoutUrl }
  */
 
+import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { corsHeaders, jsonWithCors } from '@/lib/cors'
-import { sendPendingConfirmationEmail } from '@/lib/emails'
 import { sendMetaCapiEvents, extractFbCookies, extractClientIp } from '@/lib/meta-capi'
+import { findPaidIdentityConflict } from '@/lib/affiliateIdentity'
 
 interface FinalizeLeadInput {
   dni?: string
@@ -32,6 +35,18 @@ interface FinalizeLeadInput {
   /** GA4 client_id parseado del cookie `_ga` en el browser — necesario para
    *  atribuir el Purchase server-side al mismo usuario en el webhook MP. */
   ga_client_id?: string
+  /** Atribución: repetidos aquí por si la sesión perdió el POST inicial y
+   *  los captura recién en el PATCH. El backend solo escribe si son truthy
+   *  para no pisar first-touch. */
+  utm_source?: string
+  utm_medium?: string
+  utm_campaign?: string
+  utm_term?: string
+  utm_content?: string
+  fbclid?: string
+  gclid?: string
+  referer?: string
+  landing_url?: string
 }
 
 export async function OPTIONS(req: Request) {
@@ -82,7 +97,7 @@ export async function PATCH(
     return jsonWithCors({ success: false, error: 'Body inválido' }, { status: 400, origin })
   }
 
-  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, plan_id, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id } = body
+  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, plan_id, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url } = body
 
   // Identificadores del browser para CAPI Purchase / GA4 purchase server-side
   // (en el webhook MP no podremos leerlos — se persisten en el affiliate).
@@ -129,7 +144,7 @@ export async function PATCH(
   // 1. Fetch lead
   const { data: lead, error: leadFetchError } = await supabase
     .from('leads')
-    .select('id, status, affiliate_id, para_quien, nombre, apellido, email, whatsapp')
+    .select('id, status, affiliate_id, checkout_url, para_quien, nombre, apellido, email, whatsapp')
     .eq('id', leadId)
     .maybeSingle()
 
@@ -139,124 +154,147 @@ export async function PATCH(
       { status: 404, origin }
     )
   }
-  // Idempotencia: si el lead ya fue convertido, devolver la checkoutUrl
-  // persistida en el affiliate (evita crear una sub duplicada en MP).
+
+  // Idempotencia #1: el lead ya pagó → hay un afiliado y no se generan más registros.
   if (lead.status === 'converted' && lead.affiliate_id) {
-    const { data: existingAff } = await supabase
-      .from('affiliates')
-      .select('checkout_url')
-      .eq('id', lead.affiliate_id)
-      .maybeSingle()
-    if (existingAff?.checkout_url) {
-      return jsonWithCors(
-        { success: true, leadId, affiliateId: lead.affiliate_id, checkoutUrl: existingAff.checkout_url },
-        { status: 200, origin }
-      )
-    }
+    return jsonWithCors(
+      {
+        success: false,
+        error: 'already_affiliate',
+        message: 'Ya existe una afiliación activa con estos datos. Iniciá sesión en el portal.',
+      },
+      { status: 409, origin }
+    )
   }
 
-  // 2. Plan (seleccionado o el más barato por default)
+  // Idempotencia #2: ya completó el formulario y tiene checkout vigente →
+  // devolvemos el mismo link en vez de crear otra suscripción en MP.
+  if (lead.status === 'completed' && lead.checkout_url) {
+    return jsonWithCors(
+      { success: true, leadId, affiliateId: null, checkoutUrl: lead.checkout_url },
+      { status: 200, origin }
+    )
+  }
+
+  // 2. La identidad (DNI/email) la reservan SOLO los afiliados pagados.
+  //    Mientras no haya pago, se pueden generar todos los leads que hagan falta.
+  const identityConflict = await findPaidIdentityConflict(supabase, {
+    dni: dni.trim(),
+    email: lead.email,
+  })
+  if (identityConflict) {
+    return jsonWithCors(
+      {
+        success: false,
+        error: identityConflict === 'dni' ? 'dni_taken' : 'email_taken',
+        message: identityConflict === 'dni'
+          ? 'Ya existe una afiliación con ese DNI. Iniciá sesión en el portal.'
+          : 'Ya existe una afiliación con ese email. Iniciá sesión en el portal.',
+      },
+      { status: 409, origin }
+    )
+  }
+
+  // 3. Plan (seleccionado o el más barato por default)
   const planQuery = supabase.from('plans').select('id, name, price')
   const { data: plan } = plan_id
     ? await planQuery.eq('id', plan_id).maybeSingle()
     : await planQuery.order('price', { ascending: true }).limit(1).maybeSingle()
 
-  // 3. Armar domicilio
+  // 4. Armar domicilio
   const domicilio = [
     calle.trim(),
     numero.trim(),
     depto?.trim() ? `Dpto. ${depto.trim()}` : '',
   ].filter(Boolean).join(' ')
 
-  // 4. Crear affiliate (status=pending; será activado por el webhook tras autorización MP)
-  const { data: affiliate, error: affiliateError } = await supabase
-    .from('affiliates')
-    .insert({
-      nombre: lead.nombre,
-      apellido: lead.apellido,
+  // 5. Crear la suscripción directamente en MP SIN plan template.
+  //    Con plan template MP pisaba el external_reference y forzaba el matching
+  //    por email/DNI (frágil ante emails compartidos, casos como Federico donde
+  //    un mismo payer_email tenía sub previas con external_reference de otro
+  //    afiliado). Sin plan, external_reference viaja intacto en todos los
+  //    eventos (subscription_preapproval, payment, subscription_authorized_payment).
+  //
+  //    external_reference = leadId: el affiliate NO existe todavía — lo crea el
+  //    webhook de MP recién cuando el pago queda aprobado.
+  const payerEmail = medio_pago === 'mp_balance' && mp_email ? mp_email.trim() : lead.email
+  const planPrice = plan?.price ?? 19500
+  const planName = plan?.name ?? 'Previnca Nexo'
+
+  // Paso donde estamos, para logging estructurado si algo falla y disparamos rollback
+  let failStep: 'mp_sub' | 'lead_data' | 'capi' = 'mp_sub'
+  try {
+    const mpToken = process.env.MP_ACCESS_TOKEN
+    if (!mpToken) throw new Error('MP_ACCESS_TOKEN no configurado')
+
+    const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
+    const preApprovalClient = new PreApproval(mpClient)
+    const sub = await preApprovalClient.create({
+      body: {
+        reason: planName,
+        external_reference: leadId,
+        payer_email: payerEmail,
+        back_url: 'https://nexo.portal.previncasalud.com.ar/registro/exito',
+        status: 'pending',
+        auto_recurring: {
+          frequency: 1,
+          frequency_type: 'months',
+          transaction_amount: planPrice,
+          currency_id: 'ARS',
+        },
+      },
+    })
+    const subExt = sub as unknown as { id?: string; init_point?: string }
+    const checkoutUrl = subExt.init_point
+    const mpSubId = subExt.id
+    if (!checkoutUrl || !mpSubId) throw new Error('MP no devolvió init_point/id')
+
+    // 6. Persistir en el lead todo el estado pre-pago: datos del step 2,
+    //    trazabilidad y el checkout de MP. El lead pasa a 'completed'
+    //    (formulario terminado, pago pendiente) — NO a 'converted': eso lo
+    //    hace el webhook cuando MP aprueba y se crea el affiliate.
+    failStep = 'lead_data'
+    // Atribución: solo se pisa lo previo si viene truthy en este PATCH
+    // (respeta first-touch cuando el POST inicial ya la persistió).
+    const leadUpdate: Record<string, unknown> = {
       dni: dni.trim(),
-      email: lead.email,
-      whatsapp: lead.whatsapp,
+      fecha_nacimiento,
       ciudad,
       domicilio,
-      fecha_nacimiento,
+      medio_pago,
+      mp_email: mp_email?.trim() || null,
       plan_id: plan?.id ?? null,
-      user_id: null,
-      status: 'pending',
-    })
-    .select('id')
-    .single()
+      checkout_url: checkoutUrl,
+      mp_subscription_id: mpSubId,
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+      // IDs del browser para Meta CAPI / GA4 Purchase server-side (los lee el webhook MP)
+      fbp: fb.fbp ?? null,
+      fbc: fb.fbc ?? null,
+      ga_client_id: ga_client_id ?? null,
+      client_user_agent: clientUserAgent ?? null,
+      client_ip: clientIp ?? null,
+    }
+    if (utm_source) leadUpdate.utm_source = utm_source
+    if (utm_medium) leadUpdate.utm_medium = utm_medium
+    if (utm_campaign) leadUpdate.utm_campaign = utm_campaign
+    if (utm_term) leadUpdate.utm_term = utm_term
+    if (utm_content) leadUpdate.utm_content = utm_content
+    if (fbclid) leadUpdate.fbclid = fbclid
+    if (gclid) leadUpdate.gclid = gclid
+    if (referer) leadUpdate.referer = referer
+    if (landing_url) leadUpdate.landing_url = landing_url
 
-  if (affiliateError) {
-    const isDniDup = (affiliateError as { code?: string })?.code === '23505' &&
-      affiliateError.message.toLowerCase().includes('dni')
-    const isEmailDup = (affiliateError as { code?: string })?.code === '23505' &&
-      affiliateError.message.toLowerCase().includes('email')
-    return jsonWithCors(
-      {
-        success: false,
-        error: isDniDup ? 'dni_taken' : isEmailDup ? 'email_taken' : 'affiliate_insert_error',
-        message: isDniDup
-          ? 'Ya existe una cuenta con ese DNI.'
-          : isEmailDup
-          ? 'Probá registrándote con otro email.'
-          : `Error al crear el afiliado: ${affiliateError.message}`,
-      },
-      { status: isDniDup || isEmailDup ? 409 : 500, origin }
-    )
-  }
+    const { error: leadUpdateError } = await supabase.from('leads').update(leadUpdate).eq('id', leadId)
+    if (leadUpdateError) throw new Error(`No se pudo guardar el lead: ${leadUpdateError.message}`)
 
-  // 5. Construir URL de checkout del plan template en MP.
-  //    Volvemos a preapproval_plan_id para que las subs queden agrupadas bajo
-  //    el plan en el dashboard de MP. El webhook YA NO depende de
-  //    external_reference (MP lo pisa con el del plan) — matchea el affiliate
-  //    por email/DNI del pagador (ver webhooks/mercadopago).
-  const MP_PLAN_ID = process.env.MP_PLAN_ID || '2efbdb5cfbf34e77b3f117f8852fa7eb'
-  const payerEmail = medio_pago === 'mp_balance' && mp_email ? mp_email.trim() : lead.email
+    // Email "completá tu pago" NO se dispara acá: se difiere al cron
+    // /api/cron/abandoned-recovery (corre cada 30 min) que lo manda cuando
+    // el lead lleva +1h en 'completed' sin pagar. Evita spamear al usuario
+    // que se está por redirigir al checkout de MP.
 
-  try {
-    const checkoutUrlObj = new URL('https://www.mercadopago.com.ar/subscriptions/checkout')
-    checkoutUrlObj.searchParams.set('preapproval_plan_id', MP_PLAN_ID)
-    checkoutUrlObj.searchParams.set('external_reference', affiliate.id)
-    checkoutUrlObj.searchParams.set('payer_email', payerEmail)
-    const checkoutUrl = checkoutUrlObj.toString()
-    // Persistir el link de pago para la recuperación de abandono/rechazo.
-    await supabase
-      .from('affiliates')
-      .update({ checkout_url: checkoutUrl })
-      .eq('id', affiliate.id)
-    // mp_subscription_id se completa cuando llega el webhook subscription_preapproval:authorized
-
-    // 7. Marcar lead como converted, asociarlo al affiliate y guardar datos del paso 2
-    await supabase
-      .from('leads')
-      .update({
-        status: 'converted',
-        affiliate_id: affiliate.id,
-        dni: dni.trim(),
-        fecha_nacimiento,
-        ciudad,
-        domicilio,
-        medio_pago,
-        mp_email: mp_email?.trim() || null,
-        plan_id: plan?.id ?? null,
-        // IDs del browser para Meta CAPI / GA4 Purchase server-side (los lee el webhook MP)
-        fbp: fb.fbp ?? null,
-        fbc: fb.fbc ?? null,
-        ga_client_id: ga_client_id ?? null,
-        client_user_agent: clientUserAgent ?? null,
-        client_ip: clientIp ?? null,
-      })
-      .eq('id', leadId)
-
-    // 8. Email "completá tu pago" — fire-and-forget
-    sendPendingConfirmationEmail({
-      nombre: lead.nombre,
-      email: lead.email,
-      checkoutUrl,
-    }).catch((err) => console.error('[api/leads] sendPendingConfirmationEmail:', err))
-
-    // 9. CAPI: CompleteRegistration + InitiateCheckout (fire-and-forget)
+    // CAPI: CompleteRegistration + InitiateCheckout (fire-and-forget)
+    failStep = 'capi'
     if (event_id_complete_registration || event_id_initiate_checkout) {
       const userData = {
         email: lead.email,
@@ -265,7 +303,7 @@ export async function PATCH(
         lastName: lead.apellido,
         dni: dni.trim(),
         ciudad,
-        externalId: affiliate.id,
+        externalId: leadId,
         fbp: fb.fbp,
         fbc: fb.fbc,
         clientIp,
@@ -304,16 +342,26 @@ export async function PATCH(
     }
 
     return jsonWithCors(
-      { success: true, leadId, affiliateId: affiliate.id, checkoutUrl },
+      { success: true, leadId, affiliateId: null, checkoutUrl },
       { status: 200, origin }
     )
   } catch (err: unknown) {
     const e = err as { message?: string; cause?: unknown; apiResponse?: unknown }
-    console.error('[api/leads/finalize] MP error:', e?.message ?? err, JSON.stringify(e?.cause ?? e?.apiResponse ?? ''))
+    console.error('[api/leads/finalize] rollback triggered', JSON.stringify({
+      step: failStep,
+      leadId,
+      message: e?.message ?? String(err),
+      cause: e?.cause ?? e?.apiResponse ?? null,
+    }))
 
-    // Rollback: borrar el affiliate creado (el webhook todavía no se enteró de nada)
+    // Rollback: no hay affiliate que borrar — solo devolvemos el lead a
+    // 'partial' para que reaparezca como incompleto en /admin/leads y el
+    // usuario pueda reintentar sin arrastrar un checkout roto.
     try {
-      await supabase.from('affiliates').delete().eq('id', affiliate.id)
+      await supabase
+        .from('leads')
+        .update({ status: 'partial', checkout_url: null, mp_subscription_id: null, completed_at: null })
+        .eq('id', leadId)
     } catch (rollbackErr) {
       console.error('[api/leads/finalize] rollback error:', rollbackErr)
     }
