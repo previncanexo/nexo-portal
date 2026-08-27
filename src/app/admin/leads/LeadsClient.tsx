@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import Link from 'next/link'
 import PeriodFilter from '@/components/admin/PeriodFilter'
 import CustomDropdown from '@/components/admin/CustomDropdown'
 
@@ -13,6 +12,9 @@ export interface UnifiedLead {
   estado: 'Incompleto' | 'Completo'
   estadoKey: 'incompleto' | 'completo'
   fecha: string
+  primer_intento: string
+  ultimo_intento: string
+  intentos: number
   para_quien: string | null
   nombre: string
   apellido: string
@@ -30,7 +32,12 @@ export interface UnifiedLead {
   utm_source: string | null
   utm_medium: string | null
   utm_campaign: string | null
+  utm_term: string | null
+  utm_content: string | null
+  fbclid: string | null
+  gclid: string | null
   referer: string | null
+  landing_url: string | null
   fbp: string | null
   fbc: string | null
   ga_client_id: string | null
@@ -65,6 +72,45 @@ function initials(nombre: string, apellido: string): string {
 
 function shortId(id: string): string {
   return id.slice(0, 8)
+}
+
+function exportCSV(list: UnifiedLead[]) {
+  const headers = [
+    'ID', 'Tipo', 'Estado', 'Intentos', 'Primer intento', 'Último intento',
+    'Para quién', 'Nombre', 'Apellido', 'Email', 'WhatsApp',
+    'DNI', 'Fecha nacimiento', 'Ciudad', 'Domicilio',
+    'Medio de pago', 'Email MP', 'Plan', 'Affiliate ID',
+    'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+    'fbclid', 'gclid', 'referer', 'landing_url',
+    'fbp', 'fbc', 'ga_client_id', 'client_ip', 'client_user_agent',
+  ]
+  const rows = list.map((l) => [
+    l.id, l.tipo, l.estado, l.intentos,
+    l.primer_intento ? new Date(l.primer_intento).toLocaleString('es-AR') : '',
+    l.ultimo_intento ? new Date(l.ultimo_intento).toLocaleString('es-AR') : '',
+    l.para_quien ? PARA_QUIEN_LABEL[l.para_quien] ?? l.para_quien : '',
+    l.nombre, l.apellido, l.email, l.whatsapp ?? '',
+    l.dni ?? '', l.fecha_nacimiento ?? '', l.ciudad ?? '', l.domicilio ?? '',
+    l.medio_pago ? MEDIO_PAGO_LABEL[l.medio_pago] ?? l.medio_pago : '',
+    l.mp_email ?? '', l.plan_name ?? '', l.affiliate_id ?? '',
+    l.utm_source ?? '', l.utm_medium ?? '', l.utm_campaign ?? '', l.utm_term ?? '', l.utm_content ?? '',
+    l.fbclid ?? '', l.gclid ?? '', l.referer ?? '', l.landing_url ?? '',
+    l.fbp ?? '', l.fbc ?? '', l.ga_client_id ?? '', l.client_ip ?? '', l.client_user_agent ?? '',
+  ])
+
+  const csv = [headers, ...rows]
+    .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    .join('\n')
+
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `leads-nexo-${new Date().toISOString().split('T')[0]}.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 export default function LeadsClient({ rows }: { rows: UnifiedLead[] }) {
@@ -136,7 +182,7 @@ export default function LeadsClient({ rows }: { rows: UnifiedLead[] }) {
           <button
             className="btn-ghost-admin"
             style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}
-            onClick={() => alert('Export CSV: implementar en próxima iteración')}
+            onClick={() => exportCSV(filtered)}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -177,16 +223,18 @@ export default function LeadsClient({ rows }: { rows: UnifiedLead[] }) {
               <tr>
                 <th>ID</th>
                 <th>Nombre completo</th>
+                <th>Email</th>
                 <th>Plan</th>
                 <th>Estado</th>
-                <th>Fecha de creación</th>
+                <th style={{ textAlign: 'center' }}>Intentos</th>
+                <th>Último intento</th>
                 <th style={{ textAlign: 'right' }}></th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: '48px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
+                  <td colSpan={8} style={{ padding: '48px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
                     Sin leads para los filtros seleccionados.
                   </td>
                 </tr>
@@ -199,6 +247,9 @@ export default function LeadsClient({ rows }: { rows: UnifiedLead[] }) {
                     <td style={{ fontWeight: 600, color: '#fff', whiteSpace: 'nowrap' }}>
                       {r.nombre} {r.apellido}
                     </td>
+                    <td style={{ color: 'rgba(255,255,255,0.65)', whiteSpace: 'nowrap' }}>
+                      {r.email}
+                    </td>
                     <td style={{ color: 'rgba(255,255,255,0.75)', whiteSpace: 'nowrap' }}>
                       {r.plan_name ?? '—'}
                     </td>
@@ -207,8 +258,13 @@ export default function LeadsClient({ rows }: { rows: UnifiedLead[] }) {
                         {r.estado}
                       </span>
                     </td>
+                    <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      <span style={{ display: 'inline-block', minWidth: 24, padding: '2px 8px', borderRadius: 9999, background: r.intentos > 1 ? 'rgba(160,138,242,0.18)' : 'rgba(255,255,255,0.06)', color: r.intentos > 1 ? '#c4b3ff' : 'rgba(255,255,255,0.65)', fontWeight: 700, fontSize: 13 }}>
+                        {r.intentos}
+                      </span>
+                    </td>
                     <td style={{ color: 'rgba(255,255,255,0.65)', whiteSpace: 'nowrap' }}>
-                      {fmtDate(r.fecha)}
+                      {fmtDate(r.ultimo_intento)}
                     </td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                       <button
@@ -240,12 +296,13 @@ function LeadDetailModal({ lead: l, onClose }: { lead: UnifiedLead; onClose: () 
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
   }, [onClose])
-
-  const stage2Done = l.tipo === 'affiliate' || l.dni !== null
-  const hasCampaña = l.utm_source || l.utm_medium || l.utm_campaign
-  const hasTecnica = l.fbp || l.fbc || l.ga_client_id || l.client_ip || l.client_user_agent
 
   return createPortal(
     <div
@@ -262,7 +319,7 @@ function LeadDetailModal({ lead: l, onClose }: { lead: UnifiedLead; onClose: () 
 
         <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', maxHeight: '85vh' }}>
           {/* Aside */}
-          <aside style={{ background: 'linear-gradient(160deg, rgba(134,96,239,0.20) 0%, rgba(238,92,208,0.10) 60%, rgba(20,10,40,0.4) 100%)', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: '1px solid rgba(255,255,255,0.08)', overflowY: 'auto' }}>
+          <aside style={{ background: 'linear-gradient(160deg, rgba(134,96,239,0.20) 0%, rgba(238,92,208,0.10) 60%, rgba(20,10,40,0.4) 100%)', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: '1px solid rgba(255,255,255,0.08)', overflowY: 'auto', minHeight: 0, maxHeight: '85vh' }}>
             <div style={{ width: 72, height: 72, borderRadius: 20, background: 'linear-gradient(135deg, var(--purple), var(--pink))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 28, fontWeight: 700, boxShadow: '0 8px 32px rgba(134,96,239,0.45)' }}>
               {initials(l.nombre, l.apellido)}
             </div>
@@ -273,8 +330,12 @@ function LeadDetailModal({ lead: l, onClose }: { lead: UnifiedLead; onClose: () 
               <span className={l.estadoKey === 'completo' ? 'chip chip-completo' : 'chip chip-incompleto'}>{l.estado}</span>
             </div>
             <div style={{ paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.10)' }}>
-              <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Registro</p>
-              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 14 }}>{fmtDate(l.fecha)}</p>
+              <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Intentos</p>
+              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 14 }}>{l.intentos}</p>
+              <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Primer intento</p>
+              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 14 }}>{fmtDate(l.primer_intento)}</p>
+              <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Último intento</p>
+              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 14 }}>{fmtDate(l.ultimo_intento)}</p>
               {l.para_quien && (
                 <>
                   <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Para quién</p>
@@ -293,9 +354,9 @@ function LeadDetailModal({ lead: l, onClose }: { lead: UnifiedLead; onClose: () 
           </aside>
 
           {/* Section */}
-          <section style={{ padding: '28px 28px 24px 28px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <section style={{ padding: '28px 28px 24px 28px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20, minHeight: 0, maxHeight: '85vh' }}>
             <div>
-              <SectionTitle icon="user">Datos personales</SectionTitle>
+              <SectionTitle icon="user">Datos del onboarding</SectionTitle>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px 24px' }}>
                 <Field label="Email" value={l.email} />
                 <Field label="WhatsApp" value={l.whatsapp} />
@@ -303,61 +364,50 @@ function LeadDetailModal({ lead: l, onClose }: { lead: UnifiedLead; onClose: () 
                 <Field label="Fecha nacimiento" value={fmtBirth(l.fecha_nacimiento)} />
                 <Field label="Ciudad" value={l.ciudad} />
                 <Field label="Domicilio" value={l.domicilio} />
+                <Field label="Plan seleccionado" value={l.plan_name} />
+                <Field label="Medio de pago" value={l.medio_pago ? MEDIO_PAGO_LABEL[l.medio_pago] ?? l.medio_pago : null} />
+                <Field label="Email MP (si aplica)" value={l.mp_email} />
               </div>
             </div>
 
-            {stage2Done && (l.plan_name || l.medio_pago) && (
-              <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <SectionTitle icon="card">Datos de pago (stage 2)</SectionTitle>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px 24px' }}>
-                  <Field label="Plan seleccionado" value={l.plan_name} />
-                  <Field label="Medio de pago" value={l.medio_pago ? MEDIO_PAGO_LABEL[l.medio_pago] ?? l.medio_pago : null} />
-                  <Field label="Email MP (si aplica)" value={l.mp_email} />
+            <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <SectionTitle icon="chart">Datos de trazabilidad</SectionTitle>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
+                  <Field label="Origen (utm_source)" value={l.utm_source} />
+                  <Field label="Medio (utm_medium)" value={l.utm_medium} />
+                  <Field label="Campaña (utm_campaign)" value={l.utm_campaign} />
+                  <Field label="Término (utm_term)" value={l.utm_term} />
+                  <Field label="Contenido (utm_content)" value={l.utm_content} />
+                  <Field label="Facebook click ID (fbclid)" value={l.fbclid} />
+                  <Field label="Google click ID (gclid)" value={l.gclid} />
+                  <Field label="Referer" value={l.referer} />
+                </div>
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Landing URL</p>
+                  <p style={{ color: l.landing_url ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{l.landing_url || '—'}</p>
                 </div>
               </div>
-            )}
+            </div>
 
-            {hasCampaña && (
-              <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <SectionTitle icon="chart">Trazabilidad de campaña</SectionTitle>
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
-                    <Field label="Origen (utm_source)" value={l.utm_source} />
-                    <Field label="Medio (utm_medium)" value={l.utm_medium} />
-                    <Field label="Campaña (utm_campaign)" value={l.utm_campaign} />
-                    <Field label="Referer" value={l.referer} />
-                  </div>
+            <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <SectionTitle icon="monitor">Datos de huella digital</SectionTitle>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
+                  <Field label="IP cliente" value={l.client_ip} />
+                  <Field label="GA client_id" value={l.ga_client_id} />
+                  <Field label="Facebook fbp" value={l.fbp} />
+                  <Field label="Facebook fbc" value={l.fbc} />
+                </div>
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>User Agent</p>
+                  <p style={{ color: l.client_user_agent ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{l.client_user_agent || '—'}</p>
                 </div>
               </div>
-            )}
-
-            {hasTecnica && (
-              <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <SectionTitle icon="monitor">Trazabilidad técnica</SectionTitle>
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
-                    <Field label="IP cliente" value={l.client_ip} />
-                    <Field label="GA client_id" value={l.ga_client_id} />
-                    <Field label="Facebook fbp" value={l.fbp} />
-                    <Field label="Facebook fbc" value={l.fbc} />
-                  </div>
-                  {l.client_user_agent && (
-                    <div style={{ marginTop: 14 }}>
-                      <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>User Agent</p>
-                      <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{l.client_user_agent}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            </div>
 
             <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', paddingTop: 20, paddingBottom: 8, borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 'auto' }}>
               <button onClick={onClose} className="btn-ghost-admin">Cerrar</button>
-              {l.affiliate_id && (
-                <Link href={`/admin/afiliados/${l.affiliate_id}`} className="btn-primary-admin" style={{ padding: '10px 24px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
-                  Ver afiliado →
-                </Link>
-              )}
             </div>
           </section>
         </div>
