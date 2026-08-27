@@ -549,7 +549,7 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
             style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.12)', border: `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.14)'}` }}
           >
             <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
-              Valor de la sesión
+              Valor de tu primera sesión
             </p>
             <div className="flex items-baseline gap-2.5 flex-wrap">
               <span
@@ -562,6 +562,9 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
                 $15.000
               </span>
             </div>
+            <p className="text-[11px] leading-snug mt-1" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>
+              Precio promocional por única vez, válido para tu primera sesión. A partir de la segunda, el valor es de $30.000.
+            </p>
           </div>
 
           <div className="flex flex-col gap-2.5">
