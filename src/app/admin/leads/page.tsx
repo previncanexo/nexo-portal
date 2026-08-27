@@ -80,7 +80,8 @@ export default async function LeadsPage({
     (completoLeads ?? []).filter((l) => l.affiliate_id).map((l) => [l.affiliate_id!, l])
   )
 
-  const rows: UnifiedLead[] = [
+  // Convertir crudos → UnifiedLead
+  const allLeads: UnifiedLead[] = [
     ...(incRes.data ?? []).map((l): UnifiedLead => ({
       id: l.id,
       tipo: 'lead',
@@ -88,6 +89,9 @@ export default async function LeadsPage({
       estado: l.status === 'completed' ? 'Completo' : 'Incompleto',
       estadoKey: l.status === 'completed' ? 'completo' : 'incompleto',
       fecha: l.created_at,
+      primer_intento: l.created_at,
+      ultimo_intento: l.created_at,
+      intentos: 1,
       para_quien: l.para_quien,
       nombre: l.nombre,
       apellido: l.apellido,
@@ -126,6 +130,9 @@ export default async function LeadsPage({
         estado: 'Completo',
         estadoKey: 'completo',
         fecha: a.created_at,
+        primer_intento: a.created_at,
+        ultimo_intento: a.created_at,
+        intentos: 1,
         para_quien: null,
         nombre: a.nombre,
         apellido: a.apellido,
@@ -156,7 +163,35 @@ export default async function LeadsPage({
         client_ip: t?.client_ip ?? null,
       }
     }),
-  ].sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
+  ]
+
+  // Agrupar por identidad (email lowercase). El representante del grupo es el
+  // intento más reciente — datos más completos y status más avanzado. El más
+  // avanzado (completo) gana sobre incompleto aunque sea más viejo.
+  const byIdentity = new Map<string, UnifiedLead[]>()
+  for (const l of allLeads) {
+    const key = (l.email || l.dni || l.id).toLowerCase().trim()
+    const arr = byIdentity.get(key) ?? []
+    arr.push(l)
+    byIdentity.set(key, arr)
+  }
+
+  const rows: UnifiedLead[] = Array.from(byIdentity.values()).map((group) => {
+    // Ordenar del más nuevo al más viejo
+    const sorted = [...group].sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
+    const hasCompleto = sorted.find((x) => x.estadoKey === 'completo')
+    // Representante: el completo más reciente (si hay), sino el más reciente
+    const rep = hasCompleto ?? sorted[0]
+    const primero = sorted[sorted.length - 1].fecha
+    const ultimo = sorted[0].fecha
+    return {
+      ...rep,
+      intentos: group.length,
+      primer_intento: primero,
+      ultimo_intento: ultimo,
+      fecha: ultimo,
+    }
+  }).sort((a, b) => (a.ultimo_intento < b.ultimo_intento ? 1 : -1))
 
   return (
     <Suspense fallback={null}>

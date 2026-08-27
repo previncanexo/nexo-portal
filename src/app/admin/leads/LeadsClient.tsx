@@ -12,6 +12,9 @@ export interface UnifiedLead {
   estado: 'Incompleto' | 'Completo'
   estadoKey: 'incompleto' | 'completo'
   fecha: string
+  primer_intento: string
+  ultimo_intento: string
+  intentos: number
   para_quien: string | null
   nombre: string
   apellido: string
@@ -73,7 +76,7 @@ function shortId(id: string): string {
 
 function exportCSV(list: UnifiedLead[]) {
   const headers = [
-    'ID', 'Tipo', 'Estado', 'Fecha',
+    'ID', 'Tipo', 'Estado', 'Intentos', 'Primer intento', 'Último intento',
     'Para quién', 'Nombre', 'Apellido', 'Email', 'WhatsApp',
     'DNI', 'Fecha nacimiento', 'Ciudad', 'Domicilio',
     'Medio de pago', 'Email MP', 'Plan', 'Affiliate ID',
@@ -82,7 +85,9 @@ function exportCSV(list: UnifiedLead[]) {
     'fbp', 'fbc', 'ga_client_id', 'client_ip', 'client_user_agent',
   ]
   const rows = list.map((l) => [
-    l.id, l.tipo, l.estado, l.fecha ? new Date(l.fecha).toLocaleString('es-AR') : '',
+    l.id, l.tipo, l.estado, l.intentos,
+    l.primer_intento ? new Date(l.primer_intento).toLocaleString('es-AR') : '',
+    l.ultimo_intento ? new Date(l.ultimo_intento).toLocaleString('es-AR') : '',
     l.para_quien ? PARA_QUIEN_LABEL[l.para_quien] ?? l.para_quien : '',
     l.nombre, l.apellido, l.email, l.whatsapp ?? '',
     l.dni ?? '', l.fecha_nacimiento ?? '', l.ciudad ?? '', l.domicilio ?? '',
@@ -218,16 +223,18 @@ export default function LeadsClient({ rows }: { rows: UnifiedLead[] }) {
               <tr>
                 <th>ID</th>
                 <th>Nombre completo</th>
+                <th>Email</th>
                 <th>Plan</th>
                 <th>Estado</th>
-                <th>Fecha de creación</th>
+                <th style={{ textAlign: 'center' }}>Intentos</th>
+                <th>Último intento</th>
                 <th style={{ textAlign: 'right' }}></th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: '48px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
+                  <td colSpan={8} style={{ padding: '48px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
                     Sin leads para los filtros seleccionados.
                   </td>
                 </tr>
@@ -240,6 +247,9 @@ export default function LeadsClient({ rows }: { rows: UnifiedLead[] }) {
                     <td style={{ fontWeight: 600, color: '#fff', whiteSpace: 'nowrap' }}>
                       {r.nombre} {r.apellido}
                     </td>
+                    <td style={{ color: 'rgba(255,255,255,0.65)', whiteSpace: 'nowrap' }}>
+                      {r.email}
+                    </td>
                     <td style={{ color: 'rgba(255,255,255,0.75)', whiteSpace: 'nowrap' }}>
                       {r.plan_name ?? '—'}
                     </td>
@@ -248,8 +258,13 @@ export default function LeadsClient({ rows }: { rows: UnifiedLead[] }) {
                         {r.estado}
                       </span>
                     </td>
+                    <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      <span style={{ display: 'inline-block', minWidth: 24, padding: '2px 8px', borderRadius: 9999, background: r.intentos > 1 ? 'rgba(160,138,242,0.18)' : 'rgba(255,255,255,0.06)', color: r.intentos > 1 ? '#c4b3ff' : 'rgba(255,255,255,0.65)', fontWeight: 700, fontSize: 13 }}>
+                        {r.intentos}
+                      </span>
+                    </td>
                     <td style={{ color: 'rgba(255,255,255,0.65)', whiteSpace: 'nowrap' }}>
-                      {fmtDate(r.fecha)}
+                      {fmtDate(r.ultimo_intento)}
                     </td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                       <button
@@ -315,8 +330,12 @@ function LeadDetailModal({ lead: l, onClose }: { lead: UnifiedLead; onClose: () 
               <span className={l.estadoKey === 'completo' ? 'chip chip-completo' : 'chip chip-incompleto'}>{l.estado}</span>
             </div>
             <div style={{ paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.10)' }}>
-              <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Registro</p>
-              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 14 }}>{fmtDate(l.fecha)}</p>
+              <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Intentos</p>
+              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 14 }}>{l.intentos}</p>
+              <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Primer intento</p>
+              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 14 }}>{fmtDate(l.primer_intento)}</p>
+              <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Último intento</p>
+              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 14 }}>{fmtDate(l.ultimo_intento)}</p>
               {l.para_quien && (
                 <>
                   <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Para quién</p>
