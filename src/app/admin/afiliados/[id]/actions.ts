@@ -620,11 +620,12 @@ export async function sendAffiliatePasswordReset(affiliateId: string): Promise<{
 }
 
 /**
- * Psicología On Demand: marca o desmarca la promo de bienvenida como utilizada.
+ * Psicología On Demand: registra o borra el consumo de la sesión bonificada.
  *
  * El cobro ocurre en DOC24, fuera del portal, así que no hay señal automática de
- * contratación. Un operador confirma con DOC24 y lo marca acá. A partir de ese
- * momento el afiliado ve el precio de lista ($30.000) en su panel.
+ * contratación: un operador confirma con DOC24 y lo registra acá. Es un dato interno
+ * de seguimiento — el portal muestra el mismo beneficio mensual a todos los afiliados
+ * (una sesión a $15.000, el resto a $30.000) y no lee este registro.
  */
 export async function setPsicologiaPromoUsada(
   affiliateId: string,
@@ -648,16 +649,16 @@ export async function setPsicologiaPromoUsada(
       return { success: false, message: `Error al leer consumos: ${readError.message}` }
     }
     if (existing && existing.length > 0) {
-      return { success: true, message: 'La promo ya figuraba como utilizada.' }
+      return { success: true, message: 'El consumo ya figuraba registrado.' }
     }
 
     const { error } = await supabase.from('service_consumptions').insert({
       affiliate_id: affiliateId,
       service_type: 'psicologia',
-      notes: 'Promo de bienvenida marcada manualmente desde el panel admin.',
+      notes: 'Sesión bonificada registrada manualmente desde el panel admin.',
     })
     if (error) {
-      return { success: false, message: `Error al marcar la promo: ${error.message}` }
+      return { success: false, message: `Error al registrar el consumo: ${error.message}` }
     }
   } else {
     const { error } = await supabase
@@ -666,7 +667,7 @@ export async function setPsicologiaPromoUsada(
       .eq('affiliate_id', affiliateId)
       .eq('service_type', 'psicologia')
     if (error) {
-      return { success: false, message: `Error al restaurar la promo: ${error.message}` }
+      return { success: false, message: `Error al borrar el registro: ${error.message}` }
     }
   }
 
@@ -675,7 +676,7 @@ export async function setPsicologiaPromoUsada(
   return {
     success: true,
     message: usada
-      ? 'Promo marcada como utilizada. El afiliado ahora ve $30.000.'
-      : 'Promo restaurada. El afiliado vuelve a ver $15.000.',
+      ? 'Sesión bonificada registrada.'
+      : 'Registro de consumo borrado.',
   }
 }

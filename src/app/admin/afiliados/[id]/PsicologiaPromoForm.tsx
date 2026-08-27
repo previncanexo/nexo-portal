@@ -6,7 +6,7 @@ import { setPsicologiaPromoUsada } from './actions'
 
 interface PsicologiaPromoFormProps {
   affiliateId: string
-  /** Fecha ISO del consumo registrado, o null si la promo sigue disponible. */
+  /** Fecha ISO del consumo registrado, o null si todavía no se registró ninguno. */
   usadaEn: string | null
 }
 
@@ -39,18 +39,19 @@ export default function PsicologiaPromoForm({ affiliateId, usadaEn }: Psicologia
           className="text-sm font-semibold"
           style={{ color: usada ? '#ca8a04' : '#16a34a', fontFamily: 'var(--font-dm-sans)' }}
         >
-          {usada ? 'Promo utilizada' : 'Promo disponible'}
+          {usada ? 'Sesión bonificada registrada' : 'Sin sesiones registradas'}
         </span>
         <span className="text-xs" style={{ color: 'var(--gray-600)', fontFamily: 'var(--font-dm-sans)' }}>
           {usada
-            ? `Registrada el ${new Date(usadaEn).toLocaleDateString('es-AR')}. En su panel ve $30.000.`
-            : 'En su panel ve la primera sesión a $15.000.'}
+            ? `Registrada el ${new Date(usadaEn).toLocaleDateString('es-AR')}.`
+            : 'Todavía no se registró ninguna sesión bonificada para este afiliado.'}
         </span>
       </div>
 
       <p className="text-xs leading-relaxed" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
-        El cobro de las sesiones ocurre en DOC24, fuera del portal. Marcá la promo como
-        utilizada recién cuando DOC24 confirme que el afiliado contrató su primera sesión.
+        Registro interno: no cambia lo que ve el afiliado en su portal. Todos los afiliados ven
+        el mismo beneficio (una sesión a $15.000 por mes, el resto a $30.000). El cobro ocurre en
+        DOC24, fuera del portal: marcá el consumo recién cuando DOC24 lo confirme.
       </p>
 
       {message && (
@@ -83,8 +84,8 @@ export default function PsicologiaPromoForm({ affiliateId, usadaEn }: Psicologia
         {isPending
           ? 'Guardando...'
           : usada
-            ? 'Restaurar promo de bienvenida'
-            : 'Marcar promo como utilizada'}
+            ? 'Borrar registro de consumo'
+            : 'Registrar sesión bonificada'}
       </button>
     </div>
   )
