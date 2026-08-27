@@ -14,6 +14,7 @@ import DeleteAfiliadoButton from './DeleteAfiliadoButton'
 import DeletePaymentButton from './DeletePaymentButton'
 import RefundButton from './RefundButton'
 import ResetPasswordButton from './ResetPasswordButton'
+import PsicologiaPromoForm from './PsicologiaPromoForm'
 
 const STATUS_CONFIG: Record<AffiliateStatus, { label: string; color: string; bg: string; border: string }> = {
   active:    { label: 'Activo',     color: '#16a34a', bg: 'rgba(22,163,74,0.1)',  border: 'rgba(22,163,74,0.2)' },
@@ -55,7 +56,12 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
   const { id } = await params
   const supabase = createAdminClient()
 
-  const [{ data: affiliateData, error }, { data: paymentsData }, { data: plansData }] = await Promise.all([
+  const [
+    { data: affiliateData, error },
+    { data: paymentsData },
+    { data: plansData },
+    { data: psicologiaData },
+  ] = await Promise.all([
     supabase
       .from('affiliates')
       .select('*, plan:plans(*)')
@@ -70,6 +76,13 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
       .from('plans')
       .select('*')
       .order('price'),
+    supabase
+      .from('service_consumptions')
+      .select('consumed_at')
+      .eq('affiliate_id', id)
+      .eq('service_type', 'psicologia')
+      .order('consumed_at', { ascending: true })
+      .limit(1),
   ])
 
   if (error || !affiliateData) notFound()
@@ -77,6 +90,7 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
   const affiliate = affiliateData as Affiliate
   const payments = (paymentsData ?? []) as Payment[]
   const plans = (plansData ?? []) as Plan[]
+  const psicologiaPromoUsadaEn = psicologiaData?.[0]?.consumed_at ?? null
 
   // Último pago aprobado (monto positivo) para el botón de devolución
   const lastApprovedPayment = [...payments]
@@ -241,6 +255,13 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
               lastAmount={lastApprovedPayment?.amount ?? null}
               currency={lastApprovedPayment?.currency ?? 'ARS'}
             />
+          </div>
+
+          <div className="glass-card px-6 py-6">
+            <h2 className="text-sm font-bold uppercase tracking-wider mb-5" style={{ color: 'var(--gray-700)' }}>
+              Psicología · promo de bienvenida
+            </h2>
+            <PsicologiaPromoForm affiliateId={affiliate.id} usadaEn={psicologiaPromoUsadaEn} />
           </div>
 
           <div className="glass-card px-6 py-6">

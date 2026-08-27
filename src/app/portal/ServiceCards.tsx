@@ -131,6 +131,8 @@ const TEAL: CardTheme = {
 
 interface ServiceCardsProps {
   affiliate: Affiliate | null
+  /** true si el afiliado ya consumió la sesión promocional de bienvenida de Psicología. */
+  psicologiaPromoUsada?: boolean
 }
 
 function IconDOC24() {
@@ -508,7 +510,15 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
 }
 
 /* ── Modal Psicología On Demand ── */
-function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
+function PsicologiaModal({
+  service,
+  onClose,
+  promoUsada,
+}: {
+  service: ServiceItem
+  onClose: () => void
+  promoUsada: boolean
+}) {
   // Un solo perfil abierto a la vez: el modal ya scrollea en 60vh y varios abiertos lo vuelven ilegible.
   const [perfilAbierto, setPerfilAbierto] = useState<string | null>(null)
   const acento = service.theme?.solid ?? 'var(--purple)'
@@ -543,27 +553,33 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
         <div className="px-6 py-5 max-h-[60vh] overflow-y-auto flex flex-col gap-4">
           <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
 
-          {/* Precio de la sesión: valor de lista tachado + precio para afiliados */}
+          {/* Precio de la sesión.
+              Promo disponible → valor de lista tachado + precio de bienvenida.
+              Promo consumida  → precio de lista, aclarando que el beneficio ya se usó. */}
           <div
             className="rounded-2xl px-4 py-3.5 flex flex-col gap-1"
             style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.12)', border: `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.14)'}` }}
           >
             <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
-              Valor de tu primera sesión
+              {promoUsada ? 'Valor de la sesión' : 'Valor de tu primera sesión'}
             </p>
             <div className="flex items-baseline gap-2.5 flex-wrap">
-              <span
-                className="text-base font-medium"
-                style={{ color: 'rgba(255,255,255,0.40)', textDecoration: 'line-through', fontFamily: 'var(--font-dm-sans)' }}
-              >
-                $30.000
-              </span>
+              {!promoUsada && (
+                <span
+                  className="text-base font-medium"
+                  style={{ color: 'rgba(255,255,255,0.40)', textDecoration: 'line-through', fontFamily: 'var(--font-dm-sans)' }}
+                >
+                  $30.000
+                </span>
+              )}
               <span className="text-3xl font-extrabold leading-none" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>
-                $15.000
+                {promoUsada ? '$30.000' : '$15.000'}
               </span>
             </div>
             <p className="text-[11px] leading-snug mt-1" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>
-              Precio promocional por única vez, válido para tu primera sesión. A partir de la segunda, el valor es de $30.000.
+              {promoUsada
+                ? 'Ya utilizaste tu sesión promocional de bienvenida. Este es el valor de lista para las siguientes sesiones.'
+                : 'Precio promocional por única vez, válido para tu primera sesión. A partir de la segunda, el valor es de $30.000.'}
             </p>
           </div>
 
@@ -864,7 +880,7 @@ function ServiceCard({ service, onAction }: { service: ServiceItem; onAction: (s
 }
 
 /* ── Componente principal ── */
-export default function ServiceCards({ affiliate }: ServiceCardsProps) {
+export default function ServiceCards({ affiliate, psicologiaPromoUsada = false }: ServiceCardsProps) {
   const [farmaciaModalOpen, setFarmaciaModalOpen] = useState(false)
   const [urgenciasModalOpen, setUrgenciasModalOpen] = useState(false)
   const [psicologiaModalOpen, setPsicologiaModalOpen] = useState(false)
@@ -1104,6 +1120,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
         <PsicologiaModal
           service={services.find((s) => s.id === 'psicologia')!}
           onClose={() => setPsicologiaModalOpen(false)}
+          promoUsada={psicologiaPromoUsada}
         />
       )}
     </>

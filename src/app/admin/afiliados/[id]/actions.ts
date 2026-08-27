@@ -618,3 +618,64 @@ export async function sendAffiliatePasswordReset(affiliateId: string): Promise<{
 
   return { success: true, message: `Email de restablecimiento enviado a ${affiliate.email}.` }
 }
+
+/**
+ * Psicología On Demand: marca o desmarca la promo de bienvenida como utilizada.
+ *
+ * El cobro ocurre en DOC24, fuera del portal, así que no hay señal automática de
+ * contratación. Un operador confirma con DOC24 y lo marca acá. A partir de ese
+ * momento el afiliado ve el precio de lista ($30.000) en su panel.
+ */
+export async function setPsicologiaPromoUsada(
+  affiliateId: string,
+  usada: boolean,
+): Promise<{ success: boolean; message: string }> {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
+  const supabase = createAdminClient()
+
+  if (usada) {
+    // Idempotente: si ya está marcada no duplicamos el consumo.
+    const { data: existing, error: readError } = await supabase
+      .from('service_consumptions')
+      .select('id')
+      .eq('affiliate_id', affiliateId)
+      .eq('service_type', 'psicologia')
+      .limit(1)
+
+    if (readError) {
+      return { success: false, message: `Error al leer consumos: ${readError.message}` }
+    }
+    if (existing && existing.length > 0) {
+      return { success: true, message: 'La promo ya figuraba como utilizada.' }
+    }
+
+    const { error } = await supabase.from('service_consumptions').insert({
+      affiliate_id: affiliateId,
+      service_type: 'psicologia',
+      notes: 'Promo de bienvenida marcada manualmente desde el panel admin.',
+    })
+    if (error) {
+      return { success: false, message: `Error al marcar la promo: ${error.message}` }
+    }
+  } else {
+    const { error } = await supabase
+      .from('service_consumptions')
+      .delete()
+      .eq('affiliate_id', affiliateId)
+      .eq('service_type', 'psicologia')
+    if (error) {
+      return { success: false, message: `Error al restaurar la promo: ${error.message}` }
+    }
+  }
+
+  revalidatePath(`/admin/afiliados/${affiliateId}`)
+
+  return {
+    success: true,
+    message: usada
+      ? 'Promo marcada como utilizada. El afiliado ahora ve $30.000.'
+      : 'Promo restaurada. El afiliado vuelve a ver $15.000.',
+  }
+}

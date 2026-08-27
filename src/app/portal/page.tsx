@@ -59,6 +59,19 @@ export default async function PortalPage() {
     payments = (data ?? []) as Payment[]
   }
 
+  // Psicología On Demand: la promo de bienvenida ($15.000) se consume una sola vez.
+  // La marca la carga un operador desde el admin cuando DOC24 confirma la contratación.
+  let psicologiaPromoUsada = false
+  if (affiliate.id) {
+    const { data: consumos } = await supabase
+      .from('service_consumptions')
+      .select('id')
+      .eq('affiliate_id', affiliate.id)
+      .eq('service_type', 'psicologia')
+      .limit(1)
+    psicologiaPromoUsada = (consumos?.length ?? 0) > 0
+  }
+
   // Pending: show focused payment screen instead of locked portal
   if (isPending) {
     return (
@@ -192,7 +205,7 @@ export default async function PortalPage() {
 
       {/* Servicios */}
       {isActive ? (
-        <ServiceCards affiliate={affiliate as Affiliate | null} />
+        <ServiceCards affiliate={affiliate as Affiliate | null} psicologiaPromoUsada={psicologiaPromoUsada} />
       ) : (
         <section>
           <p
