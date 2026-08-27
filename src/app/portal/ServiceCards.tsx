@@ -556,10 +556,10 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
                 className="text-base font-medium"
                 style={{ color: 'rgba(255,255,255,0.40)', textDecoration: 'line-through', fontFamily: 'var(--font-dm-sans)' }}
               >
-                $40.000
+                $30.000
               </span>
               <span className="text-3xl font-extrabold leading-none" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>
-                $20.000
+                $15.000
               </span>
             </div>
           </div>
