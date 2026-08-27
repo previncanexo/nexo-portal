@@ -259,7 +259,7 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
 
           <div className="glass-card px-6 py-6">
             <h2 className="text-sm font-bold uppercase tracking-wider mb-5" style={{ color: 'var(--gray-700)' }}>
-              Psicología · promo de bienvenida
+              Psicología · sesión bonificada
             </h2>
             <PsicologiaPromoForm affiliateId={affiliate.id} usadaEn={psicologiaPromoUsadaEn} />
           </div>
