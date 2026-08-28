@@ -131,7 +131,8 @@ export default function LeadsClient({ rows }: { rows: UnifiedLead[] }) {
   }, [rows, search, statusFilter])
 
   const stats = {
-    total: filtered.length,
+    unicos: filtered.length,
+    intenciones: filtered.reduce((sum, r) => sum + (r.intentos || 1), 0),
     incompletos: filtered.filter((r) => r.estadoKey === 'incompleto').length,
     completos: filtered.filter((r) => r.estadoKey === 'completo').length,
   }
@@ -197,11 +198,16 @@ export default function LeadsClient({ rows }: { rows: UnifiedLead[] }) {
       <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '20px 0' }} />
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         <div className="stat-card">
-          <span className="stat-label">Total</span>
-          <span className="stat-value">{stats.total}</span>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Suma de incompletos y completos</span>
+          <span className="stat-label">Leads únicos</span>
+          <span className="stat-value">{stats.unicos}</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Personas distintas (agrupadas por email)</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Intenciones totales</span>
+          <span className="stat-value">{stats.intenciones}</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Suma de todos los intentos de onboarding</span>
         </div>
         <div className="stat-card">
           <span className="stat-label">Incompletos</span>
