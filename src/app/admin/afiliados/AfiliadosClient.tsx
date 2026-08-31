@@ -35,19 +35,31 @@ function initials(nombre: string, apellido: string): string {
   return ((nombre[0] || '') + (apellido[0] || '')).toUpperCase()
 }
 
-function exportCSV(list: Affiliate[]) {
+function exportCSV(list: Affiliate[], trazMap: Record<string, Traz>, plans: Plan[]) {
+  const planName = (id: string | null) => id ? plans.find((p) => p.id === id)?.name ?? '' : ''
   const headers = [
     'N° Afiliado', 'Nombre', 'Apellido', 'DNI', 'Email',
-    'WhatsApp', 'Ciudad', 'Fecha nacimiento', 'Estado',
-    'Cobertura desde', 'Cobertura hasta', 'Fecha registro',
+    'WhatsApp', 'Ciudad', 'Domicilio', 'Fecha nacimiento', 'Plan', 'Estado',
+    'Cobertura desde', 'Cobertura hasta', 'Fecha registro', 'Suscripción MP',
+    'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+    'fbclid', 'gclid', 'referer', 'landing_url',
+    'fbp', 'fbc', 'ga_client_id', 'client_ip', 'client_user_agent',
   ]
-  const rows = list.map((a) => [
-    a.affiliate_number, a.nombre, a.apellido, a.dni, a.email,
-    a.whatsapp ?? '', a.ciudad ?? '', a.fecha_nacimiento ?? '',
-    STATUS_CHIP[a.status]?.label ?? a.status,
-    a.cobertura_desde ?? '', a.cobertura_hasta ?? '',
-    a.created_at ? new Date(a.created_at).toLocaleDateString('es-AR') : '',
-  ])
+  const rows = list.map((a) => {
+    const t = trazMap[a.id] ?? null
+    return [
+      a.affiliate_number, a.nombre, a.apellido, a.dni, a.email,
+      a.whatsapp ?? '', a.ciudad ?? '', a.domicilio ?? '', a.fecha_nacimiento ?? '',
+      planName(a.plan_id),
+      STATUS_CHIP[a.status]?.label ?? a.status,
+      a.cobertura_desde ?? '', a.cobertura_hasta ?? '',
+      a.created_at ? new Date(a.created_at).toLocaleDateString('es-AR') : '',
+      a.mp_subscription_id ?? '',
+      t?.utm_source ?? '', t?.utm_medium ?? '', t?.utm_campaign ?? '', t?.utm_term ?? '', t?.utm_content ?? '',
+      t?.fbclid ?? '', t?.gclid ?? '', t?.referer ?? '', t?.landing_url ?? '',
+      t?.fbp ?? '', t?.fbc ?? '', t?.ga_client_id ?? '', t?.client_ip ?? '', t?.client_user_agent ?? '',
+    ]
+  })
 
   const csv = [headers, ...rows]
     .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
@@ -68,12 +80,24 @@ interface Traz {
   utm_source: string | null
   utm_medium: string | null
   utm_campaign: string | null
+  utm_term: string | null
+  utm_content: string | null
+  fbclid: string | null
+  gclid: string | null
   referer: string | null
+  landing_url: string | null
   fbp: string | null
   fbc: string | null
   ga_client_id: string | null
   client_user_agent: string | null
   client_ip: string | null
+  medio_pago: string | null
+  mp_email: string | null
+}
+
+const MEDIO_PAGO_LABEL: Record<string, string> = {
+  tarjeta: 'Tarjeta',
+  mp_balance: 'Saldo Mercado Pago',
 }
 
 export default function AfiliadosClient({
@@ -214,7 +238,7 @@ export default function AfiliadosClient({
           <button
             className="btn-ghost-admin"
             style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}
-            onClick={() => exportCSV(filtered)}
+            onClick={() => exportCSV(filtered, trazMap, plans)}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -421,7 +445,12 @@ function DetailModal({
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
   }, [onClose])
 
   const chip = STATUS_CHIP[a.status] ?? { label: a.status, className: 'chip' }
@@ -442,7 +471,7 @@ function DetailModal({
 
         <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', maxHeight: '85vh' }}>
           {/* Aside identidad */}
-          <aside style={{ background: 'linear-gradient(160deg, rgba(134,96,239,0.20) 0%, rgba(238,92,208,0.10) 60%, rgba(20,10,40,0.4) 100%)', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: '1px solid rgba(255,255,255,0.08)', overflowY: 'auto' }}>
+          <aside style={{ background: 'linear-gradient(160deg, rgba(134,96,239,0.20) 0%, rgba(238,92,208,0.10) 60%, rgba(20,10,40,0.4) 100%)', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: '1px solid rgba(255,255,255,0.08)', overflowY: 'auto', minHeight: 0, maxHeight: '85vh' }}>
             <div style={{ width: 72, height: 72, borderRadius: 20, background: 'linear-gradient(135deg, var(--purple), var(--pink))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 28, fontWeight: 700, boxShadow: '0 8px 32px rgba(134,96,239,0.45)' }}>
               {initials(a.nombre, a.apellido)}
             </div>
@@ -469,14 +498,14 @@ function DetailModal({
           </aside>
 
           {/* Section detalles */}
-          <section style={{ padding: '28px 28px 24px 28px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <section style={{ padding: '28px 28px 24px 28px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20, minHeight: 0, maxHeight: '85vh' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
-                <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Datos personales</p>
+                <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Datos del onboarding</p>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px 24px' }}>
                 <Field label="Email" value={a.email} />
@@ -485,8 +514,67 @@ function DetailModal({
                 <Field label="Fecha nacimiento" value={a.fecha_nacimiento ? formatDate(a.fecha_nacimiento) : null} />
                 <Field label="Ciudad" value={a.ciudad} />
                 <Field label="Domicilio" value={a.domicilio} />
+              </div>
+            </div>
+
+            <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                </svg>
+                <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Datos de Mercado Pago</p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
+                <Field label="Suscripción MP" value={a.mp_subscription_id} />
+                <Field label="Medio de pago" value={traz?.medio_pago ? MEDIO_PAGO_LABEL[traz.medio_pago] ?? traz.medio_pago : null} />
+                <Field label="Email MP (si aplica)" value={traz?.mp_email ?? null} />
                 <Field label="Fecha de creación" value={formatDateTime(a.created_at)} />
-                {a.mp_subscription_id && <Field label="Suscripción MP" value={a.mp_subscription_id} />}
+              </div>
+            </div>
+
+            <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 3v18h18" /><path d="M7 12l3-3 4 4 5-5" />
+                </svg>
+                <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Datos de trazabilidad</p>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
+                  <Field label="Origen (utm_source)" value={traz?.utm_source ?? null} />
+                  <Field label="Medio (utm_medium)" value={traz?.utm_medium ?? null} />
+                  <Field label="Campaña (utm_campaign)" value={traz?.utm_campaign ?? null} />
+                  <Field label="Término (utm_term)" value={traz?.utm_term ?? null} />
+                  <Field label="Contenido (utm_content)" value={traz?.utm_content ?? null} />
+                  <Field label="Facebook click ID (fbclid)" value={traz?.fbclid ?? null} />
+                  <Field label="Google click ID (gclid)" value={traz?.gclid ?? null} />
+                  <Field label="Referer" value={traz?.referer ?? null} />
+                </div>
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>Landing URL</p>
+                  <p style={{ color: traz?.landing_url ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{traz?.landing_url || '—'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a08af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+                </svg>
+                <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>Datos de huella digital</p>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 20px' }}>
+                  <Field label="IP cliente" value={traz?.client_ip ?? null} />
+                  <Field label="GA client_id" value={traz?.ga_client_id ?? null} />
+                  <Field label="Facebook fbp" value={traz?.fbp ?? null} />
+                  <Field label="Facebook fbc" value={traz?.fbc ?? null} />
+                </div>
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>User Agent</p>
+                  <p style={{ color: traz?.client_user_agent ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>{traz?.client_user_agent || '—'}</p>
+                </div>
               </div>
             </div>
 

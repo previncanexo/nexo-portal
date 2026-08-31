@@ -225,8 +225,16 @@ function IconArbolVida() {
 
 const phoneIconPath = "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l.97-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
 
+type ServiceGroup = 'nexo' | 'ondemand'
+
 interface ServiceItem {
   id: string
+  /**
+   * `nexo`     → ya incluido en la cuota de afiliación, sin costo extra.
+   * `ondemand` → producto adicional que se contrata y se paga por fuera de la cuota.
+   * Define en qué bloque de la UI se muestra la card.
+   */
+  group: ServiceGroup
   title: string
   subtitle: string
   badge: string
@@ -534,7 +542,13 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
 }
 
 /* ── Modal Psicología On Demand ── */
-function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
+function PsicologiaModal({
+  service,
+  onClose,
+}: {
+  service: ServiceItem
+  onClose: () => void
+}) {
   // Un solo perfil abierto a la vez: el modal ya scrollea en 60vh y varios abiertos lo vuelven ilegible.
   const [perfilAbierto, setPerfilAbierto] = useState<string | null>(null)
   const acento = service.theme?.solid ?? 'var(--purple)'
@@ -569,25 +583,30 @@ function PsicologiaModal({ service, onClose }: { service: ServiceItem; onClose: 
         <div className="px-6 py-5 max-h-[60vh] overflow-y-auto flex flex-col gap-4">
           <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
 
-          {/* Precio de la sesión: valor de lista tachado + precio para afiliados */}
+          {/* Precio de la sesión.
+              Beneficio mensual fijo: 1 sesión bonificada al 50% por mes, el resto a valor de lista.
+              No depende del afiliado ni de consumos previos: el cobro lo hace DOC24 y se renueva cada mes. */}
           <div
             className="rounded-2xl px-4 py-3.5 flex flex-col gap-1"
             style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.12)', border: `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.14)'}` }}
           >
             <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
-              Valor de la sesión
+              Valor de las sesiones
             </p>
             <div className="flex items-baseline gap-2.5 flex-wrap">
               <span
                 className="text-base font-medium"
                 style={{ color: 'rgba(255,255,255,0.40)', textDecoration: 'line-through', fontFamily: 'var(--font-dm-sans)' }}
               >
-                $40.000
+                $30.000
               </span>
               <span className="text-3xl font-extrabold leading-none" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>
-                $20.000
+                $15.000
               </span>
             </div>
+            <p className="text-[11px] leading-snug mt-1" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>
+              Cada mes tenés una sesión a $15.000 (50% de descuento). Las siguientes sesiones del mes son a $30.000. El beneficio se renueva todos los meses.
+            </p>
           </div>
 
           <div className="flex flex-col gap-2.5">
@@ -930,6 +949,104 @@ function ArbolVidaModal({ service, onClose }: { service: ServiceItem; onClose: (
   )
 }
 
+/* ── Encabezado de bloque ── */
+function GroupHeading({ title, pill, hint, theme }: { title: string; pill: string; hint: string; theme?: CardTheme }) {
+  return (
+    <div className="mb-3">
+      <div className="flex items-center gap-2 flex-wrap">
+        <p
+          className="text-xs sm:text-sm font-semibold uppercase tracking-widest"
+          style={{ color: 'rgba(255,255,255,0.70)' }}
+        >
+          {title}
+        </p>
+        <span
+          className="px-2 py-0.5 rounded-full text-[11px] font-bold whitespace-nowrap"
+          style={{
+            background: theme?.soft ?? 'rgba(134,96,239,0.14)',
+            border: `1px solid ${theme?.border ?? 'rgba(134,96,239,0.30)'}`,
+            color: theme ? '#5eead4' : '#c4b5fd',
+            fontFamily: 'var(--font-dm-sans)',
+          }}
+        >
+          {pill}
+        </span>
+      </div>
+      <p
+        className="text-xs sm:text-sm mt-1 leading-snug"
+        style={{ color: 'rgba(255,255,255,0.50)', fontFamily: 'var(--font-dm-sans)' }}
+      >
+        {hint}
+      </p>
+    </div>
+  )
+}
+
+/* ── Card de servicio ── */
+function ServiceCard({ service, onAction }: { service: ServiceItem; onAction: (service: ServiceItem) => void }) {
+  return (
+    <div className="glass-card rounded-2xl flex items-center gap-4 p-4 sm:p-5 relative overflow-hidden">
+      <div
+        className="absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl pointer-events-none"
+        style={{ background: service.glowColor }}
+      />
+
+      <div
+        className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 relative z-10"
+        style={{ background: service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}
+      >
+        <service.Icon />
+      </div>
+
+      <div className="flex-1 min-w-0 relative z-10">
+        <p className="text-sm sm:text-base font-bold leading-tight" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
+          {service.title}
+        </p>
+        <p className="text-sm leading-snug mt-0.5" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
+          {service.subtitle}
+        </p>
+        {/* El badge sólo se muestra en on-demand: ahí es donde aporta información nueva
+            (se paga aparte). En las cards incluidas el bloque ya lo aclara. */}
+        {service.group === 'ondemand' && (
+          <span
+            className="inline-block mt-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold"
+            style={{
+              background: service.badgeBg,
+              border: `1px solid ${service.theme?.border ?? 'transparent'}`,
+              color: service.badgeColor,
+              fontFamily: 'var(--font-dm-sans)',
+            }}
+          >
+            {service.badge}
+          </span>
+        )}
+      </div>
+
+      <button
+        onClick={() => onAction(service)}
+        className="shrink-0 relative z-10 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
+        style={{
+          background: service.theme?.soft ?? 'rgba(134,96,239,0.10)',
+          border: `1px solid ${service.theme?.border ?? 'rgba(134,96,239,0.20)'}`,
+          color: service.theme?.solid ?? 'var(--purple)',
+          cursor: 'pointer',
+          fontFamily: 'var(--font-dm-sans)',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = service.theme?.softHover ?? 'rgba(134,96,239,0.18)'
+          e.currentTarget.style.borderColor = service.theme?.borderHover ?? 'rgba(134,96,239,0.35)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = service.theme?.soft ?? 'rgba(134,96,239,0.10)'
+          e.currentTarget.style.borderColor = service.theme?.border ?? 'rgba(134,96,239,0.20)'
+        }}
+      >
+        {service.buttonLabel}
+      </button>
+    </div>
+  )
+}
+
 /* ── Componente principal ── */
 export default function ServiceCards({ affiliate }: ServiceCardsProps) {
   const [farmaciaModalOpen, setFarmaciaModalOpen] = useState(false)
@@ -942,6 +1059,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
   const services: ServiceItem[] = [
     {
       id: 'teleconsultas',
+      group: 'nexo',
       title: 'Teleconsultas Médicas 24/7',
       subtitle: 'Médico online desde tu celular',
       badge: '24hs · En vivo',
@@ -967,6 +1085,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     },
     {
       id: 'urgencias',
+      group: 'nexo',
       title: 'Emergencias médicas',
       subtitle: 'Asistencia médica inmediata',
       badge: 'Disponible 24/7',
@@ -991,6 +1110,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     },
     {
       id: 'farmacias',
+      group: 'nexo',
       title: 'Descuentos en Farmacias',
       subtitle: 'Farmacias en Rosario y la región',
       badge: '50% descuento',
@@ -1013,6 +1133,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     },
     {
       id: 'odontologia',
+      group: 'nexo',
       title: 'Guardia Odontológica',
       subtitle: 'Guardias y consultas urgentes',
       badge: 'Urgencias dentales',
@@ -1037,11 +1158,12 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     ...(PSICOLOGIA_URL
       ? [{
           id: 'psicologia',
+          group: 'ondemand' as const,
           title: 'Psicología On Demand',
           subtitle: 'Tu bienestar emocional, cuando lo necesitás.',
           badge: 'Pago aparte',
-          badgeColor: '#0d9488',
-          badgeBg: 'rgba(13,148,136,0.10)',
+          badgeColor: '#5eead4',
+          badgeBg: 'rgba(13,148,136,0.16)',
           buttonLabel: 'Ver y reservar',
           buttonAction: 'modal' as const,
           accentColor: 'white',
@@ -1060,11 +1182,12 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     ...(SEGURO_HOGAR_URL
       ? [{
           id: 'seguro-hogar',
+          group: 'ondemand' as const,
           title: 'Seguros del Hogar On Demand',
           subtitle: 'Protegé tu hogar cuando lo necesites.',
           badge: 'Pago aparte',
-          badgeColor: '#0d9488',
-          badgeBg: 'rgba(13,148,136,0.10)',
+          badgeColor: '#5eead4',
+          badgeBg: 'rgba(13,148,136,0.16)',
           buttonLabel: 'Ver planes',
           buttonAction: 'modal' as const,
           accentColor: 'white',
@@ -1083,6 +1206,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     // se muestra igual en modo "Próximamente" para captar interés antes del lanzamiento.
     {
       id: 'arbol-de-vida',
+      group: 'ondemand' as const,
       title: 'Árbol de Vida On Demand',
       subtitle: 'Cremación ecológica · Cochería Caramuto',
       badge: ARBOL_VIDA_URL ? 'Pago aparte' : 'Próximamente',
@@ -1123,58 +1247,48 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
   const urgenciasService = services.find(s => s.id === 'urgencias')!
   const farmaciaService = services.find(s => s.id === 'farmacias')!
 
+  const coberturaNexo = services.filter((s) => s.group === 'nexo')
+  const onDemand = services.filter((s) => s.group === 'ondemand')
+
   return (
     <>
-      <div className="flex flex-col gap-3">
-        {services.map((service) => (
-          <div
-            key={service.id}
-            className="glass-card rounded-2xl flex items-center gap-4 p-4 sm:p-5 relative overflow-hidden"
-          >
-            <div
-              className="absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl pointer-events-none"
-              style={{ background: service.glowColor }}
-            />
+      <div className="flex flex-col gap-7">
 
-            <div
-              className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 relative z-10"
-              style={{ background: service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}
-            >
-              <service.Icon />
-            </div>
-
-            <div className="flex-1 min-w-0 relative z-10">
-              <p className="text-sm sm:text-base font-bold leading-tight" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
-                {service.title}
-              </p>
-              <p className="text-sm leading-snug mt-0.5" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
-                {service.subtitle}
-              </p>
-            </div>
-
-            <button
-              onClick={() => handleAction(service)}
-              className="shrink-0 relative z-10 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
-              style={{
-                background: service.theme?.soft ?? 'rgba(134,96,239,0.10)',
-                border: `1px solid ${service.theme?.border ?? 'rgba(134,96,239,0.20)'}`,
-                color: service.theme?.solid ?? 'var(--purple)',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-dm-sans)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = service.theme?.softHover ?? 'rgba(134,96,239,0.18)'
-                e.currentTarget.style.borderColor = service.theme?.borderHover ?? 'rgba(134,96,239,0.35)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = service.theme?.soft ?? 'rgba(134,96,239,0.10)'
-                e.currentTarget.style.borderColor = service.theme?.border ?? 'rgba(134,96,239,0.20)'
-              }}
-            >
-              {service.buttonLabel}
-            </button>
+        {/* Lo que ya tenés con Nexo */}
+        <section>
+          <GroupHeading
+            title="Tu cobertura Nexo"
+            pill="Incluido en tu plan"
+            hint="Ya está activo con tu afiliación. No pagás nada extra por usarlo."
+          />
+          <div className="flex flex-col gap-3">
+            {coberturaNexo.map((service) => (
+              <ServiceCard key={service.id} service={service} onAction={handleAction} />
+            ))}
           </div>
-        ))}
+        </section>
+
+        {/* Lo que sumás aparte */}
+        {onDemand.length > 0 && (
+          <section>
+            <div
+              className="h-px w-full mb-6"
+              style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.02), rgba(13,148,136,0.35), rgba(255,255,255,0.02))' }}
+            />
+            <GroupHeading
+              title="Productos on-demand"
+              pill="Se paga aparte"
+              hint="No están incluidos en tu cuota. Los contratás y los pagás por separado, sólo si los necesitás."
+              theme={TEAL}
+            />
+            <div className="flex flex-col gap-3">
+              {onDemand.map((service) => (
+                <ServiceCard key={service.id} service={service} onAction={handleAction} />
+              ))}
+            </div>
+          </section>
+        )}
+
       </div>
 
       {seguroHogarModalOpen && (

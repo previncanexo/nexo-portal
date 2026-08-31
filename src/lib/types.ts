@@ -48,10 +48,13 @@ export interface Payment {
   type: 'payment' | 'refund'
 }
 
+/** Debe mantenerse en sync con el CHECK de public.service_consumptions.service_type */
+export type ServiceType = 'doc24' | 'urgencias' | 'farmacia' | 'odontologia' | 'psicologia'
+
 export interface ServiceConsumption {
   id: string
   affiliate_id: string
-  service_type: string
+  service_type: ServiceType
   consumed_at: string
   notes: string | null
   created_at: string

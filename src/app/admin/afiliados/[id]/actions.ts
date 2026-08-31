@@ -618,3 +618,65 @@ export async function sendAffiliatePasswordReset(affiliateId: string): Promise<{
 
   return { success: true, message: `Email de restablecimiento enviado a ${affiliate.email}.` }
 }
+
+/**
+ * Psicología On Demand: registra o borra el consumo de la sesión bonificada.
+ *
+ * El cobro ocurre en DOC24, fuera del portal, así que no hay señal automática de
+ * contratación: un operador confirma con DOC24 y lo registra acá. Es un dato interno
+ * de seguimiento — el portal muestra el mismo beneficio mensual a todos los afiliados
+ * (una sesión a $15.000, el resto a $30.000) y no lee este registro.
+ */
+export async function setPsicologiaPromoUsada(
+  affiliateId: string,
+  usada: boolean,
+): Promise<{ success: boolean; message: string }> {
+  const auth = await requireAdmin()
+  if (!auth.authorized) return auth.error
+
+  const supabase = createAdminClient()
+
+  if (usada) {
+    // Idempotente: si ya está marcada no duplicamos el consumo.
+    const { data: existing, error: readError } = await supabase
+      .from('service_consumptions')
+      .select('id')
+      .eq('affiliate_id', affiliateId)
+      .eq('service_type', 'psicologia')
+      .limit(1)
+
+    if (readError) {
+      return { success: false, message: `Error al leer consumos: ${readError.message}` }
+    }
+    if (existing && existing.length > 0) {
+      return { success: true, message: 'El consumo ya figuraba registrado.' }
+    }
+
+    const { error } = await supabase.from('service_consumptions').insert({
+      affiliate_id: affiliateId,
+      service_type: 'psicologia',
+      notes: 'Sesión bonificada registrada manualmente desde el panel admin.',
+    })
+    if (error) {
+      return { success: false, message: `Error al registrar el consumo: ${error.message}` }
+    }
+  } else {
+    const { error } = await supabase
+      .from('service_consumptions')
+      .delete()
+      .eq('affiliate_id', affiliateId)
+      .eq('service_type', 'psicologia')
+    if (error) {
+      return { success: false, message: `Error al borrar el registro: ${error.message}` }
+    }
+  }
+
+  revalidatePath(`/admin/afiliados/${affiliateId}`)
+
+  return {
+    success: true,
+    message: usada
+      ? 'Sesión bonificada registrada.'
+      : 'Registro de consumo borrado.',
+  }
+}
