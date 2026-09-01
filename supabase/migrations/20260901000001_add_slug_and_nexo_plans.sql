@@ -19,6 +19,11 @@ create trigger plans_updated_at
 -- su credencial (CredentialCard.tsx:103), y se desactiva para que no aparezca en
 -- el alta. Queda sin slug a propósito: sin slug no se puede contratar.
 --
+-- La description distingue esta fila legacy de la nueva 'Nexo I' ($20.000) que
+-- inserta el bloque de abajo: sin esto, /admin/planes mostraria dos filas
+-- "Nexo I" indistinguibles a simple vista. La credencial del socio (que solo lee
+-- `name`) no se ve afectada.
+--
 -- El match es por nombre, asi que si el plan legacy fue renombrado a mano el
 -- update afectaria 0 filas EN SILENCIO y quedaria activo a $19.500 en el alta.
 -- Sobre datos de afiliados reales preferimos abortar y que alguien mire.
@@ -27,19 +32,22 @@ declare
   filas int;
 begin
   update public.plans
-     set name = 'Nexo I', is_active = false
+     set name = 'Nexo I', is_active = false, description = 'Plan anterior · $19.500'
    where name = 'Plan Base Nexo';
   get diagnostics filas = row_count;
 
   if filas = 0 then
     -- Puede ser una re-corrida (ya renombrado) o que el legacy tenga otro nombre.
-    -- El predicado identifica al legacy YA MIGRADO con precision (nombre + sin slug
-    -- + su precio historico), en vez de "cualquier plan inactivo sin slug": el ABM
-    -- permite crear planes inactivos sin slug a mano, y uno de esos daria un falso
-    -- positivo justo en el caso que esta guarda viene a cubrir.
+    -- El predicado identifica al legacy YA MIGRADO por nombre + sin slug: el
+    -- insert de abajo siempre pone slug, asi que el UNICO "Nexo I" sin slug
+    -- posible es este legacy ya migrado. Sin el precio en el predicado a
+    -- proposito (a diferencia de una version anterior de esta migracion): el
+    -- ABM permite editar el precio del legacy desde /admin/planes, y atar la
+    -- idempotencia a ese valor mutable convertiria un cambio de precio legitimo
+    -- en un aborto en falso de una segunda corrida.
     if not exists (
       select 1 from public.plans
-       where name = 'Nexo I' and slug is null and price = 19500
+       where name = 'Nexo I' and slug is null
     ) then
       raise exception 'No se encontro el plan legacy "Plan Base Nexo" ni un legacy ya migrado. Revisar la tabla plans a mano antes de continuar.';
     end if;
