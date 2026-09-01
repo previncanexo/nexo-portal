@@ -12,10 +12,64 @@ interface PortalHeaderProps {
 
 function IconPerson() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="8" r="4" />
       <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
     </svg>
+  )
+}
+
+function IconSalir() {
+  return (
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  )
+}
+
+/**
+ * Botón circular del header. Es el patrón de las referencias: acciones sueltas
+ * flotando sobre el fondo, sin barra que las contenga.
+ *
+ * 44px es el mínimo táctil que pide AGENTS.md; acá importa más que en otros
+ * lados porque parte del público son adultos mayores.
+ */
+function BotonCircular({
+  etiqueta,
+  onClick,
+  href,
+  children,
+}: {
+  etiqueta: string
+  onClick?: () => void
+  href?: string
+  children: React.ReactNode
+}) {
+  const estilo: React.CSSProperties = {
+    width: 44,
+    height: 44,
+    borderRadius: '9999px',
+    background: 'var(--superficie-card)',
+    border: '1px solid var(--borde)',
+    boxShadow: 'var(--sombra-card)',
+    color: 'var(--texto)',
+    cursor: 'pointer',
+  }
+  const clases = 'flex items-center justify-center shrink-0 transition-transform active:scale-95'
+
+  if (href) {
+    return (
+      <Link href={href} aria-label={etiqueta} title={etiqueta} className={clases} style={estilo}>
+        {children}
+      </Link>
+    )
+  }
+  return (
+    <button type="button" onClick={onClick} aria-label={etiqueta} title={etiqueta} className={clases} style={estilo}>
+      {children}
+    </button>
   )
 }
 
@@ -29,72 +83,31 @@ export default function PortalHeader({ affiliate }: PortalHeaderProps) {
     router.refresh()
   }
 
-  const displayName = affiliate ? `${affiliate.nombre} ${affiliate.apellido}` : 'Mi cuenta'
+  const nombre = affiliate?.nombre ?? 'Mi cuenta'
 
   return (
-    /* Floating pill nav wrapper */
-    /* La misma envoltura que el <main> del layout (max-w-[680px] + px-4/sm:px-6)
-       para que la barra quede EXACTAMENTE del ancho de las tarjetas. Antes el
-       nav media 680 y las tarjetas 632, y la barra sobresalia 24px por lado. */
-    <div className="fixed top-3 left-0 right-0 z-50 pointer-events-none">
-      <div className="max-w-[680px] mx-auto px-4 sm:px-6">
-      <nav
-        /*
-          max-w-[680px]: el mismo ancho que la columna de contenido (ver el
-          <main> del layout). Antes era 960px y la barra sobresalia de las cards,
-          que era justo lo que se veia desprolijo.
+    /*
+      Ya NO es `fixed`: acompaña al contenido en vez de seguir al usuario. La
+      barra flotante ocupaba espacio permanente en una pantalla que se navega
+      scrolleando, y una vez adentro del portal el logo no necesita estar
+      siempre visible.
 
-          Sin backdrop-filter: es un elemento `fixed`, o sea de lo mas caro que
-          se le puede pedir a un telefono, y sobre fondo claro no aporta nada.
-          La sombra pasa a la del sistema: antes era 0.24 de negro y pesaba mas
-          que las propias tarjetas.
-        */
-        className="pointer-events-auto w-full flex items-center justify-between"
-        style={{
-          background: 'var(--superficie-card)',
-          border: '1px solid var(--borde)',
-          borderRadius: '9999px',
-          boxShadow: 'var(--sombra-card)',
-          padding: '6px 8px 6px 18px',
-        }}
-      >
-        {/* Logo */}
-        <LogoNexo alto={34} />
+      Tampoco hay contenedor: el logo y las acciones flotan sobre el fondo, que
+      es el patrón de las referencias.
+    */
+    <header className="relative z-10 w-full max-w-[680px] mx-auto px-4 sm:px-6 pt-5 sm:pt-7">
+      <div className="flex items-center justify-between gap-4">
+        <LogoNexo alto={30} centrado={false} />
 
-        {/* Actions */}
-        <div className="flex items-center gap-2">
-          <Link
-            href="/portal/cuenta"
-            className="flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-full transition-all hover:bg-white/10"
-            style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}
-          >
+        <div className="flex items-center gap-2.5">
+          <BotonCircular etiqueta={`Mi cuenta · ${nombre}`} href="/portal/cuenta">
             <IconPerson />
-            <span className="hidden sm:inline truncate max-w-[160px]">{displayName}</span>
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="text-sm font-semibold px-4 py-2.5 min-h-[40px] rounded-full transition-all active:scale-95"
-            style={{
-              background: 'var(--superficie-sutil)',
-              border: '1px solid var(--borde-fuerte)',
-              color: 'var(--texto)',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-dm-sans)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--borde-fuerte)'
-              e.currentTarget.style.borderColor = 'var(--texto-tenue)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'var(--superficie-sutil)'
-              e.currentTarget.style.borderColor = 'var(--borde-fuerte)'
-            }}
-          >
-            Salir
-          </button>
+          </BotonCircular>
+          <BotonCircular etiqueta="Cerrar sesión" onClick={handleLogout}>
+            <IconSalir />
+          </BotonCircular>
         </div>
-        </nav>
       </div>
-    </div>
+    </header>
   )
 }

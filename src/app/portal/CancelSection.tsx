@@ -36,8 +36,10 @@ export default function CancelSection({ status }: { status: Status }) {
       {/* Section label + card */}
       <div>
         <p
-          className="text-xs uppercase tracking-[0.14em] font-semibold mb-3"
-          style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}
+          /* Mismo tratamiento que el resto de los titulos de seccion: caja
+             normal y tamano real, no versalita diminuta. */
+          className="text-lg font-bold mb-4"
+          style={{ color: 'var(--texto-fuerte)', fontFamily: 'var(--font-dm-sans)' }}
         >
           Gestionar suscripción
         </p>

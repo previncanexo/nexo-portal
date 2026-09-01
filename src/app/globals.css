@@ -668,7 +668,7 @@
   /* Dos teales, y no uno: como TEXTO sobre blanco hace falta el oscuro para
      llegar a 4.5:1, pero como RELLENO del cuadradito del icono ese mismo tono
      se ve apagado y turbio. --teal-vivo es el del icono. */
-  --teal: #0f766e;
+  --teal: #0d6b63;
   --teal-vivo: #14b8a6;
   --texto-sobre-acento: #ffffff;
 

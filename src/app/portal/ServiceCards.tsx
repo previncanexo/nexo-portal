@@ -709,7 +709,7 @@ function PsicologiaModal({
 /* ── Modal Seguro de Hogar (dos planes + cobertura completa + legal) ── */
 function SeguroHogarModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
   const [coberturaAbierta, setCoberturaAbierta] = useState(false)
-  const acento = service.theme?.solid ?? 'var(--purple)'
+  const acento = service.theme?.solid ?? 'var(--acento-texto)'
   const gradiente = service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))'
   return (
     <div
@@ -814,7 +814,7 @@ function SeguroHogarModal({ service, onClose }: { service: ServiceItem; onClose:
 /* ── Modal Árbol de Vida (plan único + condiciones + CTA "Próximamente") ── */
 function ArbolVidaModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
   const [avisoEstado, setAvisoEstado] = useState<'inicial' | 'enviando' | 'listo' | 'error'>('inicial')
-  const acento = service.theme?.solid ?? 'var(--purple)'
+  const acento = service.theme?.solid ?? 'var(--acento-texto)'
   const gradiente = service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))'
 
   async function pedirAviso() {
@@ -956,11 +956,11 @@ function ArbolVidaModal({ service, onClose }: { service: ServiceItem; onClose: (
 /* ── Encabezado de bloque ── */
 function GroupHeading({ title, pill, hint, theme }: { title: string; pill: string; hint: string; theme?: CardTheme }) {
   return (
-    <div className="mb-3">
+    <div className="mb-4">
       <div className="flex items-center gap-2 flex-wrap">
         <p
-          className="text-xs sm:text-sm font-semibold uppercase tracking-widest"
-          style={{ color: 'var(--texto)' }}
+          className="text-lg font-bold"
+          style={{ color: 'var(--texto-fuerte)', fontFamily: 'var(--font-dm-sans)' }}
         >
           {title}
         </p>
@@ -1027,7 +1027,7 @@ function ServiceCard({ service, onAction }: { service: ServiceItem; onAction: (s
         style={{
           background: service.theme?.soft ?? 'rgba(134,96,239,0.10)',
           border: `1px solid ${service.theme?.border ?? 'rgba(134,96,239,0.20)'}`,
-          color: service.theme?.solid ?? 'var(--purple)',
+          color: service.theme?.solid ?? 'var(--acento-texto)',
           cursor: 'pointer',
           fontFamily: 'var(--font-dm-sans)',
         }}
@@ -1251,7 +1251,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
 
   return (
     <>
-      <div className="flex flex-col gap-7">
+      <div className="flex flex-col gap-9">
 
         {/* Lo que ya tenés con Nexo */}
         <section>
@@ -1271,8 +1271,8 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
         {onDemand.length > 0 && (
           <section>
             <div
-              className="h-px w-full mb-6"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(13,148,136,0.30), transparent)' }}
+              className="h-px w-full mt-1 mb-8"
+              style={{ background: 'linear-gradient(90deg, transparent, var(--borde-fuerte), transparent)' }}
             />
             <GroupHeading
               title="Productos on-demand"

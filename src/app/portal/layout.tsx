@@ -36,7 +36,8 @@ export default async function PortalLayout({ children }: { children: React.React
       </div>
 
       <PortalHeader affiliate={affiliate as Affiliate | null} />
-      <main className="flex-1 relative z-10 pt-20 sm:pt-24 px-4 sm:px-6 pb-10 max-w-[680px] mx-auto w-full">
+      {/* Sin pt-20: el header ya no es fixed, asi que no hay que reservarle lugar. */}
+      <main className="flex-1 relative z-10 pt-7 sm:pt-9 px-4 sm:px-6 pb-14 max-w-[680px] mx-auto w-full">
         {children}
       </main>
     </div>

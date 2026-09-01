@@ -15,10 +15,19 @@
 export default function LogoNexo({
   alto = 88,
   variante = 'marca',
+  centrado = true,
   className = '',
 }: {
   alto?: number
   variante?: 'marca' | 'blanco'
+  /**
+   * Centra el logo con `margin-inline: auto`. Va en true por defecto porque las
+   * pantallas de auth lo meten en contenedores con `text-center`, que no alcanza
+   * para un bloque de ancho fijo. En una fila flex (el header del portal) hay
+   * que apagarlo: ahi el margen automatico se come el espacio libre y lo manda
+   * al centro en vez de dejarlo pegado a la izquierda.
+   */
+  centrado?: boolean
   className?: string
 }) {
   const mascara = {
@@ -39,10 +48,7 @@ export default function LogoNexo({
       className={className}
       style={{
         display: 'block',
-        /* Se centra solo: es un bloque de ancho fijo, y `text-center` del
-           contenedor no lo alcanza. Asi funciona en las seis pantallas que lo
-           usan sin que cada una tenga que acordarse. */
-        marginInline: 'auto',
+        marginInline: centrado ? 'auto' : 0,
         height: `${alto}px`,
         /* El PNG es apaisado (~2.5:1). Se fija el ancho por aspect-ratio para
            que la máscara no se recorte ni deforme. */

@@ -95,23 +95,29 @@ export default async function PortalPage() {
   }
 
   return (
-    <div className="flex flex-col gap-7 pb-10">
+    <div className="flex flex-col gap-9 pb-10">
 
-      {/* Saludo */}
-      <div className="pt-1">
+      {/*
+        Saludo en dos líneas del mismo tamaño, la primera en peso normal y la
+        segunda en bold. Antes el "buenas tardes" era una mayúscula diminuta con
+        letterspacing: se leía como una etiqueta de sistema y no como alguien
+        saludándote. El nombre es lo único que cambia, así que es lo único que
+        lleva el peso.
+      */}
+      <div>
         <p
-          className="text-sm sm:text-base font-medium mb-1"
-          style={{ color: 'var(--texto)', letterSpacing: '0.06em', textTransform: 'uppercase' }}
+          className="text-3xl sm:text-4xl leading-[1.15]"
+          style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)', fontWeight: 400 }}
         >
           {getGreeting()}
         </p>
         <h1
-          className="text-3xl sm:text-4xl font-bold leading-tight"
+          className="text-3xl sm:text-4xl font-bold leading-[1.15]"
           style={{ fontFamily: 'var(--font-dm-sans)' }}
         >
           {firstName} 👋
         </h1>
-        <p className="text-sm sm:text-base mt-1" style={{ color: 'var(--texto)' }}>
+        <p className="text-[15px] sm:text-base mt-3" style={{ color: 'var(--texto-suave)' }}>
           Todos tus beneficios en un solo lugar.
         </p>
       </div>
@@ -181,8 +187,8 @@ export default async function PortalPage() {
       {isActive && (
         <section>
           <p
-            className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
-            style={{ color: 'var(--texto)' }}
+            className="text-lg font-bold mb-4"
+            style={{ color: 'var(--texto-fuerte)', fontFamily: 'var(--font-dm-sans)' }}
           >
             Tu credencial
           </p>
@@ -196,8 +202,8 @@ export default async function PortalPage() {
       ) : (
         <section>
           <p
-            className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
-            style={{ color: 'var(--texto)' }}
+            className="text-lg font-bold mb-4"
+            style={{ color: 'var(--texto-fuerte)', fontFamily: 'var(--font-dm-sans)' }}
           >
             Tus servicios
           </p>
