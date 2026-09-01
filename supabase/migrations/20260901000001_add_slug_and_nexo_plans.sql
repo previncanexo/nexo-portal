@@ -18,9 +18,31 @@ create trigger plans_updated_at
 -- renombra, para que el socio que ya paga vea el nombre correcto del producto en
 -- su credencial (CredentialCard.tsx:103), y se desactiva para que no aparezca en
 -- el alta. Queda sin slug a propósito: sin slug no se puede contratar.
-update public.plans
-   set name = 'Nexo I', is_active = false
- where name = 'Plan Base Nexo';
+--
+-- El match es por nombre, asi que si el plan legacy fue renombrado a mano el
+-- update afectaria 0 filas EN SILENCIO y quedaria activo a $19.500 en el alta.
+-- Sobre datos de afiliados reales preferimos abortar y que alguien mire.
+do $$
+declare
+  filas int;
+begin
+  update public.plans
+     set name = 'Nexo I', is_active = false
+   where name = 'Plan Base Nexo';
+  get diagnostics filas = row_count;
+
+  if filas = 0 then
+    -- Puede ser una re-corrida (ya renombrado) o que el legacy tenga otro nombre.
+    -- Si ya existe un plan inactivo sin slug, la migracion ya se aplico: seguimos.
+    if not exists (
+      select 1 from public.plans where is_active = false and slug is null
+    ) then
+      raise exception 'No se encontro el plan legacy "Plan Base Nexo" ni un legacy ya migrado. Revisar la tabla plans a mano antes de continuar.';
+    end if;
+  elsif filas > 1 then
+    raise exception 'Se esperaba renombrar exactamente 1 plan legacy, se afectaron %', filas;
+  end if;
+end $$;
 
 insert into public.plans (slug, name, price, description, is_active) values
   ('nexo-1', 'Nexo I',   20000, 'Emergencias · Guardia odontológica · Farmacia · Doc24', true),
