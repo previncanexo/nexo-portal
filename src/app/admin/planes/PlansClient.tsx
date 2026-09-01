@@ -95,6 +95,36 @@ function PlanForm({
         />
       </div>
 
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={labelStyle}>
+            Slug
+          </label>
+          <input
+            name="slug"
+            type="text"
+            defaultValue={plan?.slug ?? ''}
+            placeholder="nexo-1"
+            className="w-full px-4 py-2.5 rounded-xl text-sm"
+            style={inputStyle}
+          />
+          <p className="mt-1.5 text-xs" style={labelStyle}>
+            Identificador que usa la landing. Sin slug, el plan no se puede contratar desde la web.
+          </p>
+        </div>
+        <div className="flex items-start pt-7">
+          <label className="flex items-center gap-2.5 text-sm cursor-pointer" style={labelStyle}>
+            <input
+              name="is_active"
+              type="checkbox"
+              defaultChecked={plan?.is_active ?? true}
+              className="w-4 h-4"
+            />
+            Se ofrece en el alta
+          </label>
+        </div>
+      </div>
+
       {message && (
         <p
           className="text-sm px-4 py-2.5 rounded-xl"
@@ -194,6 +224,14 @@ function PlanRow({ plan, affiliateCount }: { plan: Plan; affiliateCount: number 
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold" style={{ color: 'var(--gray-900)', fontFamily: 'var(--font-dm-sans)' }}>
             {plan.name}
+            {!plan.is_active && (
+              <span
+                className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                style={{ background: 'rgba(251,146,60,0.15)', color: '#fb923c' }}
+              >
+                Inactivo
+              </span>
+            )}
           </p>
           {plan.description && (
             <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>

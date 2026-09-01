@@ -22,6 +22,9 @@ export async function createPlan(formData: FormData) {
   const name = (formData.get('name') as string)?.trim()
   const description = (formData.get('description') as string)?.trim() || null
   const price = parseFloat(formData.get('price') as string)
+  const slug = (formData.get('slug') as string)?.trim() || null
+  // Un checkbox HTML no manda nada cuando está desmarcado: ausente = inactivo.
+  const isActive = formData.get('is_active') === 'on'
 
   if (!name) return { success: false, message: 'El nombre es obligatorio.' }
   if (isNaN(price) || price <= 0) return { success: false, message: 'El precio debe ser un número mayor a 0.' }
@@ -31,6 +34,8 @@ export async function createPlan(formData: FormData) {
     name,
     description,
     price,
+    slug,
+    is_active: isActive,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   })
@@ -48,6 +53,9 @@ export async function updatePlan(planId: string, formData: FormData) {
   const name = (formData.get('name') as string)?.trim()
   const description = (formData.get('description') as string)?.trim() || null
   const price = parseFloat(formData.get('price') as string)
+  const slug = (formData.get('slug') as string)?.trim() || null
+  // Un checkbox HTML no manda nada cuando está desmarcado: ausente = inactivo.
+  const isActive = formData.get('is_active') === 'on'
 
   if (!name) return { success: false, message: 'El nombre es obligatorio.' }
   if (isNaN(price) || price <= 0) return { success: false, message: 'El precio debe ser un número mayor a 0.' }
@@ -55,7 +63,7 @@ export async function updatePlan(planId: string, formData: FormData) {
   const supabase = createAdminClient()
   const { error } = await supabase
     .from('plans')
-    .update({ name, description, price, updated_at: new Date().toISOString() })
+    .update({ name, description, price, slug, is_active: isActive, updated_at: new Date().toISOString() })
     .eq('id', planId)
 
   if (error) return { success: false, message: error.message }
