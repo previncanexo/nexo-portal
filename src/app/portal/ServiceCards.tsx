@@ -115,6 +115,10 @@ const SEGURO_COBERTURA_COMPLETA = [
 // entorno y el mismo botón pasa a "Contratar" + redirección, sin tocar código.
 const ARBOL_VIDA_URL = process.env.NEXT_PUBLIC_ARBOL_VIDA_URL
 
+// Precio en revisión: acá se cobra $4.500, pero la landing (data/planes.ts,
+// ON_DEMAND → 'arbol-de-vida') dice $5.000. No se sabe cuál de los dos es el
+// correcto — falta confirmar con el cliente antes de tocar cualquiera de los
+// dos. La landing ya marca su entrada con `pendiente: true` para la revisión.
 const ARBOL_VIDA_PRECIO = '$4.500'
 
 const ARBOL_VIDA_COBERTURA = [
