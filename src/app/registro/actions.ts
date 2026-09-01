@@ -75,8 +75,11 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
 
   // Fetch selected plan or default to cheapest
   const planQuery = supabase.from('plans').select('id, name, price')
+  // is_active: mismo filtro que la rama plan_slug de api/leads/[id]/route.ts.
+  // Sin él, un plan_id de un plan desactivado (p.ej. el legacy "Nexo I" a
+  // $19.500 tras la migración de planes) igual resolvía y se cobraba.
   const { data: plan } = input.plan_id
-    ? await planQuery.eq('id', input.plan_id).maybeSingle()
+    ? await planQuery.eq('id', input.plan_id).eq('is_active', true).maybeSingle()
     : await planQuery.order('price', { ascending: true }).limit(1).maybeSingle()
 
   // La identidad (DNI/email) queda reservada solo por afiliados PAGADOS.

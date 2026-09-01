@@ -208,7 +208,7 @@ export async function PATCH(
   // plan termina pagando $7.000. Por eso la landing SIEMPRE manda plan_slug.
   const planQuery = () => supabase.from('plans').select('id, name, price')
   const { data: plan } = plan_id
-    ? await planQuery().eq('id', plan_id).maybeSingle()
+    ? await planQuery().eq('id', plan_id).eq('is_active', true).maybeSingle()
     : plan_slug
       ? await planQuery().eq('slug', plan_slug).eq('is_active', true).maybeSingle()
       : await planQuery().order('price', { ascending: true }).limit(1).maybeSingle()
