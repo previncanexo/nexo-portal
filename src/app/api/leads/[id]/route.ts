@@ -27,6 +27,12 @@ interface FinalizeLeadInput {
   medio_pago?: string
   mp_email?: string
   plan_id?: string
+  /**
+   * Identificador estable del plan, que manda la landing. La landing es SSG puro
+   * y no conoce los UUID de Supabase: se resuelve acá del lado del servidor.
+   * `plan_id` se mantiene porque RegistroForm.tsx (portal) ya lo manda.
+   */
+  plan_slug?: string
   /** ID compartido con el pixel para dedup CAPI CompleteRegistration */
   event_id_complete_registration?: string
   /** ID compartido con el pixel para dedup CAPI InitiateCheckout */
@@ -97,7 +103,7 @@ export async function PATCH(
     return jsonWithCors({ success: false, error: 'Body inválido' }, { status: 400, origin })
   }
 
-  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, plan_id, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url } = body
+  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, plan_id, plan_slug, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url } = body
 
   // Identificadores del browser para CAPI Purchase / GA4 purchase server-side
   // (en el webhook MP no podremos leerlos — se persisten en el affiliate).
@@ -196,10 +202,16 @@ export async function PATCH(
   }
 
   // 3. Plan (seleccionado o el más barato por default)
-  const planQuery = supabase.from('plans').select('id, name, price')
+  // Precedencia: plan_id (portal) → plan_slug (landing) → el más barato.
+  // El fallback al más barato es el comportamiento histórico y se conserva por
+  // compatibilidad, pero con tres planes en venta es peligroso: quien llegue sin
+  // plan termina pagando $7.000. Por eso la landing SIEMPRE manda plan_slug.
+  const planQuery = () => supabase.from('plans').select('id, name, price')
   const { data: plan } = plan_id
-    ? await planQuery.eq('id', plan_id).maybeSingle()
-    : await planQuery.order('price', { ascending: true }).limit(1).maybeSingle()
+    ? await planQuery().eq('id', plan_id).maybeSingle()
+    : plan_slug
+      ? await planQuery().eq('slug', plan_slug).eq('is_active', true).maybeSingle()
+      : await planQuery().order('price', { ascending: true }).limit(1).maybeSingle()
 
   // 4. Armar domicilio
   const domicilio = [
