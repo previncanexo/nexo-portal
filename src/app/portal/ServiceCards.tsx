@@ -227,6 +227,34 @@ function IconArbolVida() {
   )
 }
 
+function IconSeguroSalud() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="M12 8v6M9 11h6" />
+    </svg>
+  )
+}
+
+function IconSeguroVida() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.2l7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8Z" />
+    </svg>
+  )
+}
+
+/**
+ * WhatsApp de contratación para los productos que todavía no tienen flujo propio
+ * en el portal. Es deliberado que sea un contacto y no un alta automática: sin
+ * la tabla de solicitudes (que viene en la etapa siguiente) no habría dónde
+ * registrar el pedido, y un botón que no deja rastro es peor que uno que abre
+ * una conversación real.
+ */
+const WA_CONTRATACION = process.env.NEXT_PUBLIC_WA_SUPPORT ?? '5493415056130'
+const waContratar = (producto: string) =>
+  `https://wa.me/${WA_CONTRATACION}?text=${encodeURIComponent(`Hola, quiero sumar ${producto} a mi plan Nexo.`)}`
+
 const phoneIconPath = "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l.97-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
 
 type ServiceGroup = 'nexo' | 'ondemand'
@@ -286,7 +314,14 @@ function ServiceInfoModal({ service, onClose }: { service: ServiceItem; onClose:
         >
           <div
             className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}
+            /* El ícono hereda el tema del servicio: sin esto, una card teal abría
+               un modal con el ícono violeta y el mismo servicio se presentaba con
+               dos colores distintos. */
+            style={{
+              background: service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))',
+              color: 'white',
+              boxShadow: '0 4px 16px rgba(134,96,239,0.22)',
+            }}
           >
             <service.Icon />
           </div>
@@ -1224,6 +1259,63 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
         'Sin costo de mantenimiento',
         'Servicio adicional, se contrata aparte',
       ],
+    },
+    /*
+      Seguro de Salud I y Seguro de Vida ya se publican en la landing pero no
+      existían acá: el socio los veía antes de contratar y desaparecían justo
+      cuando podía sumarlos.
+
+      Todavía no tienen flujo propio (eso llega con la tabla de solicitudes), así
+      que abren el modal informativo con un WhatsApp de contratación. Es el mismo
+      patrón que ya usa la guardia odontológica.
+    */
+    {
+      id: 'seguro-salud-1',
+      group: 'ondemand' as const,
+      title: 'Seguro de Salud I',
+      subtitle: 'Alta complejidad, internación y trasplante · $6.000/mes',
+      badge: 'Pago aparte',
+      badgeColor: 'var(--teal)',
+      badgeBg: 'rgba(13,148,136,0.10)',
+      buttonLabel: 'Quiero sumarlo',
+      buttonAction: 'info' as const,
+      accentColor: 'white',
+      accentBg: 'rgba(13,148,136,0.10)',
+      glowColor: 'rgba(13,148,136,0.16)',
+      theme: TEAL,
+      Icon: IconSeguroSalud,
+      description: 'Cobertura para lo que no se planifica: intervenciones quirúrgicas de alta complejidad, internación y trasplante de órganos. Se suma a tu plan Nexo y se paga aparte.',
+      bullets: [
+        'Intervenciones de alta complejidad: hasta $3.000.000',
+        'Renta diaria por internación',
+        'Trasplante de órganos: hasta $10.000.000',
+        'Segunda opinión médica',
+        'Edad de incorporación: hasta 59 años',
+      ],
+      whatsapp: waContratar('el Seguro de Salud I'),
+    },
+    {
+      id: 'seguro-vida',
+      group: 'ondemand' as const,
+      title: 'Seguro de Vida',
+      subtitle: 'Suma asegurada $3.162.500 · $2.750/mes',
+      badge: 'Pago aparte',
+      badgeColor: 'var(--teal)',
+      badgeBg: 'rgba(13,148,136,0.10)',
+      buttonLabel: 'Quiero sumarlo',
+      buttonAction: 'info' as const,
+      accentColor: 'white',
+      accentBg: 'rgba(13,148,136,0.10)',
+      glowColor: 'rgba(13,148,136,0.16)',
+      theme: TEAL,
+      Icon: IconSeguroVida,
+      description: 'Un respaldo económico para tu familia. Se suma a tu plan Nexo y se paga aparte de la cuota.',
+      bullets: [
+        'Suma asegurada de $3.162.500',
+        'Se contrata sobre tu plan Nexo activo',
+        'Sin trámites presenciales',
+      ],
+      whatsapp: waContratar('el Seguro de Vida'),
     },
   ]
 
