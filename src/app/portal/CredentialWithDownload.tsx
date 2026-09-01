@@ -33,9 +33,9 @@ export default function CredentialWithDownload({ affiliate }: { affiliate: Affil
         disabled={loading}
         className="w-full py-2.5 rounded-full text-sm font-semibold transition-all hover:opacity-90 active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
         style={{
-          background: 'rgba(255,255,255,0.10)',
-          border: '1px solid rgba(255,255,255,0.20)',
-          color: 'rgba(255,255,255,0.85)',
+          background: 'var(--superficie-sutil)',
+          border: '1px solid var(--borde-fuerte)',
+          color: 'var(--texto)',
           cursor: loading ? 'not-allowed' : 'pointer',
           fontFamily: 'var(--font-dm-sans)',
         }}

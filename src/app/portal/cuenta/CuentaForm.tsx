@@ -6,12 +6,12 @@ import { updateProfile, notifyPasswordChanged } from './actions'
 import type { Affiliate } from '@/lib/types'
 
 const INPUT_BASE: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.07)',
-  border: '1px solid rgba(255,255,255,0.15)',
-  color: 'white',
+  background: 'var(--superficie-sutil)',
+  border: '1px solid var(--borde-fuerte)',
+  color: 'var(--texto-fuerte)',
   fontFamily: 'var(--font-dm-sans)',
   fontSize: '0.9rem',
-  colorScheme: 'dark',
+  colorScheme: 'light',
 }
 
 function Field({
@@ -36,11 +36,11 @@ function Field({
       <label
         htmlFor={id}
         className="block text-sm font-medium mb-1.5"
-        style={{ color: readOnly ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}
+        style={{ color: readOnly ? 'var(--texto-tenue)' : 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}
       >
         {label}
         {readOnly && (
-          <span className="ml-2 text-xs font-normal tracking-normal" style={{ color: 'rgba(255,255,255,0.25)' }}>
+          <span className="ml-2 text-xs font-normal tracking-normal" style={{ color: 'var(--borde-fuerte)' }}>
             (no editable)
           </span>
         )}
@@ -61,13 +61,13 @@ function Field({
         onFocus={(e) => {
           if (!readOnly) {
             e.target.style.border = '1px solid rgba(134,96,239,0.70)'
-            e.target.style.background = 'rgba(255,255,255,0.10)'
+            e.target.style.background = 'var(--superficie-sutil)'
           }
         }}
         onBlur={(e) => {
           if (!readOnly) {
-            e.target.style.border = '1px solid rgba(255,255,255,0.15)'
-            e.target.style.background = 'rgba(255,255,255,0.07)'
+            e.target.style.border = '1px solid var(--borde-fuerte)'
+            e.target.style.background = 'var(--superficie-sutil)'
           }
         }}
       />
@@ -79,7 +79,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p
       className="text-xs uppercase tracking-[0.14em] font-semibold mb-3"
-      style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}
+      style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}
     >
       {children}
     </p>
@@ -93,7 +93,7 @@ function Alert({ ok, text }: { ok: boolean; text: string }) {
       style={{
         background: ok ? 'rgba(34,197,94,0.10)' : 'rgba(239,68,68,0.12)',
         border: `1px solid ${ok ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.30)'}`,
-        color: ok ? '#86efac' : '#fca5a5',
+        color: ok ? 'var(--ok)' : 'var(--error)',
         fontFamily: 'var(--font-dm-sans)',
       }}
     >

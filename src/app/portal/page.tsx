@@ -32,8 +32,8 @@ export default async function PortalPage() {
   if (!affiliate) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
-        <p className="text-base font-semibold text-white">No encontramos tu afiliación.</p>
-        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.60)' }}>
+        <p className="text-base font-semibold">No encontramos tu afiliación.</p>
+        <p className="text-sm" style={{ color: 'var(--texto-suave)' }}>
           Si creés que es un error, contactate con Nexo para resolver tu situación.
         </p>
       </div>
@@ -67,16 +67,16 @@ export default async function PortalPage() {
           className="w-16 h-16 rounded-3xl flex items-center justify-center"
           style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)' }}
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--alerta)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
             <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
           </svg>
         </div>
 
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+          <h1 className="text-2xl sm:text-3xl font-bold" style={{ fontFamily: 'var(--font-dm-sans)' }}>
             Completá tu pago
           </h1>
-          <p className="text-sm sm:text-base max-w-sm" style={{ color: 'rgba(255,255,255,0.60)', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-sm sm:text-base max-w-sm" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
             Tu cuenta está registrada pero el pago no fue confirmado todavía. Completá el pago para activar todos tus beneficios.
           </p>
         </div>
@@ -86,7 +86,7 @@ export default async function PortalPage() {
         <a
           href="/registro"
           className="text-sm"
-          style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)', textDecoration: 'underline', textUnderlineOffset: '3px' }}
+          style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)', textDecoration: 'underline', textUnderlineOffset: '3px' }}
         >
           Volver a registrarse con otros datos
         </a>
@@ -101,17 +101,17 @@ export default async function PortalPage() {
       <div className="pt-1">
         <p
           className="text-sm sm:text-base font-medium mb-1"
-          style={{ color: 'rgba(255,255,255,0.72)', letterSpacing: '0.06em', textTransform: 'uppercase' }}
+          style={{ color: 'var(--texto)', letterSpacing: '0.06em', textTransform: 'uppercase' }}
         >
           {getGreeting()}
         </p>
         <h1
-          className="text-3xl sm:text-4xl font-bold text-white leading-tight"
+          className="text-3xl sm:text-4xl font-bold leading-tight"
           style={{ fontFamily: 'var(--font-dm-sans)' }}
         >
           {firstName} 👋
         </h1>
-        <p className="text-sm sm:text-base mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>
+        <p className="text-sm sm:text-base mt-1" style={{ color: 'var(--texto)' }}>
           Todos tus beneficios en un solo lugar.
         </p>
       </div>
@@ -121,11 +121,11 @@ export default async function PortalPage() {
           className="rounded-2xl px-4 py-4 flex items-start gap-3"
           style={{ background: 'rgba(251,146,60,0.12)', border: '1px solid rgba(251,146,60,0.30)' }}
         >
-          <svg className="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fb923c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--alerta)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <div>
-            <p className="text-sm font-semibold" style={{ color: '#fb923c' }}>
+            <p className="text-sm font-semibold" style={{ color: 'var(--alerta)' }}>
               Tu cuenta está suspendida
             </p>
             <p className="text-sm mt-0.5" style={{ color: 'rgba(251,146,60,0.80)' }}>
@@ -136,7 +136,7 @@ export default async function PortalPage() {
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold"
-              style={{ color: '#fb923c' }}
+              style={{ color: 'var(--alerta)' }}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -151,11 +151,11 @@ export default async function PortalPage() {
           className="rounded-2xl px-4 py-4 flex items-start gap-3"
           style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.30)' }}
         >
-          <svg className="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--error)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"/><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
           <div>
-            <p className="text-sm font-semibold" style={{ color: '#f87171' }}>
+            <p className="text-sm font-semibold" style={{ color: 'var(--error)' }}>
               Tu suscripción fue cancelada
             </p>
             <p className="text-sm mt-0.5" style={{ color: 'rgba(248,113,113,0.80)' }}>
@@ -166,7 +166,7 @@ export default async function PortalPage() {
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold"
-              style={{ color: '#f87171' }}
+              style={{ color: 'var(--error)' }}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -182,7 +182,7 @@ export default async function PortalPage() {
         <section>
           <p
             className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
-            style={{ color: 'rgba(255,255,255,0.70)' }}
+            style={{ color: 'var(--texto)' }}
           >
             Tu credencial
           </p>
@@ -197,7 +197,7 @@ export default async function PortalPage() {
         <section>
           <p
             className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
-            style={{ color: 'rgba(255,255,255,0.70)' }}
+            style={{ color: 'var(--texto)' }}
           >
             Tus servicios
           </p>
@@ -206,7 +206,7 @@ export default async function PortalPage() {
               className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
               style={{ background: 'rgba(251,191,36,0.1)' }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--alerta)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
             </div>

@@ -148,8 +148,8 @@ interface CardTheme {
   borderHover: string
 }
 const TEAL: CardTheme = {
-  gradient: 'linear-gradient(135deg, #0d9488, #14b8a6)',
-  solid: '#0d9488',
+  gradient: 'linear-gradient(135deg, var(--teal), #14b8a6)',
+  solid: 'var(--teal)',
   soft: 'rgba(13,148,136,0.10)',
   border: 'rgba(13,148,136,0.20)',
   softHover: 'rgba(13,148,136,0.18)',
@@ -271,30 +271,30 @@ function ServiceInfoModal({ service, onClose }: { service: ServiceItem; onClose:
       <div
         className="w-full max-w-sm rounded-3xl overflow-hidden"
         style={{
-          background: 'rgba(18,5,61,0.88)',
-          border: '1px solid rgba(255,255,255,0.12)',
+          background: 'var(--superficie-card)',
+          border: '1px solid var(--borde)',
           backdropFilter: 'blur(40px)',
           WebkitBackdropFilter: 'blur(40px)',
-          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06) inset',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px var(--superficie-sutil) inset',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
           className="px-6 pt-6 pb-5 flex items-center gap-4"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+          style={{ borderBottom: '1px solid var(--superficie-sutil)' }}
         >
           <div
             className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}
+            style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'var(--texto-fuerte)', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}
           >
             <service.Icon />
           </div>
           <div>
-            <p className="font-bold text-white text-base leading-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="font-bold text-base leading-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>
               {service.title}
             </p>
-            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
               {service.subtitle}
             </p>
           </div>
@@ -302,11 +302,11 @@ function ServiceInfoModal({ service, onClose }: { service: ServiceItem; onClose:
 
         {/* Contenido */}
         <div className="px-6 py-5 max-h-[55vh] overflow-y-auto flex flex-col gap-4">
-          <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}>
             {service.description}
           </p>
           {service.descriptionExtra && (
-            <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
               {service.descriptionExtra}
             </p>
           )}
@@ -314,7 +314,7 @@ function ServiceInfoModal({ service, onClose }: { service: ServiceItem; onClose:
             {service.bullets.map((bullet, i) => (
               <li key={i} className="flex items-start gap-2.5">
                 <span className="text-sm mt-px shrink-0" style={{ color: 'var(--pink)' }}>✔</span>
-                <span className="text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.68)', fontFamily: 'var(--font-dm-sans)' }}>
+                <span className="text-sm leading-snug" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
                   {bullet}
                 </span>
               </li>
@@ -330,7 +330,7 @@ function ServiceInfoModal({ service, onClose }: { service: ServiceItem; onClose:
               target="_blank"
               rel="noopener noreferrer"
               className="w-full py-3 rounded-2xl text-sm font-semibold text-center transition-opacity active:scale-95 flex items-center justify-center gap-2"
-              style={{ background: '#25D366', color: 'white', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', textDecoration: 'none' }}
+              style={{ background: '#25D366', color: 'var(--texto-fuerte)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', textDecoration: 'none' }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
               Enviar WhatsApp
@@ -339,7 +339,7 @@ function ServiceInfoModal({ service, onClose }: { service: ServiceItem; onClose:
           <button
             onClick={onClose}
             className="w-full py-3 rounded-2xl text-sm font-semibold transition-opacity active:scale-95"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.50)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+            style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde)', color: 'var(--texto-tenue)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
           >
             Cerrar
           </button>
@@ -360,11 +360,11 @@ function UrgenciasModal({ service, onClose }: { service: ServiceItem; onClose: (
       <div
         className="w-full max-w-sm rounded-3xl overflow-hidden"
         style={{
-          background: 'rgba(18,5,61,0.82)',
-          border: '1px solid rgba(255,255,255,0.12)',
+          background: 'var(--superficie-card)',
+          border: '1px solid var(--borde)',
           backdropFilter: 'blur(40px)',
           WebkitBackdropFilter: 'blur(40px)',
-          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06) inset',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px var(--superficie-sutil) inset',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -377,12 +377,12 @@ function UrgenciasModal({ service, onClose }: { service: ServiceItem; onClose: (
           <div className="flex items-center gap-4 relative">
             <div
               className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(220,38,38,0.20)', border: '1px solid rgba(220,38,38,0.35)', color: '#f87171' }}
+              style={{ background: 'rgba(220,38,38,0.20)', border: '1px solid rgba(220,38,38,0.35)', color: 'var(--error)' }}
             >
               <IconUrgencias />
             </div>
             <div className="flex-1">
-              <p className="text-base font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>Emergencias médicas</p>
+              <p className="text-base font-bold" style={{ fontFamily: 'var(--font-dm-sans)' }}>Emergencias médicas</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
                 <p className="text-xs font-medium" style={{ color: 'rgba(248,113,113,0.80)', fontFamily: 'var(--font-dm-sans)' }}>Disponible 24/7</p>
@@ -393,19 +393,19 @@ function UrgenciasModal({ service, onClose }: { service: ServiceItem; onClose: (
 
         {/* Descripción */}
         <div className="px-6 pt-5 pb-2 flex flex-col gap-3">
-          <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
             {service.description}
           </p>
           {service.descriptionExtra && (
-            <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.50)', fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
               {service.descriptionExtra}
             </p>
           )}
           <ul className="flex flex-col gap-2">
             {service.bullets.map((bullet, i) => (
               <li key={i} className="flex items-start gap-2">
-                <span className="text-xs mt-0.5 shrink-0" style={{ color: '#f87171' }}>✔</span>
-                <span className="text-xs leading-snug" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>{bullet}</span>
+                <span className="text-xs mt-0.5 shrink-0" style={{ color: 'var(--error)' }}>✔</span>
+                <span className="text-xs leading-snug" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>{bullet}</span>
               </li>
             ))}
           </ul>
@@ -421,23 +421,23 @@ function UrgenciasModal({ service, onClose }: { service: ServiceItem; onClose: (
           >
             <div>
               <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(248,113,113,0.65)', fontFamily: 'var(--font-dm-sans)' }}>Contacto principal</p>
-              <p className="text-xl font-bold tracking-wide" style={{ color: '#fca5a5', fontFamily: 'monospace', letterSpacing: '0.04em' }}>341-434-5400</p>
+              <p className="text-xl font-bold tracking-wide" style={{ color: 'var(--error)', fontFamily: 'monospace', letterSpacing: '0.04em' }}>341-434-5400</p>
             </div>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(220,38,38,0.22)', border: '1px solid rgba(220,38,38,0.35)' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d={phoneIconPath} /></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--error)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d={phoneIconPath} /></svg>
             </div>
           </a>
           <a
             href="tel:3415286900"
             className="flex items-center justify-between px-5 py-4 rounded-2xl active:scale-95 transition-all"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}
+            style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde)' }}
           >
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>Contacto alternativo</p>
-              <p className="text-xl font-bold tracking-wide" style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'monospace', letterSpacing: '0.04em' }}>341-528-6900</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>Contacto alternativo</p>
+              <p className="text-xl font-bold tracking-wide" style={{ color: 'var(--texto)', fontFamily: 'monospace', letterSpacing: '0.04em' }}>341-528-6900</p>
             </div>
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d={phoneIconPath} /></svg>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde)' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--texto-tenue)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d={phoneIconPath} /></svg>
             </div>
           </a>
         </div>
@@ -446,7 +446,7 @@ function UrgenciasModal({ service, onClose }: { service: ServiceItem; onClose: (
           <button
             onClick={onClose}
             className="w-full py-3 rounded-2xl text-sm font-semibold transition-opacity hover:opacity-80 active:scale-95"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.50)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+            style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde)', color: 'var(--texto-tenue)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
           >
             Cerrar
           </button>
@@ -468,7 +468,7 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
         <div className="flex items-center gap-3 mb-5" style={{ borderBottom: '1px solid rgba(134,96,239,0.12)', paddingBottom: '1rem' }}>
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}
+            style={{ background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'var(--texto-fuerte)', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}
           >
             <IconFarmacias />
           </div>
@@ -489,7 +489,7 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
         <ul className="flex flex-col gap-1.5 mb-5">
           {service.bullets.map((bullet, i) => (
             <li key={i} className="flex items-start gap-2">
-              <span className="text-xs mt-0.5 shrink-0" style={{ color: 'var(--purple)' }}>✔</span>
+              <span className="text-xs mt-0.5 shrink-0" style={{ color: 'var(--acento-texto)' }}>✔</span>
               <span className="text-xs leading-snug" style={{ color: 'var(--gray-600)', fontFamily: 'var(--font-dm-sans)' }}>{bullet}</span>
             </li>
           ))}
@@ -512,7 +512,7 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 w-full py-3 min-h-[44px] rounded-full text-sm font-bold mb-3"
-          style={{ background: 'rgba(134,96,239,0.10)', color: 'var(--purple)', border: '1px solid rgba(134,96,239,0.25)', fontFamily: 'var(--font-dm-sans)' }}
+          style={{ background: 'rgba(134,96,239,0.10)', color: 'var(--acento-texto)', border: '1px solid rgba(134,96,239,0.25)', fontFamily: 'var(--font-dm-sans)' }}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
@@ -525,7 +525,7 @@ function FarmaciaModal({ service, affiliateNumber, onClose }: { service: Service
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 w-full py-3 min-h-[44px] rounded-full text-sm font-bold mb-3"
-          style={{ background: 'rgba(134,96,239,0.10)', color: 'var(--purple)', border: '1px solid rgba(134,96,239,0.25)', fontFamily: 'var(--font-dm-sans)' }}
+          style={{ background: 'rgba(134,96,239,0.10)', color: 'var(--acento-texto)', border: '1px solid rgba(134,96,239,0.25)', fontFamily: 'var(--font-dm-sans)' }}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
@@ -555,7 +555,7 @@ function PsicologiaModal({
 }) {
   // Un solo perfil abierto a la vez: el modal ya scrollea en 60vh y varios abiertos lo vuelven ilegible.
   const [perfilAbierto, setPerfilAbierto] = useState<string | null>(null)
-  const acento = service.theme?.solid ?? 'var(--purple)'
+  const acento = service.theme?.solid ?? 'var(--acento-texto)'
   const gradiente = service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))'
   return (
     <div
@@ -566,41 +566,41 @@ function PsicologiaModal({
       <div
         className="w-full max-w-md rounded-3xl overflow-hidden"
         style={{
-          background: 'rgba(18,5,61,0.88)',
-          border: '1px solid rgba(255,255,255,0.12)',
+          background: 'var(--superficie-card)',
+          border: '1px solid var(--borde)',
           backdropFilter: 'blur(40px)',
           WebkitBackdropFilter: 'blur(40px)',
-          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06) inset',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px var(--superficie-sutil) inset',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid var(--superficie-sutil)' }}>
           <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: gradiente, color: 'white' }}>
             <service.Icon />
           </div>
           <div>
-            <p className="font-bold text-white text-base leading-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>{service.title}</p>
-            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>{service.subtitle}</p>
+            <p className="font-bold text-base leading-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>{service.title}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>{service.subtitle}</p>
           </div>
         </div>
 
         <div className="px-6 py-5 max-h-[60vh] overflow-y-auto flex flex-col gap-4">
-          <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
 
           {/* Precio de la sesión.
               Beneficio mensual fijo: 1 sesión bonificada al 50% por mes, el resto a valor de lista.
               No depende del afiliado ni de consumos previos: el cobro lo hace DOC24 y se renueva cada mes. */}
           <div
             className="rounded-2xl px-4 py-3.5 flex flex-col gap-1"
-            style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.12)', border: `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.14)'}` }}
+            style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.12)', border: `1px solid ${service.theme?.borderHover ?? 'var(--borde-fuerte)'}` }}
           >
-            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
               Valor de las sesiones
             </p>
             <div className="flex items-baseline gap-2.5 flex-wrap">
               <span
                 className="text-base font-medium"
-                style={{ color: 'rgba(255,255,255,0.40)', textDecoration: 'line-through', fontFamily: 'var(--font-dm-sans)' }}
+                style={{ color: 'var(--texto-tenue)', textDecoration: 'line-through', fontFamily: 'var(--font-dm-sans)' }}
               >
                 $30.000
               </span>
@@ -608,19 +608,19 @@ function PsicologiaModal({
                 $15.000
               </span>
             </div>
-            <p className="text-[11px] leading-snug mt-1" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="text-[11px] leading-snug mt-1" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
               Cada mes tenés una sesión a $15.000 (50% de descuento). Las siguientes sesiones del mes son a $30.000. El beneficio se renueva todos los meses.
             </p>
           </div>
 
           <div className="flex flex-col gap-2.5">
-            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
               Equipo profesional · videoconsulta de 30 min
             </p>
             {PSICOLOGOS.map((p) => {
               const perfilVisible = perfilAbierto === p.id
               return (
-                <div key={p.id} className="rounded-2xl p-3 flex flex-col gap-2.5" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                <div key={p.id} className="rounded-2xl p-3 flex flex-col gap-2.5" style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde)' }}>
                   <div className="flex items-center gap-3">
                     {p.foto ? (
                       <Image
@@ -629,24 +629,24 @@ function PsicologiaModal({
                         width={96}
                         height={96}
                         className="w-12 h-12 rounded-full object-cover shrink-0"
-                        style={{ border: `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.25)'}` }}
+                        style={{ border: `1px solid ${service.theme?.borderHover ?? 'var(--borde-fuerte)'}` }}
                       />
                     ) : (
                       <div
                         className="w-12 h-12 rounded-full flex flex-col items-center justify-center shrink-0"
-                        style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.18)', border: `1px dashed ${service.theme?.borderHover ?? 'rgba(255,255,255,0.25)'}`, color: acento }}
+                        style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.18)', border: `1px dashed ${service.theme?.borderHover ?? 'var(--borde-fuerte)'}`, color: acento }}
                         aria-label={`Foto de ${p.nombre} pendiente`}
                       >
                         <span className="text-xs font-bold leading-none" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.iniciales}</span>
-                        <span className="text-[8px] leading-none mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>foto</span>
+                        <span className="text-[8px] leading-none mt-0.5" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>foto</span>
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-white leading-tight truncate" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.nombre}</p>
+                      <p className="text-sm font-semibold leading-tight truncate" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.nombre}</p>
                       {p.especialidad && (
                         <p className="text-[11px] mt-0.5 leading-snug" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>{p.especialidad}</p>
                       )}
-                      <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.50)', fontFamily: 'var(--font-dm-sans)' }}>{p.dias} · {p.franja}</p>
+                      <p className="text-[11px] mt-0.5" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>{p.dias} · {p.franja}</p>
                       {p.descripcion && (
                         <button
                           onClick={() => setPerfilAbierto(perfilVisible ? null : p.id)}
@@ -664,16 +664,16 @@ function PsicologiaModal({
                       rel="noopener noreferrer"
                       onClick={() => { void registerPsicologiaClick() }}
                       className="shrink-0 px-3 py-2 rounded-xl text-xs font-semibold text-center active:scale-95"
-                      style={{ background: gradiente, color: 'white', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}
+                      style={{ background: gradiente, color: 'var(--texto-fuerte)', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}
                     >
                       Reservar
                     </a>
                   </div>
 
                   {perfilVisible && p.descripcion && (
-                    <div className="flex flex-col gap-2 pt-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div className="flex flex-col gap-2 pt-2.5" style={{ borderTop: '1px solid var(--superficie-sutil)' }}>
                       {p.descripcion.map((parrafo, i) => (
-                        <p key={i} className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.62)', fontFamily: 'var(--font-dm-sans)' }}>
+                        <p key={i} className="text-[11px] leading-relaxed" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
                           {parrafo}
                         </p>
                       ))}
@@ -685,7 +685,7 @@ function PsicologiaModal({
           </div>
 
           {/* Aviso */}
-          <p className="text-xs leading-relaxed rounded-xl px-3 py-2.5" style={{ color: 'rgba(255,255,255,0.60)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-xs leading-relaxed rounded-xl px-3 py-2.5" style={{ color: 'var(--texto-suave)', background: 'var(--superficie-sutil)', border: '1px solid var(--borde)', fontFamily: 'var(--font-dm-sans)' }}>
             Es un servicio adicional a tu cobertura Previnca Nexo y se contrata de manera
             independiente. Reservá tu turno desde DOC24, donde podés elegir el profesional, el
             día y el horario que mejor se adapten a vos.
@@ -696,7 +696,7 @@ function PsicologiaModal({
           <button
             onClick={onClose}
             className="w-full py-3 rounded-2xl text-sm font-semibold transition-opacity active:scale-95"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.50)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+            style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde)', color: 'var(--texto-tenue)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
           >
             Cerrar
           </button>
@@ -720,39 +720,39 @@ function SeguroHogarModal({ service, onClose }: { service: ServiceItem; onClose:
       <div
         className="w-full max-w-md rounded-3xl overflow-hidden"
         style={{
-          background: 'rgba(18,5,61,0.88)',
-          border: '1px solid rgba(255,255,255,0.12)',
+          background: 'var(--superficie-card)',
+          border: '1px solid var(--borde)',
           backdropFilter: 'blur(40px)',
           WebkitBackdropFilter: 'blur(40px)',
-          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06) inset',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px var(--superficie-sutil) inset',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid var(--superficie-sutil)' }}>
           <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: gradiente, color: 'white' }}>
             <service.Icon />
           </div>
           <div>
-            <p className="font-bold text-white text-base leading-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>{service.title}</p>
-            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>{service.subtitle}</p>
+            <p className="font-bold text-base leading-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>{service.title}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>{service.subtitle}</p>
           </div>
         </div>
 
         <div className="px-6 py-5 max-h-[60vh] overflow-y-auto flex flex-col gap-4">
-          <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
 
           {SEGURO_PLANES.map((p) => (
-            <div key={p.id} className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
+            <div key={p.id} className="rounded-2xl p-4" style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde)' }}>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>HOGAR PROTEGIDO</span>
+                <span className="text-sm font-bold" style={{ fontFamily: 'var(--font-dm-sans)' }}>HOGAR PROTEGIDO</span>
                 <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.18)', color: acento }}>{p.badge}</span>
               </div>
-              <p className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>{p.alcance}</p>
-              <p className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.precio}<span className="text-sm font-normal" style={{ color: 'rgba(255,255,255,0.5)' }}>/mes</span></p>
-              <p className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>6 cuotas sin interés</p>
+              <p className="text-xs mb-2" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>{p.alcance}</p>
+              <p className="text-xl font-bold mb-1" style={{ fontFamily: 'var(--font-dm-sans)' }}>{p.precio}<span className="text-sm font-normal" style={{ color: 'var(--texto-suave)' }}>/mes</span></p>
+              <p className="text-xs mb-3" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>6 cuotas sin interés</p>
               <ul className="flex flex-col gap-1.5 mb-3">
                 {SEGURO_COBERTURAS_PRINCIPALES.map((c, i) => (
-                  <li key={i} className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.68)', fontFamily: 'var(--font-dm-sans)' }}>
+                  <li key={i} className="flex items-center gap-2 text-xs" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
                     <span style={{ color: acento }}>✔</span>{c}
                   </li>
                 ))}
@@ -763,7 +763,7 @@ function SeguroHogarModal({ service, onClose }: { service: ServiceItem; onClose:
                 rel="noopener noreferrer"
                 onClick={() => { void registerSeguroHogarSolicitud(p.id) }}
                 className="block w-full py-2.5 rounded-xl text-sm font-semibold text-center active:scale-95"
-                style={{ background: gradiente, color: 'white', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}
+                style={{ background: gradiente, color: 'var(--texto-fuerte)', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}
               >
                 Contratar
               </a>
@@ -779,29 +779,29 @@ function SeguroHogarModal({ service, onClose }: { service: ServiceItem; onClose:
           </button>
           {coberturaAbierta && (
             <div className="flex flex-col gap-2.5">
-              <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
+              <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
                 Sumas aseguradas vigentes — 2026 · iguales para ambos planes
               </p>
               {SEGURO_COBERTURA_COMPLETA.map((c, i) => (
-                <div key={i} className="rounded-xl px-3 py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div key={i} className="rounded-xl px-3 py-2" style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde)' }}>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>{c.nombre}</span>
+                    <span className="text-xs font-semibold" style={{ fontFamily: 'var(--font-dm-sans)' }}>{c.nombre}</span>
                     <span className="text-xs font-bold" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>{c.monto}</span>
                   </div>
-                  {c.detalle && <p className="text-[11px] mt-1 leading-snug" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>{c.detalle}</p>}
+                  {c.detalle && <p className="text-[11px] mt-1 leading-snug" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>{c.detalle}</p>}
                 </div>
               ))}
             </div>
           )}
 
-          <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>{SEGURO_LEGAL}</p>
+          <p className="text-[10px] leading-relaxed" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>{SEGURO_LEGAL}</p>
         </div>
 
         <div className="px-5 pb-6 pt-1">
           <button
             onClick={onClose}
             className="w-full py-3 rounded-2xl text-sm font-semibold active:scale-95"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.50)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+            style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde)', color: 'var(--texto-tenue)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
           >
             Cerrar
           </button>
@@ -833,49 +833,49 @@ function ArbolVidaModal({ service, onClose }: { service: ServiceItem; onClose: (
       <div
         className="w-full max-w-md rounded-3xl overflow-hidden"
         style={{
-          background: 'rgba(18,5,61,0.88)',
-          border: '1px solid rgba(255,255,255,0.12)',
+          background: 'var(--superficie-card)',
+          border: '1px solid var(--borde)',
           backdropFilter: 'blur(40px)',
           WebkitBackdropFilter: 'blur(40px)',
-          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06) inset',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px var(--superficie-sutil) inset',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid var(--superficie-sutil)' }}>
           <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: gradiente, color: 'white' }}>
             <service.Icon />
           </div>
           <div>
-            <p className="font-bold text-white text-base leading-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>{service.title}</p>
-            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>{service.subtitle}</p>
+            <p className="font-bold text-base leading-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>{service.title}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>{service.subtitle}</p>
           </div>
         </div>
 
         <div className="px-6 py-5 max-h-[60vh] overflow-y-auto flex flex-col gap-4">
-          <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
 
           {/* Precio */}
           <div
             className="rounded-2xl px-4 py-3.5 flex flex-col gap-1"
-            style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.12)', border: `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.14)'}` }}
+            style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.12)', border: `1px solid ${service.theme?.borderHover ?? 'var(--borde-fuerte)'}` }}
           >
-            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
               Valor del servicio
             </p>
             <p className="text-3xl font-extrabold leading-none" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>
               {ARBOL_VIDA_PRECIO}
-              <span className="text-sm font-normal" style={{ color: 'rgba(255,255,255,0.5)' }}>/mes</span>
+              <span className="text-sm font-normal" style={{ color: 'var(--texto-suave)' }}>/mes</span>
             </p>
           </div>
 
           {/* Cobertura */}
           <div className="flex flex-col gap-2.5">
-            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
               Qué incluye
             </p>
             <ul className="flex flex-col gap-1.5">
               {ARBOL_VIDA_COBERTURA.map((c, i) => (
-                <li key={i} className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.68)', fontFamily: 'var(--font-dm-sans)' }}>
+                <li key={i} className="flex items-center gap-2 text-xs" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
                   <span style={{ color: acento }}>✔</span>{c}
                 </li>
               ))}
@@ -884,13 +884,13 @@ function ArbolVidaModal({ service, onClose }: { service: ServiceItem; onClose: (
 
           {/* Condiciones */}
           <div className="flex flex-col gap-2">
-            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
               Condiciones
             </p>
             {ARBOL_VIDA_CONDICIONES.map((c, i) => (
-              <div key={i} className="rounded-xl px-3 py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <span className="text-xs font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>{c.titulo}</span>
-                <p className="text-[11px] mt-0.5 leading-snug" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>{c.detalle}</p>
+              <div key={i} className="rounded-xl px-3 py-2" style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde)' }}>
+                <span className="text-xs font-semibold" style={{ fontFamily: 'var(--font-dm-sans)' }}>{c.titulo}</span>
+                <p className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>{c.detalle}</p>
               </div>
             ))}
           </div>
@@ -903,7 +903,7 @@ function ArbolVidaModal({ service, onClose }: { service: ServiceItem; onClose: (
               rel="noopener noreferrer"
               onClick={() => { void registerArbolVidaSolicitud() }}
               className="block w-full py-3 rounded-2xl text-sm font-semibold text-center active:scale-95"
-              style={{ background: gradiente, color: 'white', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}
+              style={{ background: gradiente, color: 'var(--texto-fuerte)', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}
             >
               Contratar
             </a>
@@ -916,7 +916,7 @@ function ArbolVidaModal({ service, onClose }: { service: ServiceItem; onClose: (
                 style={{
                   background: avisoEstado === 'listo' ? (service.theme?.soft ?? 'rgba(134,96,239,0.18)') : gradiente,
                   color: avisoEstado === 'listo' ? acento : 'white',
-                  border: avisoEstado === 'listo' ? `1px solid ${service.theme?.borderHover ?? 'rgba(255,255,255,0.25)'}` : 'none',
+                  border: avisoEstado === 'listo' ? `1px solid ${service.theme?.borderHover ?? 'var(--borde-fuerte)'}` : 'none',
                   cursor: avisoEstado === 'listo' ? 'default' : 'pointer',
                   opacity: avisoEstado === 'enviando' ? 0.7 : 1,
                   fontFamily: 'var(--font-dm-sans)',
@@ -924,7 +924,7 @@ function ArbolVidaModal({ service, onClose }: { service: ServiceItem; onClose: (
               >
                 {avisoEstado === 'listo' ? '✔ Te avisamos cuando esté disponible' : avisoEstado === 'enviando' ? 'Enviando...' : 'Próximamente'}
               </button>
-              <p className="text-[11px] leading-snug text-center" style={{ color: avisoEstado === 'error' ? '#fca5a5' : 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
+              <p className="text-[11px] leading-snug text-center" style={{ color: avisoEstado === 'error' ? 'var(--error)' : 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
                 {avisoEstado === 'listo'
                   ? 'Quedaste anotado. Te contactamos apenas se habilite la contratación.'
                   : avisoEstado === 'error'
@@ -934,7 +934,7 @@ function ArbolVidaModal({ service, onClose }: { service: ServiceItem; onClose: (
             </div>
           )}
 
-          <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-[10px] leading-relaxed" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
             Servicio prestado por Cochería Caramuto. Es un servicio adicional a tu cobertura Previnca Nexo y se contrata de manera independiente.
           </p>
         </div>
@@ -943,7 +943,7 @@ function ArbolVidaModal({ service, onClose }: { service: ServiceItem; onClose: (
           <button
             onClick={onClose}
             className="w-full py-3 rounded-2xl text-sm font-semibold active:scale-95"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.50)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+            style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde)', color: 'var(--texto-tenue)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
           >
             Cerrar
           </button>
@@ -960,7 +960,7 @@ function GroupHeading({ title, pill, hint, theme }: { title: string; pill: strin
       <div className="flex items-center gap-2 flex-wrap">
         <p
           className="text-xs sm:text-sm font-semibold uppercase tracking-widest"
-          style={{ color: 'rgba(255,255,255,0.70)' }}
+          style={{ color: 'var(--texto)' }}
         >
           {title}
         </p>
@@ -969,7 +969,7 @@ function GroupHeading({ title, pill, hint, theme }: { title: string; pill: strin
           style={{
             background: theme?.soft ?? 'rgba(134,96,239,0.14)',
             border: `1px solid ${theme?.border ?? 'rgba(134,96,239,0.30)'}`,
-            color: theme ? '#5eead4' : '#c4b5fd',
+            color: theme ? 'var(--teal)' : 'var(--acento-texto)',
             fontFamily: 'var(--font-dm-sans)',
           }}
         >
@@ -978,7 +978,7 @@ function GroupHeading({ title, pill, hint, theme }: { title: string; pill: strin
       </div>
       <p
         className="text-xs sm:text-sm mt-1 leading-snug"
-        style={{ color: 'rgba(255,255,255,0.50)', fontFamily: 'var(--font-dm-sans)' }}
+        style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}
       >
         {hint}
       </p>
@@ -997,7 +997,7 @@ function ServiceCard({ service, onAction }: { service: ServiceItem; onAction: (s
 
       <div
         className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 relative z-10"
-        style={{ background: service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'white', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}
+        style={{ background: service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))', color: 'var(--texto-fuerte)', boxShadow: '0 4px 16px rgba(134,96,239,0.22)' }}
       >
         <service.Icon />
       </div>
@@ -1166,7 +1166,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
           title: 'Psicología On Demand',
           subtitle: 'Tu bienestar emocional, cuando lo necesitás.',
           badge: 'Pago aparte',
-          badgeColor: '#5eead4',
+          badgeColor: 'var(--teal)',
           badgeBg: 'rgba(13,148,136,0.16)',
           buttonLabel: 'Ver y reservar',
           buttonAction: 'modal' as const,
@@ -1190,7 +1190,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
           title: 'Seguros del Hogar On Demand',
           subtitle: 'Protegé tu hogar cuando lo necesites.',
           badge: 'Pago aparte',
-          badgeColor: '#5eead4',
+          badgeColor: 'var(--teal)',
           badgeBg: 'rgba(13,148,136,0.16)',
           buttonLabel: 'Ver planes',
           buttonAction: 'modal' as const,
@@ -1214,7 +1214,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       title: 'Árbol de Vida On Demand',
       subtitle: 'Cremación ecológica · Cochería Caramuto',
       badge: ARBOL_VIDA_URL ? 'Pago aparte' : 'Próximamente',
-      badgeColor: ARBOL_VIDA_URL ? '#0d9488' : '#d97706',
+      badgeColor: ARBOL_VIDA_URL ? 'var(--teal)' : 'var(--alerta)',
       badgeBg: ARBOL_VIDA_URL ? 'rgba(13,148,136,0.10)' : 'rgba(217,119,6,0.10)',
       buttonLabel: 'Ver cobertura',
       buttonAction: 'modal' as const,
@@ -1277,7 +1277,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
           <section>
             <div
               className="h-px w-full mb-6"
-              style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.02), rgba(13,148,136,0.35), rgba(255,255,255,0.02))' }}
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(13,148,136,0.30), transparent)' }}
             />
             <GroupHeading
               title="Productos on-demand"

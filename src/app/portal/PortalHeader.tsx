@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import LogoNexo from '../components/LogoNexo'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -37,31 +37,24 @@ export default function PortalHeader({ affiliate }: PortalHeaderProps) {
       <nav
         className="pointer-events-auto w-full max-w-[960px] flex items-center justify-between"
         style={{
-          background: 'rgba(18,5,61,0.85)',
+          background: 'var(--superficie-card)',
           backdropFilter: 'blur(24px) saturate(1.4)',
           WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
-          border: '1px solid rgba(255,255,255,0.14)',
+          border: '1px solid var(--borde-fuerte)',
           borderRadius: '9999px',
           boxShadow: '0 8px 40px rgba(0,0,0,0.24)',
           padding: '6px 8px 6px 20px',
         }}
       >
         {/* Logo */}
-        <Image
-          src="/logo.png"
-          alt="Previnca Nexo"
-          width={100}
-          height={44}
-          style={{ objectFit: 'contain', height: '44px', width: 'auto' }}
-          priority
-        />
+        <LogoNexo alto={34} />
 
         {/* Actions */}
         <div className="flex items-center gap-2">
           <Link
             href="/portal/cuenta"
             className="flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-full transition-all hover:bg-white/10"
-            style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'var(--font-dm-sans)' }}
+            style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}
           >
             <IconPerson />
             <span className="hidden sm:inline truncate max-w-[160px]">{displayName}</span>
@@ -70,19 +63,19 @@ export default function PortalHeader({ affiliate }: PortalHeaderProps) {
             onClick={handleLogout}
             className="text-sm font-semibold px-4 py-2.5 min-h-[40px] rounded-full transition-all active:scale-95"
             style={{
-              background: 'rgba(255,255,255,0.10)',
-              border: '1px solid rgba(255,255,255,0.25)',
-              color: 'rgba(255,255,255,0.85)',
+              background: 'var(--superficie-sutil)',
+              border: '1px solid var(--borde-fuerte)',
+              color: 'var(--texto)',
               cursor: 'pointer',
               fontFamily: 'var(--font-dm-sans)',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.18)'
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.45)'
+              e.currentTarget.style.background = 'var(--borde-fuerte)'
+              e.currentTarget.style.borderColor = 'var(--texto-tenue)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.10)'
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'
+              e.currentTarget.style.background = 'var(--superficie-sutil)'
+              e.currentTarget.style.borderColor = 'var(--borde-fuerte)'
             }}
           >
             Salir

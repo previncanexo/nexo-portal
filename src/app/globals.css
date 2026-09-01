@@ -29,8 +29,12 @@
   --shadow-subtle: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
   --shadow-card: 0 4px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
   --shadow-elevated: 0 12px 40px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
-  --font-dm-serif: 'DM_Serif_Display';
-  --font-dm-sans: 'DM_Sans';
+  /* OJO: --font-dm-sans y --font-dm-serif las define next/font en el <html>
+     (layout.tsx, dmSans.variable). Antes se redefinian aca con los literales
+     'DM_Sans' y 'DM_Serif_Display', que NO son nombres de familia reales: los
+     308 elementos del portal que hacen fontFamily: 'var(--font-dm-sans)' sin
+     cadena de respaldo caian al serif por defecto del navegador. Por eso el
+     portal se veia en Times y nadie sabia por que. No volver a declararlas. */
 }
 
 @layer base {
@@ -619,4 +623,251 @@
 .portal-dark input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background: rgba(134,96,239,0.25);
   opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TEMA CLARO DEL PORTAL DEL SOCIO — 2026-09
+   
+   Por que existe esta capa: el tema del portal vivia en ~258 valores
+   `rgba(255,255,255,x)` escritos a mano dentro de estilos inline, repartidos por
+   todos los componentes. Eso hacia imposible cambiar de tema y era la razon de
+   fondo por la que cada pantalla tenia sus propios grises.
+   
+   Estos tokens son SEMANTICOS (que rol cumple el color), no una escala de
+   grises. Un componente pide `--texto-suave`, no `--gray-500`: asi el mismo
+   markup sirve para claro y oscuro sin tocarlo.
+   
+   Alcance: /portal, /login, /registro, /registro/exito, /forgot-password y
+   /reset-password. El /admin sigue con .portal-dark y NO se toca.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Superficies */
+  --superficie: #f7f4fd;
+  --superficie-card: #ffffff;
+  --superficie-sutil: #f4f1fb;
+  --superficie-hover: #efeafa;
+
+  /* Texto — el casi-negro tira a violeta para que ate con la marca en vez de
+     leerse como un gris de sistema. */
+  --texto-fuerte: #191231;
+  --texto: #40395c;
+  --texto-suave: #635c7d;
+  --texto-tenue: #6b6480;
+
+  /* Colores de estado para fondo CLARO. Los originales (#86efac, #5eead4,
+     #c4b5fd, #fca5a5) eran las versiones claras que se usan sobre oscuro: sobre
+     blanco daban entre 1.1:1 y 2.9:1, o sea ilegibles. */
+  --acento-texto: #6d43e0;
+  --ok: #15803d;
+  --ok-suave: rgba(21, 128, 61, 0.10);
+  --alerta: #b45309;
+  --alerta-suave: rgba(180, 83, 9, 0.10);
+  --error: #b91c1c;
+  --error-suave: rgba(185, 28, 28, 0.10);
+  --teal: #0f766e;
+  --texto-sobre-acento: #ffffff;
+
+  /* Bordes */
+  --borde: rgba(25, 18, 49, 0.08);
+  --borde-fuerte: rgba(25, 18, 49, 0.14);
+
+  /* Acento de marca (ya existian como --purple/--pink; se exponen con rol) */
+  --acento: var(--purple);
+  --acento-suave: rgba(134, 96, 239, 0.10);
+  --acento-borde: rgba(134, 96, 239, 0.22);
+
+  /* Sombras tenidas de violeta: en las referencias la profundidad viene del
+     color de marca difuminado, no de un negro neutro. */
+  --sombra-card: 0 2px 8px rgba(25, 18, 49, 0.04), 0 8px 24px rgba(134, 96, 239, 0.07);
+  --sombra-elevada: 0 4px 12px rgba(25, 18, 49, 0.05), 0 16px 48px rgba(134, 96, 239, 0.12);
+
+  --radius-lg: 28px;
+  --radius-md: 18px;
+}
+
+/* Los mismos roles, en oscuro. El admin los hereda por .portal-dark, asi que
+   un componente ya migrado a tokens funciona en las dos superficies. */
+.portal-dark {
+  --superficie: #0d0520;
+  --superficie-card: rgba(18, 5, 61, 0.55);
+  --superficie-sutil: rgba(255, 255, 255, 0.06);
+  --superficie-hover: rgba(255, 255, 255, 0.10);
+
+  --texto-fuerte: rgba(255, 255, 255, 0.95);
+  --texto: rgba(255, 255, 255, 0.85);
+  --texto-suave: rgba(255, 255, 255, 0.65);
+  --texto-tenue: rgba(255, 255, 255, 0.45);
+
+  --borde: rgba(255, 255, 255, 0.12);
+  --borde-fuerte: rgba(255, 255, 255, 0.20);
+
+  --acento-suave: rgba(134, 96, 239, 0.22);
+  --acento-borde: rgba(134, 96, 239, 0.40);
+
+  --sombra-card: 0 8px 40px rgba(0, 0, 0, 0.30);
+  --sombra-elevada: 0 12px 48px rgba(0, 0, 0, 0.40);
+
+  /* Estados sobre fondo oscuro: las versiones claras de siempre. Sin esto, una
+     superficie .portal-dark anidada dentro de .portal-claro (el panel de
+     branding del registro) heredaria los verdes y rojos oscuros del tema claro
+     y quedarian ilegibles sobre la foto. */
+  --acento-texto: #c4b5fd;
+  --ok: #86efac;
+  --ok-suave: rgba(134, 239, 172, 0.12);
+  --alerta: #fbbf24;
+  --alerta-suave: rgba(251, 191, 36, 0.12);
+  --error: #fca5a5;
+  --error-suave: rgba(252, 165, 165, 0.12);
+  --teal: #5eead4;
+}
+
+/* ── El tema claro aplicado ── */
+.portal-claro {
+  color: var(--texto);
+  /* background-color explicito ademas del degrade: el body del sitio sigue
+     siendo oscuro (#0D0520, lo usa el admin), y sin este color de base se veia
+     el fondo oscuro en el rebote del scroll de iOS y en el primer paint. */
+  background-color: var(--superficie);
+  /* Degrade lavanda -> blush, como las referencias. Los orbes de marca van
+     aparte, en el layout, para poder apagarlos en mobile (GPU).
+     `background-image` y NO el shorthand `background`: el shorthand resetea
+     background-color a transparent y volvia a asomar el body oscuro. */
+  /* Sin background-attachment: fixed. Con el degrade fijo al viewport, todo lo
+     que quedaba debajo del primer scroll mostraba el body oscuro; ademas los
+     fondos fijos son caros de repintar en mobile. */
+  background-image:
+    linear-gradient(168deg, #efe9fc 0%, #f6f2fc 42%, #fdf3f6 100%);
+  background-repeat: no-repeat;
+}
+
+.portal-claro h1,
+.portal-claro h2,
+.portal-claro h3 {
+  color: var(--texto-fuerte);
+}
+
+/* La card del tema claro: blanca, muy redondeada y con sombra difusa violeta.
+   Sin backdrop-filter: sobre un fondo claro no aporta nada y en mobile es de
+   lo mas caro que se puede pedir (misma leccion que AGENTS.md §6 en la landing). */
+.portal-claro .glass-card {
+  background: var(--superficie-card);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid var(--borde);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--sombra-card);
+}
+
+/* Escala de grises legada: se remapea a los roles claros para que los
+   componentes que ya usaban var(--gray-N) queden bien sin tocarlos. */
+.portal-claro {
+  --gray-900: var(--texto-fuerte);
+  --gray-800: var(--texto);
+  --gray-700: var(--texto);
+  --gray-600: var(--texto-suave);
+  --gray-500: var(--texto-suave);
+  --gray-400: var(--texto-tenue);
+  --gray-300: var(--texto-tenue);
+  --gray-200: var(--borde-fuerte);
+  --gray-100: var(--superficie-sutil);
+}
+
+.portal-claro input,
+.portal-claro select,
+.portal-claro textarea {
+  color-scheme: light;
+  color: var(--texto-fuerte);
+  background: var(--superficie-card);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radius-md);
+}
+
+.portal-claro input::placeholder,
+.portal-claro textarea::placeholder {
+  color: var(--texto-tenue);
+}
+
+.portal-claro input:focus,
+.portal-claro select:focus,
+.portal-claro textarea:focus {
+  outline: none;
+  border-color: var(--acento);
+  box-shadow: 0 0 0 3px var(--acento-suave);
+}
+
+.portal-claro option {
+  background: var(--superficie-card);
+  color: var(--texto-fuerte);
+}
+
+.portal-claro * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(134, 96, 239, 0.35) transparent;
+}
+.portal-claro *::-webkit-scrollbar { width: 8px; height: 8px; }
+.portal-claro *::-webkit-scrollbar-track { background: transparent; }
+.portal-claro *::-webkit-scrollbar-thumb {
+  background: rgba(134, 96, 239, 0.30);
+  border-radius: 9999px;
+}
+.portal-claro *::-webkit-scrollbar-thumb:hover { background: rgba(134, 96, 239, 0.50); }
+
+/* Chip pill del tema claro (las referencias las usan en todos lados) */
+.portal-claro .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  background: var(--superficie-sutil);
+  color: var(--texto-suave);
+  border: 1px solid transparent;
+}
+.portal-claro .pill-acento {
+  background: var(--acento-suave);
+  color: var(--acento);
+  border-color: var(--acento-borde);
+}
+
+/* Una superficie oscura anidada dentro de .portal-claro (por ejemplo el panel de
+   branding del registro) tiene que recuperar sus titulos en claro: la regla
+   `.portal-claro h1` le gana por especificidad a la clase `text-white`. */
+.portal-claro .portal-dark h1,
+.portal-claro .portal-dark h2,
+.portal-claro .portal-dark h3 {
+  color: var(--texto-fuerte);
+}
+
+/* ── Superficie oscura dentro del tema claro ──
+   La credencial y el panel de branding del registro son islas oscuras (gradiente
+   o foto con overlay) dentro de una pagina clara: su texto va en blanco y sus
+   estados necesitan los verdes/rojos claros.
+
+   Existe aparte de .portal-dark a proposito. .portal-dark arrastra reglas del
+   admin con !important (font-family y font-style forzados) que, aplicadas aca,
+   cambiaban la tipografia de la credencial sin que nadie lo pidiera. Esta clase
+   remapea SOLO color. */
+.superficie-oscura {
+  --texto-fuerte: rgba(255, 255, 255, 0.95);
+  --texto: rgba(255, 255, 255, 0.85);
+  --texto-suave: rgba(255, 255, 255, 0.65);
+  --texto-tenue: rgba(255, 255, 255, 0.45);
+  --borde: rgba(255, 255, 255, 0.12);
+  --borde-fuerte: rgba(255, 255, 255, 0.20);
+  --acento-texto: #c4b5fd;
+  --ok: #86efac;
+  --alerta: #fbbf24;
+  --error: #fca5a5;
+  --teal: #5eead4;
+}
+
+/* Sus titulos vuelven al claro: `.portal-claro h1` gana por especificidad. */
+.portal-claro .superficie-oscura h1,
+.portal-claro .superficie-oscura h2,
+.portal-claro .superficie-oscura h3 {
+  color: var(--texto-fuerte);
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
+import LogoNexo from '../components/LogoNexo'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
@@ -80,51 +80,44 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden"
-      style={{
-        backgroundImage: 'url(/login-bg.webp)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
-      {/* Overlay oscuro sobre la foto */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: 'linear-gradient(135deg, rgba(10,3,40,0.60) 0%, rgba(18,5,61,0.42) 50%, rgba(45,18,102,0.52) 100%)' }}
-      />
-      {/* Grain overlay */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          opacity: 0.18,
-          backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E\")",
-          mixBlendMode: 'overlay',
-        }}
-      />
+    <div className="portal-claro min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/*
+        Antes esto era una foto con overlay oscuro encima: el formulario caia
+        sobre una cara y el contraste dependia de que tan oscuro fuera el
+        overlay. Ahora el fondo es el degrade de marca y la atencion queda
+        donde tiene que estar, que es el formulario.
+      */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div
+          className="hidden sm:block absolute -top-32 -left-32 w-[460px] h-[460px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(134,96,239,0.26) 0%, transparent 70%)', filter: 'blur(60px)' }}
+        />
+        <div
+          className="hidden sm:block absolute -bottom-40 -right-24 w-[420px] h-[420px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(238,92,208,0.20) 0%, transparent 70%)', filter: 'blur(60px)' }}
+        />
+      </div>
 
       <div className="w-full max-w-sm relative z-10">
         {/* Logo */}
-        <div className="text-center mb-10">
-          <Image
-            src="/logo.png"
-            alt="Previnca Nexo"
-            width={220}
-            height={88}
-            style={{ objectFit: 'contain', height: '88px', width: 'auto', margin: '0 auto' }}
-            priority
-          />
-        </div>
+        <div className="flex justify-center mb-10">
+            <LogoNexo alto={72} />
+          </div>
 
         {/* Card */}
-        <div className="p-7 sm:p-8 rounded-3xl" style={{ background: 'rgba(18,5,61,0.55)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', border: '1px solid rgba(255,255,255,0.14)', boxShadow: '0 8px 40px rgba(0,0,0,0.30)' }}>
-          <h2
-            className="text-2xl text-white mb-1"
-            style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
-          >
+        <div
+          className="p-7 sm:p-9"
+          style={{
+            background: 'var(--superficie-card)',
+            border: '1px solid var(--borde)',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--sombra-elevada)',
+          }}
+        >
+          <h2 className="text-2xl mb-1" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--texto-fuerte)' }}>
             Ingresá a tu portal
           </h2>
-          <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-sm mb-7" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
             Tu salud, siempre cerca
           </p>
 
@@ -133,7 +126,7 @@ export default function LoginPage() {
               <label
                 htmlFor="email"
                 className="block text-sm font-medium mb-1.5"
-                style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}
+                style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}
               >
                 Email
               </label>
@@ -144,21 +137,21 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="tu@email.com"
-                className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl outline-none transition-all"
                 style={{
-                  background: 'rgba(255,255,255,0.07)',
-                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'var(--superficie-sutil)',
+                  border: '1px solid var(--borde-fuerte)',
                   fontFamily: 'var(--font-dm-sans)',
                   fontSize: '0.95rem',
-                  color: 'white',
+                  color: 'var(--texto-fuerte)',
                 }}
                 onFocus={(e) => {
-                  e.target.style.border = '1px solid rgba(134,96,239,0.70)'
-                  e.target.style.background = 'rgba(255,255,255,0.10)'
+                  e.target.style.border = '1px solid var(--acento)'
+                  e.target.style.background = 'var(--superficie-sutil)'
                 }}
                 onBlur={(e) => {
-                  e.target.style.border = '1px solid rgba(255,255,255,0.15)'
-                  e.target.style.background = 'rgba(255,255,255,0.07)'
+                  e.target.style.border = '1px solid var(--borde-fuerte)'
+                  e.target.style.background = 'var(--superficie-sutil)'
                 }}
               />
             </div>
@@ -167,7 +160,7 @@ export default function LoginPage() {
               <label
                 htmlFor="password"
                 className="block text-sm font-medium mb-1.5"
-                style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}
+                style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}
               >
                 Contraseña
               </label>
@@ -179,22 +172,22 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 pr-11 rounded-xl text-white outline-none transition-all"
+                  className="w-full px-4 py-3 pr-11 rounded-xl outline-none transition-all"
                   style={{
-                    background: 'rgba(255,255,255,0.07)',
-                    border: '1px solid rgba(255,255,255,0.15)',
+                    background: 'var(--superficie-sutil)',
+                    border: '1px solid var(--borde-fuerte)',
                     fontFamily: 'var(--font-dm-sans)',
                     fontSize: '0.95rem',
-                    color: 'white',
-                    colorScheme: 'dark',
+                    color: 'var(--texto-fuerte)',
+                    colorScheme: 'light',
                   }}
                   onFocus={(e) => {
-                    e.target.style.border = '1px solid rgba(134,96,239,0.70)'
-                    e.target.style.background = 'rgba(255,255,255,0.10)'
+                    e.target.style.border = '1px solid var(--acento)'
+                    e.target.style.background = 'var(--superficie-sutil)'
                   }}
                   onBlur={(e) => {
-                    e.target.style.border = '1px solid rgba(255,255,255,0.15)'
-                    e.target.style.background = 'rgba(255,255,255,0.07)'
+                    e.target.style.border = '1px solid var(--borde-fuerte)'
+                    e.target.style.background = 'var(--superficie-sutil)'
                   }}
                 />
                 <button
@@ -205,12 +198,12 @@ export default function LoginPage() {
                   style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                 >
                   {showPassword ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--texto-tenue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
                       <line x1="1" y1="1" x2="23" y2="23"/>
                     </svg>
                   ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--texto-tenue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                       <circle cx="12" cy="12" r="3"/>
                     </svg>
@@ -253,7 +246,7 @@ export default function LoginPage() {
             <Link
               href="/forgot-password"
               className="text-sm transition-opacity hover:opacity-80"
-              style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}
+              style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}
             >
               ¿Olvidaste tu contraseña?
             </Link>
@@ -266,7 +259,7 @@ export default function LoginPage() {
             <div
               key={s.label}
               className="flex items-center gap-1.5"
-              style={{ color: 'rgba(255,255,255,0.40)' }}
+              style={{ color: 'var(--texto-tenue)' }}
             >
               {s.icon}
               <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-dm-sans)', letterSpacing: '0.02em' }}>
@@ -276,12 +269,12 @@ export default function LoginPage() {
           ))}
         </div>
 
-        <p className="text-center text-xs mt-5" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-dm-sans)' }}>
+        <p className="text-center text-xs mt-5" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
           ¿No tenés cuenta?{' '}
           <a
             href={`${process.env.NEXT_PUBLIC_LANDING_URL ?? 'https://nexo.previncasalud.com.ar'}/onboarding/afiliado`}
             className="underline hover:opacity-80 transition-opacity"
-            style={{ color: 'rgba(255,255,255,0.62)' }}
+            style={{ color: 'var(--texto-suave)' }}
           >
             Registrarse
           </a>

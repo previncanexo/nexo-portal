@@ -37,7 +37,7 @@ export default function CancelSection({ status }: { status: Status }) {
       <div>
         <p
           className="text-xs uppercase tracking-[0.14em] font-semibold mb-3"
-          style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}
+          style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}
         >
           Gestionar suscripción
         </p>
@@ -51,7 +51,7 @@ export default function CancelSection({ status }: { status: Status }) {
             style={{
               background: 'rgba(239,68,68,0.10)',
               border: '1px solid rgba(239,68,68,0.25)',
-              color: '#fca5a5',
+              color: 'var(--error)',
               cursor: 'pointer',
               fontFamily: 'var(--font-dm-sans)',
             }}
@@ -82,7 +82,7 @@ export default function CancelSection({ status }: { status: Status }) {
               className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center"
               style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.25)' }}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--error)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                 <line x1="12" y1="9" x2="12" y2="13"/>
                 <line x1="12" y1="17" x2="12.01" y2="17"/>
@@ -109,7 +109,7 @@ export default function CancelSection({ status }: { status: Status }) {
             {error && (
               <div
                 className="text-sm px-4 py-3 rounded-xl mb-4"
-                style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.30)', color: '#fca5a5', fontFamily: 'var(--font-dm-sans)' }}
+                style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.30)', color: 'var(--error)', fontFamily: 'var(--font-dm-sans)' }}
               >
                 {error}
               </div>
@@ -123,7 +123,7 @@ export default function CancelSection({ status }: { status: Status }) {
                 style={{
                   background: 'rgba(239,68,68,0.10)',
                   border: '1px solid rgba(239,68,68,0.25)',
-                  color: '#fca5a5',
+                  color: 'var(--error)',
                   opacity: loading ? 0.55 : 1,
                   cursor: loading ? 'not-allowed' : 'pointer',
                   fontFamily: 'var(--font-dm-sans)',

@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
+import LogoNexo from '../components/LogoNexo'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 const fieldBase: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.07)',
-  border: '1px solid rgba(255,255,255,0.15)',
+  background: 'var(--superficie-sutil)',
+  border: '1px solid var(--borde-fuerte)',
   fontFamily: 'var(--font-dm-sans)',
   fontSize: '0.95rem',
-  color: 'white',
+  color: 'var(--texto-fuerte)',
 }
 
 export default function ResetPasswordPage() {
@@ -76,27 +76,26 @@ export default function ResetPasswordPage() {
   }
 
   const eyeIcon = (visible: boolean) => visible ? (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--texto-tenue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
       <line x1="1" y1="1" x2="23" y2="23"/>
     </svg>
   ) : (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--texto-tenue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
       <circle cx="12" cy="12" r="3"/>
     </svg>
   )
 
   return (
-    <div className="portal-dark min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
+    <div className="portal-claro min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
       <div className="absolute pointer-events-none" style={{ top: '-80px', left: '-120px', width: '500px', height: '500px', borderRadius: '50%', background: 'var(--purple)', opacity: 0.06, filter: 'blur(130px)' }} />
       <div className="absolute pointer-events-none" style={{ bottom: '-100px', right: '-100px', width: '450px', height: '450px', borderRadius: '50%', background: 'var(--pink)', opacity: 0.05, filter: 'blur(110px)' }} />
-      <div className="pointer-events-none fixed inset-0" style={{ opacity: 0.15, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E\")", mixBlendMode: 'overlay' }} />
 
       <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-10">
           <Link href="/login">
-            <Image src="/logo.png" alt="Previnca Nexo" width={220} height={88} style={{ objectFit: 'contain', height: '88px', width: 'auto', margin: '0 auto' }} priority />
+            <LogoNexo alto={72} />
           </Link>
         </div>
 
@@ -110,10 +109,10 @@ export default function ResetPasswordPage() {
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
               </div>
-              <h2 className="text-2xl text-white mb-2" style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}>
+              <h2 className="text-2xl mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>
                 ¡Contraseña actualizada!
               </h2>
-              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.60)', fontFamily: 'var(--font-dm-sans)' }}>
+              <p className="text-sm" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
                 Redirigiendo a tu portal...
               </p>
             </div>
@@ -125,10 +124,10 @@ export default function ResetPasswordPage() {
                   <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
               </div>
-              <h2 className="text-xl text-white mb-2" style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}>
+              <h2 className="text-xl mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>
                 El enlace expiró
               </h2>
-              <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.60)', fontFamily: 'var(--font-dm-sans)' }}>
+              <p className="text-sm mb-5" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
                 Este link de recuperación ya no es válido. Solicitá uno nuevo.
               </p>
               <Link
@@ -142,10 +141,10 @@ export default function ResetPasswordPage() {
           ) : (
             /* Formulario */
             <>
-              <h2 className="text-2xl text-white mb-1" style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}>
+              <h2 className="text-2xl mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>
                 Nueva contraseña
               </h2>
-              <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}>
+              <p className="text-sm mb-6" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
                 {ready ? 'Elegí tu nueva contraseña.' : 'Verificando el enlace...'}
               </p>
 
@@ -157,7 +156,7 @@ export default function ResetPasswordPage() {
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                   {/* Nueva contraseña */}
                   <div>
-                    <label htmlFor="new-password" className="block text-sm font-medium mb-1.5" style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}>
+                    <label htmlFor="new-password" className="block text-sm font-medium mb-1.5" style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}>
                       Nueva contraseña
                     </label>
                     <div className="relative">
@@ -168,10 +167,10 @@ export default function ResetPasswordPage() {
                         onChange={(e) => setNewPassword(e.target.value)}
                         required
                         placeholder="Mínimo 8 caracteres"
-                        className="w-full px-4 py-3 pr-11 rounded-xl text-white outline-none transition-all"
-                        style={{ ...fieldBase, colorScheme: 'dark' }}
-                        onFocus={(e) => { e.target.style.border = '1px solid rgba(134,96,239,0.70)'; e.target.style.background = 'rgba(255,255,255,0.10)' }}
-                        onBlur={(e) => { e.target.style.border = '1px solid rgba(255,255,255,0.15)'; e.target.style.background = 'rgba(255,255,255,0.07)' }}
+                        className="w-full px-4 py-3 pr-11 rounded-xl outline-none transition-all"
+                        style={{ ...fieldBase, colorScheme: 'light' }}
+                        onFocus={(e) => { e.target.style.border = '1px solid rgba(134,96,239,0.70)'; e.target.style.background = 'var(--superficie-sutil)' }}
+                        onBlur={(e) => { e.target.style.border = '1px solid var(--borde-fuerte)'; e.target.style.background = 'var(--superficie-sutil)' }}
                       />
                       <button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1" tabIndex={-1} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                         {eyeIcon(showNew)}
@@ -181,7 +180,7 @@ export default function ResetPasswordPage() {
 
                   {/* Confirmar contraseña */}
                   <div>
-                    <label htmlFor="confirm-password" className="block text-sm font-medium mb-1.5" style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}>
+                    <label htmlFor="confirm-password" className="block text-sm font-medium mb-1.5" style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}>
                       Confirmar contraseña
                     </label>
                     <div className="relative">
@@ -192,10 +191,10 @@ export default function ResetPasswordPage() {
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
                         placeholder="Repetí la contraseña"
-                        className="w-full px-4 py-3 pr-11 rounded-xl text-white outline-none transition-all"
-                        style={{ ...fieldBase, colorScheme: 'dark' }}
-                        onFocus={(e) => { e.target.style.border = '1px solid rgba(134,96,239,0.70)'; e.target.style.background = 'rgba(255,255,255,0.10)' }}
-                        onBlur={(e) => { e.target.style.border = '1px solid rgba(255,255,255,0.15)'; e.target.style.background = 'rgba(255,255,255,0.07)' }}
+                        className="w-full px-4 py-3 pr-11 rounded-xl outline-none transition-all"
+                        style={{ ...fieldBase, colorScheme: 'light' }}
+                        onFocus={(e) => { e.target.style.border = '1px solid rgba(134,96,239,0.70)'; e.target.style.background = 'var(--superficie-sutil)' }}
+                        onBlur={(e) => { e.target.style.border = '1px solid var(--borde-fuerte)'; e.target.style.background = 'var(--superficie-sutil)' }}
                       />
                       <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1" tabIndex={-1} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                         {eyeIcon(showConfirm)}
@@ -224,7 +223,7 @@ export default function ResetPasswordPage() {
 
           {!done && (
             <div className="mt-6 text-center">
-              <Link href="/login" className="text-sm transition-opacity hover:opacity-80" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
+              <Link href="/login" className="text-sm transition-opacity hover:opacity-80" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
                 ← Volver al login
               </Link>
             </div>

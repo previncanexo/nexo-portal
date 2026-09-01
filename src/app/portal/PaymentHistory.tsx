@@ -10,9 +10,9 @@ function formatAmount(amount: number, currency: string): string {
 }
 
 const STATUS_LABEL: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  approved: { label: 'Aprobado', color: '#86efac', bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.25)'  },
-  pending:  { label: 'Pendiente', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', border: 'rgba(251,191,36,0.30)' },
-  rejected: { label: 'Rechazado', color: '#f87171', bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.30)'  },
+  approved: { label: 'Aprobado', color: 'var(--ok)', bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.25)'  },
+  pending:  { label: 'Pendiente', color: 'var(--alerta)', bg: 'rgba(251,191,36,0.12)', border: 'rgba(251,191,36,0.30)' },
+  rejected: { label: 'Rechazado', color: 'var(--error)', bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.30)'  },
 }
 
 export default function PaymentHistory({ payments }: { payments: Payment[] }) {
@@ -32,24 +32,24 @@ export default function PaymentHistory({ payments }: { payments: Payment[] }) {
       {/* Table header */}
       <div
         className="px-4 py-3 flex justify-between items-center"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.10)' }}
+        style={{ borderBottom: '1px solid var(--superficie-sutil)' }}
       >
         <span
           className="text-xs uppercase tracking-[0.14em] font-semibold"
-          style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}
+          style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}
         >
           Monto
         </span>
         <div className="flex items-center gap-6">
           <span
             className="text-xs uppercase tracking-[0.14em] font-semibold"
-            style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}
+            style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}
           >
             Fecha
           </span>
           <span
             className="text-xs uppercase tracking-[0.14em] font-semibold"
-            style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}
+            style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}
           >
             Estado
           </span>
@@ -64,24 +64,24 @@ export default function PaymentHistory({ payments }: { payments: Payment[] }) {
           <div
             key={p.id}
             className="px-4 py-3.5 flex justify-between items-center gap-3"
-            style={isLast ? {} : { borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+            style={isLast ? {} : { borderBottom: '1px solid var(--superficie-sutil)' }}
           >
             <div className="flex-1 min-w-0">
               <p
-                className="font-bold text-white text-sm"
+                className="font-bold text-sm"
                 style={{ fontFamily: 'var(--font-dm-sans)' }}
               >
                 {formatAmount(p.amount, p.currency)}
               </p>
               {p.mp_payment_id && (
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
                   Mercado Pago
                 </p>
               )}
             </div>
 
             <div className="flex items-center gap-3 shrink-0">
-              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
+              <span className="text-xs" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
                 {formatDate(p.created_at)}
               </span>
               <span

@@ -33,19 +33,19 @@ export default function RetryPaymentButton({ email }: { email: string }) {
         style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.20)' }}
       >
         <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-sm font-semibold" style={{ fontFamily: 'var(--font-dm-sans)' }}>
             Antes de continuar, verificá tu cuenta de Mercado Pago
           </p>
-          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.60)', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-xs" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
             Debés pagar con el email exacto con el que te registraste en Nexo:
           </p>
           <p
             className="text-xs font-bold mt-1 px-3 py-1.5 rounded-full inline-block self-start"
-            style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', fontFamily: 'var(--font-dm-sans)' }}
+            style={{ background: 'rgba(251,191,36,0.15)', color: 'var(--alerta)', fontFamily: 'var(--font-dm-sans)' }}
           >
             {email}
           </p>
-          <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-xs mt-1" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
             Si ya estás logueado en Mercado Pago con otra cuenta, cerrá sesión allí primero y volvé a intentarlo.
           </p>
         </div>
@@ -64,7 +64,7 @@ export default function RetryPaymentButton({ email }: { email: string }) {
         <button
           onClick={() => setCheckoutUrl('')}
           className="text-xs text-center"
-          style={{ color: 'rgba(255,255,255,0.30)', fontFamily: 'var(--font-dm-sans)', background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)', background: 'none', border: 'none', cursor: 'pointer' }}
         >
           Cancelar
         </button>
@@ -90,7 +90,7 @@ export default function RetryPaymentButton({ email }: { email: string }) {
         {loading ? 'Generando link de pago...' : 'Completar pago con Mercado Pago'}
       </button>
       {error && (
-        <p className="text-xs text-center" style={{ color: '#fca5a5', fontFamily: 'var(--font-dm-sans)' }}>{error}</p>
+        <p className="text-xs text-center" style={{ color: 'var(--error)', fontFamily: 'var(--font-dm-sans)' }}>{error}</p>
       )}
     </div>
   )

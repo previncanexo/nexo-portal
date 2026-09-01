@@ -9,10 +9,10 @@ interface CredentialCardProps {
 }
 
 const STATUS_CONFIG = {
-  active:    { label: 'Activo',     color: '#86efac', bg: 'rgba(34,197,94,0.12)',   border: 'rgba(34,197,94,0.25)'   },
-  pending:   { label: 'Pendiente',  color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',  border: 'rgba(251,191,36,0.30)'  },
-  suspended: { label: 'Suspendido', color: '#fb923c', bg: 'rgba(251,146,60,0.12)',  border: 'rgba(251,146,60,0.30)'  },
-  cancelled: { label: 'Cancelado',  color: '#f87171', bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.30)'   },
+  active:    { label: 'Activo',     color: 'var(--ok)', bg: 'rgba(34,197,94,0.12)',   border: 'rgba(34,197,94,0.25)'   },
+  pending:   { label: 'Pendiente',  color: 'var(--alerta)', bg: 'rgba(251,191,36,0.12)',  border: 'rgba(251,191,36,0.30)'  },
+  suspended: { label: 'Suspendido', color: 'var(--alerta)', bg: 'rgba(251,146,60,0.12)',  border: 'rgba(251,146,60,0.30)'  },
+  cancelled: { label: 'Cancelado',  color: 'var(--error)', bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.30)'   },
 }
 
 function formatDate(dateStr: string | null): string {
@@ -29,7 +29,11 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
 
   return (
     <div
-      className="relative overflow-hidden"
+      /* superficie-oscura: la credencial ES una superficie oscura (gradiente violeta
+         con texto blanco) aunque viva dentro del portal claro. Con esta clase,
+         los tokens de estado (--ok, --alerta, --error) resuelven a sus versiones
+         claras, que son las legibles sobre el gradiente. */
+      className="superficie-oscura relative overflow-hidden"
       style={{
         background: 'linear-gradient(135deg, var(--purple) 0%, #5b3fb5 50%, var(--pink) 100%)',
         borderRadius: '20px',

@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import LogoNexo from '../../components/LogoNexo'
 import Link from 'next/link'
 
 export const metadata = { title: 'Resultado del pago · Previnca Nexo' }
@@ -7,7 +7,7 @@ const WHATSAPP_URL = 'https://wa.me/5493415056130'
 
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="portal-dark min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
+    <div className="portal-claro min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
       {/* Orb purple */}
       <div
         className="absolute pointer-events-none"
@@ -36,27 +36,11 @@ function PageShell({ children }: { children: React.ReactNode }) {
           filter: 'blur(110px)',
         }}
       />
-      {/* Grain overlay */}
-      <div
-        className="pointer-events-none fixed inset-0"
-        style={{
-          opacity: 0.15,
-          backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E\")",
-          mixBlendMode: 'overlay',
-        }}
-      />
 
       <div className="w-full max-w-sm relative z-10">
-        <div className="text-center mb-8">
+        <div className="flex justify-center mb-8">
           <Link href="/login" className="inline-block">
-            <Image
-              src="/logo.png"
-              alt="Previnca Nexo"
-              width={220}
-              height={88}
-              style={{ objectFit: 'contain', height: '88px', width: 'auto' }}
-              priority
-            />
+            <LogoNexo alto={72} />
           </Link>
         </div>
         {children}
@@ -96,9 +80,9 @@ function ContactLinks() {
         rel="noopener noreferrer"
         className="block w-full py-3 rounded-full font-bold text-sm text-center transition-all hover:opacity-90"
         style={{
-          background: 'rgba(255,255,255,0.08)',
-          border: '1px solid rgba(255,255,255,0.20)',
-          color: 'rgba(255,255,255,0.85)',
+          background: 'var(--superficie-sutil)',
+          border: '1px solid var(--borde-fuerte)',
+          color: 'var(--texto)',
           fontFamily: 'var(--font-dm-sans)',
         }}
       >
@@ -118,20 +102,20 @@ function ApprovedState() {
       </IconCircle>
 
       <h1
-        className="text-2xl text-white mb-2"
-        style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
+        className="text-2xl mb-2"
+        style={{ fontFamily: "'DM Serif Display', serif" }}
       >
         ¡Pago recibido!
       </h1>
-      <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}>
+      <p className="text-sm mb-6" style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}>
         Tu suscripción fue procesada correctamente. En breve recibirás un email confirmando la activación de tu cuenta.
       </p>
 
       <div
         className="rounded-2xl p-4 mb-6 text-left"
-        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}
+        style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde-fuerte)' }}
       >
-        <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
+        <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
           ¿Qué sigue?
         </p>
         {[
@@ -146,7 +130,7 @@ function ApprovedState() {
             >
               {i + 1}
             </div>
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="text-sm" style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}>
               {item}
             </p>
           </div>
@@ -180,23 +164,23 @@ function PendingState() {
       </IconCircle>
 
       <h1
-        className="text-2xl text-white mb-2"
-        style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
+        className="text-2xl mb-2"
+        style={{ fontFamily: "'DM Serif Display', serif" }}
       >
         Pago en proceso
       </h1>
-      <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}>
+      <p className="text-sm mb-6" style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}>
         Tu pago está siendo procesado. Te avisaremos por email cuando se confirme y tu cuenta esté activa.
       </p>
 
       <div
         className="rounded-2xl p-4 mb-6 text-left"
-        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}
+        style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde-fuerte)' }}
       >
-        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-dm-sans)' }}>
+        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
           Próximos pasos
         </p>
-        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}>
+        <p className="text-sm" style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}>
           Una vez que Mercado Pago confirme el pago, recibirás un email con tus credenciales de acceso. Esto puede demorar unos minutos.
         </p>
       </div>
@@ -229,12 +213,12 @@ function FailedState() {
       </IconCircle>
 
       <h1
-        className="text-2xl text-white mb-2"
-        style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
+        className="text-2xl mb-2"
+        style={{ fontFamily: "'DM Serif Display', serif" }}
       >
         No se pudo confirmar el pago
       </h1>
-      <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'var(--font-dm-sans)' }}>
+      <p className="text-sm mb-6" style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}>
         No pudimos confirmar tu pago. Podés intentarlo de nuevo o contactarnos para que te ayudemos.
       </p>
 

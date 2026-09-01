@@ -25,7 +25,7 @@ export default async function CuentaPage() {
         <Link
           href="/portal"
           className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
-          style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-dm-sans)' }}
+          style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
@@ -35,10 +35,10 @@ export default async function CuentaPage() {
       </div>
 
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+        <h1 className="text-2xl sm:text-3xl font-bold" style={{ fontFamily: 'var(--font-dm-sans)' }}>
           Mi cuenta
         </h1>
-        <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.55)' }}>
+        <p className="text-sm mt-1" style={{ color: 'var(--texto-suave)' }}>
           Actualizá tus datos personales y tu contraseña.
         </p>
       </div>
