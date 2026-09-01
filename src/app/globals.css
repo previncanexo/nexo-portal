@@ -665,7 +665,11 @@
   --alerta-suave: rgba(180, 83, 9, 0.10);
   --error: #b91c1c;
   --error-suave: rgba(185, 28, 28, 0.10);
+  /* Dos teales, y no uno: como TEXTO sobre blanco hace falta el oscuro para
+     llegar a 4.5:1, pero como RELLENO del cuadradito del icono ese mismo tono
+     se ve apagado y turbio. --teal-vivo es el del icono. */
   --teal: #0f766e;
+  --teal-vivo: #14b8a6;
   --texto-sobre-acento: #ffffff;
 
   /* Bordes */
@@ -720,6 +724,7 @@
   --error: #fca5a5;
   --error-suave: rgba(252, 165, 165, 0.12);
   --teal: #5eead4;
+  --teal-vivo: #2dd4bf;
 }
 
 /* ── El tema claro aplicado ── */
@@ -863,6 +868,7 @@
   --alerta: #fbbf24;
   --error: #fca5a5;
   --teal: #5eead4;
+  --teal-vivo: #2dd4bf;
 }
 
 /* Sus titulos vuelven al claro: `.portal-claro h1` gana por especificidad. */

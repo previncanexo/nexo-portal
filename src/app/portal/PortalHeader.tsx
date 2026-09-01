@@ -33,17 +33,29 @@ export default function PortalHeader({ affiliate }: PortalHeaderProps) {
 
   return (
     /* Floating pill nav wrapper */
-    <div className="fixed top-3 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+    /* La misma envoltura que el <main> del layout (max-w-[680px] + px-4/sm:px-6)
+       para que la barra quede EXACTAMENTE del ancho de las tarjetas. Antes el
+       nav media 680 y las tarjetas 632, y la barra sobresalia 24px por lado. */
+    <div className="fixed top-3 left-0 right-0 z-50 pointer-events-none">
+      <div className="max-w-[680px] mx-auto px-4 sm:px-6">
       <nav
-        className="pointer-events-auto w-full max-w-[960px] flex items-center justify-between"
+        /*
+          max-w-[680px]: el mismo ancho que la columna de contenido (ver el
+          <main> del layout). Antes era 960px y la barra sobresalia de las cards,
+          que era justo lo que se veia desprolijo.
+
+          Sin backdrop-filter: es un elemento `fixed`, o sea de lo mas caro que
+          se le puede pedir a un telefono, y sobre fondo claro no aporta nada.
+          La sombra pasa a la del sistema: antes era 0.24 de negro y pesaba mas
+          que las propias tarjetas.
+        */
+        className="pointer-events-auto w-full flex items-center justify-between"
         style={{
           background: 'var(--superficie-card)',
-          backdropFilter: 'blur(24px) saturate(1.4)',
-          WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
-          border: '1px solid var(--borde-fuerte)',
+          border: '1px solid var(--borde)',
           borderRadius: '9999px',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.24)',
-          padding: '6px 8px 6px 20px',
+          boxShadow: 'var(--sombra-card)',
+          padding: '6px 8px 6px 18px',
         }}
       >
         {/* Logo */}
@@ -81,7 +93,8 @@ export default function PortalHeader({ affiliate }: PortalHeaderProps) {
             Salir
           </button>
         </div>
-      </nav>
+        </nav>
+      </div>
     </div>
   )
 }
