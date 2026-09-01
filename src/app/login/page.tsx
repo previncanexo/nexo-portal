@@ -80,33 +80,41 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="portal-claro min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/*
-        Antes esto era una foto con overlay oscuro encima: el formulario caia
-        sobre una cara y el contraste dependia de que tan oscuro fuera el
-        overlay. Ahora el fondo es el degrade de marca y la atencion queda
-        donde tiene que estar, que es el formulario.
-      */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div
-          className="hidden sm:block absolute -top-32 -left-32 w-[460px] h-[460px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(134,96,239,0.26) 0%, transparent 70%)', filter: 'blur(60px)' }}
-        />
-        <div
-          className="hidden sm:block absolute -bottom-40 -right-24 w-[420px] h-[420px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(238,92,208,0.20) 0%, transparent 70%)', filter: 'blur(60px)' }}
-        />
-      </div>
+    <div
+      /* superficie-oscura: el fondo vuelve a ser la foto con overlay, asi que
+         todo lo que va FUERA de la tarjeta (logo, tira de servicios, links del
+         pie) necesita los tokens claros para leerse. La tarjeta en si vuelve a
+         fijar los oscuros con .superficie-clara. */
+      className="superficie-oscura min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden"
+      style={{
+        backgroundImage: 'url(/login-bg.webp)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      {/* Overlay: la foto sola no da contraste suficiente para el texto de
+          alrededor, y el degrade de marca la ata a la identidad. */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'linear-gradient(135deg, rgba(10,3,40,0.62) 0%, rgba(18,5,61,0.46) 50%, rgba(45,18,102,0.55) 100%)' }}
+      />
+      {/* Velo inferior: la tira de servicios y el link de registro caen sobre la
+          zona más clara de la foto y quedaban flojos. Oscurecer solo el pie los
+          hace legibles sin apagar la imagen. */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-64 pointer-events-none"
+        style={{ background: 'linear-gradient(to top, rgba(10,3,40,0.55) 0%, transparent 100%)' }}
+      />
 
       <div className="w-full max-w-sm relative z-10">
         {/* Logo */}
         <div className="flex justify-center mb-10">
-            <LogoNexo alto={72} />
+            <LogoNexo alto={72} variante="blanco" />
           </div>
 
         {/* Card */}
         <div
-          className="p-7 sm:p-9"
+          className="superficie-clara p-7 sm:p-9"
           style={{
             background: 'var(--superficie-card)',
             border: '1px solid var(--borde)',
@@ -259,7 +267,10 @@ export default function LoginPage() {
             <div
               key={s.label}
               className="flex items-center gap-1.5"
-              style={{ color: 'var(--texto-tenue)' }}
+              /* --texto-suave y no --texto-tenue: el 0.45 del tenue funciona
+                 sobre una superficie realmente oscura (la credencial), pero no
+                 sobre una foto con zonas claras. */
+              style={{ color: 'var(--texto-suave)' }}
             >
               {s.icon}
               <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-dm-sans)', letterSpacing: '0.02em' }}>
@@ -269,12 +280,12 @@ export default function LoginPage() {
           ))}
         </div>
 
-        <p className="text-center text-xs mt-5" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
+        <p className="text-center text-xs mt-5" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
           ¿No tenés cuenta?{' '}
           <a
             href={`${process.env.NEXT_PUBLIC_LANDING_URL ?? 'https://nexo.previncasalud.com.ar'}/onboarding/afiliado`}
             className="underline hover:opacity-80 transition-opacity"
-            style={{ color: 'var(--texto-suave)' }}
+            style={{ color: 'var(--texto-fuerte)' }}
           >
             Registrarse
           </a>

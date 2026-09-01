@@ -871,3 +871,30 @@
 .portal-claro .superficie-oscura h3 {
   color: var(--texto-fuerte);
 }
+
+/* ── Isla clara sobre una superficie oscura ──
+   La contraparte de .superficie-oscura: una tarjeta blanca flotando sobre una
+   foto o un fondo oscuro. Vuelve a fijar los tokens en sus valores claros para
+   que el contenido de la tarjeta no herede los del contenedor oscuro.
+
+   Se usa en /login, donde el fondo es una foto pero el formulario es blanco. */
+.superficie-clara {
+  --texto-fuerte: #191231;
+  --texto: #40395c;
+  --texto-suave: #635c7d;
+  --texto-tenue: #6b6480;
+  --borde: rgba(25, 18, 49, 0.08);
+  --borde-fuerte: rgba(25, 18, 49, 0.14);
+  --superficie-sutil: #f4f1fb;
+  --acento-texto: #6d43e0;
+  --ok: #15803d;
+  --alerta: #b45309;
+  --error: #b91c1c;
+  --teal: #0f766e;
+  color: var(--texto);
+}
+.superficie-clara h1,
+.superficie-clara h2,
+.superficie-clara h3 {
+  color: var(--texto-fuerte);
+}
