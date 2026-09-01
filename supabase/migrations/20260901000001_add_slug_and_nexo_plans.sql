@@ -33,9 +33,13 @@ begin
 
   if filas = 0 then
     -- Puede ser una re-corrida (ya renombrado) o que el legacy tenga otro nombre.
-    -- Si ya existe un plan inactivo sin slug, la migracion ya se aplico: seguimos.
+    -- El predicado identifica al legacy YA MIGRADO con precision (nombre + sin slug
+    -- + su precio historico), en vez de "cualquier plan inactivo sin slug": el ABM
+    -- permite crear planes inactivos sin slug a mano, y uno de esos daria un falso
+    -- positivo justo en el caso que esta guarda viene a cubrir.
     if not exists (
-      select 1 from public.plans where is_active = false and slug is null
+      select 1 from public.plans
+       where name = 'Nexo I' and slug is null and price = 19500
     ) then
       raise exception 'No se encontro el plan legacy "Plan Base Nexo" ni un legacy ya migrado. Revisar la tabla plans a mano antes de continuar.';
     end if;
