@@ -213,6 +213,20 @@ export async function PATCH(
       ? await planQuery().eq('slug', plan_slug).eq('is_active', true).maybeSingle()
       : await planQuery().order('price', { ascending: true }).limit(1).maybeSingle()
 
+  // Un fallback a un precio inventado sobre un cobro recurrente no se justifica
+  // nunca: si el cliente pidió un plan concreto (plan_id o plan_slug) y no
+  // resolvió —no existe, o existe pero no está activo—, es un error, no un
+  // motivo para cobrarle otra cosa. `maybeSingle()` devuelve `null` sin tirar
+  // error, así que sin esta guarda un slug que no matchea terminaba creando una
+  // suscripción real en MP al precio del `?? 19500` de más abajo: un producto
+  // que ya no existe, mientras el resumen que vio el usuario mostró otra cosa.
+  if ((plan_id || plan_slug) && !plan) {
+    return jsonWithCors(
+      { success: false, error: 'plan_no_encontrado', message: 'El plan seleccionado no está disponible.' },
+      { status: 400, origin }
+    )
+  }
+
   // 4. Armar domicilio
   const domicilio = [
     calle.trim(),
