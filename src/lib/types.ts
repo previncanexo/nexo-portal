@@ -2,9 +2,13 @@ export type AffiliateStatus = 'pending' | 'active' | 'suspended' | 'cancelled'
 
 export interface Plan {
   id: string
+  /** Identificador estable para consumidores externos (la landing). Null en planes legacy. */
+  slug: string | null
   name: string
   description: string | null
   price: number
+  /** Si es false, el plan no se ofrece en el alta. Los afiliados que ya lo tienen lo conservan. */
+  is_active: boolean
   mp_plan_id: string | null
   created_at: string
   updated_at: string
