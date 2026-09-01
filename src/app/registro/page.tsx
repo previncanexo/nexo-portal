@@ -8,6 +8,9 @@ export default async function RegistroPage() {
   const { data: plans } = await supabase
     .from('plans')
     .select('id, name, price')
+    // Solo los planes que se ofrecen hoy. El plan legacy sigue existiendo para los
+    // afiliados que lo tienen, pero no se puede contratar.
+    .eq('is_active', true)
     .order('price', { ascending: true })
 
   const planList = (plans ?? []).length > 0
