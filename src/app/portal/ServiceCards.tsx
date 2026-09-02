@@ -138,6 +138,68 @@ const ARBOL_VIDA_CONDICIONES = [
 
 const SEGURO_LEGAL = 'Cobertura sujeta a los términos y condiciones de la póliza correspondiente a la contratación, brindada por la compañía SAN CRISTÓBAL SEGUROS, CUIT 34-50004533-9, inscripta en la Superintendencia de Seguros de la Nación (SSN) mediante Nro. 0192. PREVINCA SERVICIOS SOCIALES S.A.C.I.F.I.Y.A., CUIT 30-54026445-3, interviene como Agente Institorio de la aseguradora inscripto en el Registro de Agentes Institorios de la SSN bajo el N° 233.'
 
+// Óptica — todo el texto de este bloque (circuito, cobertura, sucursales) es
+// literal de la cartilla médica AGO 2026 de Previnca Salud. No se agrega ni
+// completa ningún dato que el documento no traiga.
+const OPTICA_CIRCUITO = [
+  {
+    titulo: 'Validación de elegibilidad',
+    detalle: 'Presentás credencial y comprobante de cuota al día. Los dos son condición de acceso.',
+  },
+  {
+    titulo: 'Consulta y receta oftalmológica',
+    // PENDIENTE: el documento fuente deja el nombre de la clínica como
+    // "[Nombre de la clínica: a confirmar]". No se inventa: queda redactado
+    // sin nombrarla hasta que el cliente lo confirme.
+    detalle: 'Concurrís a la clínica oftalmológica propia, donde te hacen la consulta y te emiten la receta.',
+  },
+  {
+    titulo: 'Presentación en la óptica',
+    detalle: 'Con receta, credencial y cuota al día vas a Rosario Visión Ópticas, que valida los tres elementos antes de proceder.',
+  },
+  {
+    titulo: 'Determinación de la cobertura',
+    detalle: 'La óptica revisa tu receta contra lo que cubre el beneficio sin cargo.',
+  },
+  {
+    titulo: 'Entrega',
+    detalle: 'La óptica te entrega el par. Si hay excedente, se cobra la diferencia con el 20% de descuento aplicado.',
+  },
+]
+
+// Debe cumplirse TODO lo de esta lista para que el par salga sin cargo.
+const OPTICA_CUBRE = [
+  'Armazón de acetato con alma de metal no ferrosa',
+  'Cristales minerales blancos de stock',
+  'Graduación esférica hasta 4.00 dioptrías',
+  'Graduación cilíndrica hasta 2.00 dioptrías',
+]
+
+const OPTICA_PAGA = [
+  'Cristales con graduación superior a 4.00 esf. o 2.00 cil.',
+  'Armazones distintos al modelo cubierto',
+]
+
+/**
+ * Sucursales de Rosario Visión Ópticas, según la cartilla AGO 2026.
+ *
+ * El `label` es TEXTUAL del documento; el `href` es el número normalizado para
+ * marcar. `href` es opcional a propósito: sin él la fila se renderiza como texto
+ * y no como link. Un teléfono que no podemos verificar no se vuelve clickeable —
+ * un link roto le hace perder el viaje al socio, o peor, le hace escribirle a un
+ * tercero.
+ */
+const OPTICA_SUCURSALES: { direccion: string; contacto: { label: string; href?: string } }[] = [
+  { direccion: 'Urquiza 3136, Rosario', contacto: { label: 'Tel. 436-0580', href: 'tel:3414360580' } },
+  // PENDIENTE: el documento trae 'WhatsApp 341 869906', que son SEIS dígitos
+  // después del 341. Los otros tres números de la cartilla tienen siete
+  // (436-0580, 424-6253, 2311031), igual que el resto de Rosario. Falta un
+  // dígito en el origen. Queda sin `href` hasta que el cliente lo confirme.
+  { direccion: 'San Luis 2566, Rosario', contacto: { label: 'WhatsApp 341 869906' } },
+  { direccion: 'Montevideo 802, Rosario', contacto: { label: 'Tel. 424-6253', href: 'tel:3414246253' } },
+  { direccion: 'Elorza 1991, Paseo Jardín Loc. 6, Funes', contacto: { label: 'Tel. (0341) 2311031', href: 'tel:3412311031' } },
+]
+
 // Tema de acento para las cards "aparte" (Psicología y Seguro): teal, distinto del violeta de marca.
 interface CardTheme {
   gradient: string
@@ -240,6 +302,18 @@ function IconSeguroVida() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.2l7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8Z" />
+    </svg>
+  )
+}
+
+function IconOptica() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="6" cy="15" r="3.5" />
+      <circle cx="18" cy="15" r="3.5" />
+      <path d="M9.5 15h5" />
+      <path d="M2 12l1.3-4.8A2 2 0 0 1 5.2 5.7" />
+      <path d="M22 12l-1.3-4.8A2 2 0 0 0 18.8 5.7" />
     </svg>
   )
 }
@@ -988,6 +1062,171 @@ function ArbolVidaModal({ service, onClose }: { service: ServiceItem; onClose: (
   )
 }
 
+/* ── Modal Óptica (circuito de 5 pasos + cobertura + sucursales) ── */
+function OpticaModal({ service, onClose }: { service: ServiceItem; onClose: () => void }) {
+  const acento = service.theme?.solid ?? 'var(--acento-texto)'
+  const gradiente = service.theme?.gradient ?? 'linear-gradient(135deg, var(--purple), var(--pink))'
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background: 'rgba(5,2,25,0.78)', backdropFilter: 'blur(12px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-3xl overflow-hidden"
+        style={{
+          background: 'var(--superficie-card)',
+          border: '1px solid var(--borde)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px var(--superficie-sutil) inset',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: '1px solid var(--superficie-sutil)' }}>
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: gradiente, color: 'white' }}>
+            <service.Icon />
+          </div>
+          <div>
+            <p className="font-bold text-base leading-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>{service.title}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>{service.subtitle}</p>
+          </div>
+        </div>
+
+        <div className="px-6 py-5 max-h-[60vh] overflow-y-auto flex flex-col gap-4">
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}>{service.description}</p>
+
+          {/* Beneficio */}
+          <div
+            className="rounded-2xl px-4 py-3.5 flex flex-col gap-1"
+            style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.12)', border: `1px solid ${service.theme?.borderHover ?? 'var(--borde-fuerte)'}` }}
+          >
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
+              Beneficio
+            </p>
+            <p className="text-lg font-extrabold leading-snug" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>
+              1 par de anteojos por año y por persona
+            </p>
+            <p className="text-[11px] leading-snug mt-1" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
+              Prestador: Rosario Visión Ópticas.
+            </p>
+          </div>
+
+          {/* Circuito */}
+          <div className="flex flex-col gap-2">
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
+              Cómo se usa
+            </p>
+            {OPTICA_CIRCUITO.map((paso, i) => (
+              <div key={i} className="rounded-xl px-3 py-2.5 flex gap-2.5" style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde)' }}>
+                <span
+                  className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold"
+                  style={{ background: service.theme?.soft ?? 'rgba(134,96,239,0.18)', color: acento }}
+                >
+                  {i + 1}
+                </span>
+                <div>
+                  <span className="text-xs font-semibold" style={{ fontFamily: 'var(--font-dm-sans)' }}>{paso.titulo}</span>
+                  <p className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>{paso.detalle}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Qué cubre sin cargo */}
+          <div className="flex flex-col gap-2.5">
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
+              Sin cargo, si se cumplen todas estas condiciones
+            </p>
+            <ul className="flex flex-col gap-1.5">
+              {OPTICA_CUBRE.map((c, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
+                  <span className="mt-px shrink-0" style={{ color: acento }}>✔</span>{c}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Qué paga el afiliado */}
+          <div className="flex flex-col gap-2.5">
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
+              Con 20% de descuento, a cargo del afiliado
+            </p>
+            <ul className="flex flex-col gap-1.5">
+              {OPTICA_PAGA.map((c, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
+                  <span className="mt-px shrink-0" style={{ color: 'var(--texto-tenue)' }}>•</span>{c}
+                </li>
+              ))}
+            </ul>
+            <p className="text-[11px] leading-snug" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
+              El excedente se cobra directo en la óptica, con el 20% de descuento ya aplicado.
+            </p>
+          </div>
+
+          {/* Sucursales */}
+          <div className="flex flex-col gap-2">
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
+              Sucursales Rosario Visión Ópticas
+            </p>
+            {OPTICA_SUCURSALES.map((s, i) => {
+              const { href, label } = s.contacto
+              const esExterno = href?.startsWith('http') ?? false
+              const claseFila = 'flex items-center justify-between gap-3 px-3.5 py-3 min-h-[44px] rounded-xl transition-all'
+              const estiloFila = { background: 'var(--superficie-sutil)', border: '1px solid var(--borde)', textDecoration: 'none' }
+              const contenido = (
+                <>
+                  <span className="text-xs leading-snug" style={{ color: 'var(--texto)', fontFamily: 'var(--font-dm-sans)' }}>{s.direccion}</span>
+                  <span className="text-xs font-semibold text-right shrink-0" style={{ color: acento, fontFamily: 'var(--font-dm-sans)' }}>{label}</span>
+                </>
+              )
+
+              // Sin teléfono verificado la fila es un div, no un link: conserva el
+              // alto táctil y la tipografía, pero no promete una llamada que no
+              // podemos cumplir. Tampoco lleva `active:scale-95`, que en algo que
+              // no responde al toque solo simula que sí.
+              if (!href) {
+                return (
+                  <div key={i} className={claseFila} style={estiloFila}>
+                    {contenido}
+                  </div>
+                )
+              }
+
+              return (
+                <a
+                  key={i}
+                  href={href}
+                  target={esExterno ? '_blank' : undefined}
+                  rel={esExterno ? 'noopener noreferrer' : undefined}
+                  className={`${claseFila} active:scale-95`}
+                  style={estiloFila}
+                >
+                  {contenido}
+                </a>
+              )
+            })}
+          </div>
+
+          <p className="text-[10px] leading-relaxed" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>
+            Prestación incluida en tu plan Previnca Nexo. Cobertura sujeta a validación de credencial, cuota al día y receta oftalmológica vigente.
+          </p>
+        </div>
+
+        <div className="px-5 pb-6 pt-1">
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-2xl text-sm font-semibold active:scale-95"
+            style={{ background: 'var(--superficie-sutil)', border: '1px solid var(--borde)', color: 'var(--texto-tenue)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ── Encabezado de bloque ── */
 function GroupHeading({ title, pill, hint, theme }: { title: string; pill: string; hint: string; theme?: CardTheme }) {
   return (
@@ -1088,6 +1327,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
   const [psicologiaModalOpen, setPsicologiaModalOpen] = useState(false)
   const [seguroHogarModalOpen, setSeguroHogarModalOpen] = useState(false)
   const [arbolVidaModalOpen, setArbolVidaModalOpen] = useState(false)
+  const [opticaModalOpen, setOpticaModalOpen] = useState(false)
   const [infoService, setInfoService] = useState<ServiceItem | null>(null)
 
   const services: ServiceItem[] = [
@@ -1188,6 +1428,35 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
         'Más tranquilidad para tu día a día',
       ],
       whatsapp: 'https://wa.me/5493413077912?text=Hola%2C%20voy%20a%20concurrir%20a%20la%20guardia%20odontol%C3%B3gica',
+    },
+    // Óptica se muestra a TODOS los afiliados, sin filtrar por plan. Es deliberado
+    // para este estado de staging: hoy toda la base está en el plan legado que la
+    // migración va a renombrar "Nexo I", y el documento de producto que define las
+    // prestaciones de Nexo I no incluye Óptica entre ellas. Antes de pasar a
+    // producción hay que decidir con el cliente si Óptica queda reservada a un
+    // plan superior o si termina integrando Nexo I; mientras esa decisión no
+    // exista, no hay un campo confiable en `affiliate` del que colgar el filtro.
+    {
+      id: 'optica',
+      group: 'nexo',
+      title: 'Óptica',
+      subtitle: 'Un par de anteojos por año, por persona',
+      badge: 'Incluido en tu plan',
+      badgeColor: '#7c3aed',
+      badgeBg: 'rgba(124,58,237,0.08)',
+      buttonLabel: 'Ver cobertura',
+      buttonAction: 'modal',
+      accentColor: 'white',
+      accentBg: 'rgba(134,96,239,0.10)',
+      glowColor: 'rgba(134,96,239,0.12)',
+      Icon: IconOptica,
+      description: 'Un par de anteojos por año y por persona, con receta emitida en la clínica oftalmológica propia y entrega en Rosario Visión Ópticas.',
+      bullets: [
+        'Un par de anteojos por año, por persona',
+        'Receta emitida en la clínica oftalmológica propia',
+        'Entrega en Rosario Visión Ópticas',
+        'Excedente con 20% de descuento si tu graduación o armazón supera lo cubierto',
+      ],
     },
     ...(PSICOLOGIA_URL
       ? [{
@@ -1327,6 +1596,7 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       else if (service.id === 'arbol-de-vida') setArbolVidaModalOpen(true)
       else if (service.id === 'psicologia') setPsicologiaModalOpen(true)
       else if (service.id === 'urgencias') setUrgenciasModalOpen(true)
+      else if (service.id === 'optica') setOpticaModalOpen(true)
       else setFarmaciaModalOpen(true)
     } else if (service.buttonAction === 'tel' && service.buttonHref) {
       window.location.href = service.buttonHref
@@ -1411,6 +1681,12 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
         <ArbolVidaModal
           service={services.find((s) => s.id === 'arbol-de-vida')!}
           onClose={() => setArbolVidaModalOpen(false)}
+        />
+      )}
+      {opticaModalOpen && (
+        <OpticaModal
+          service={services.find((s) => s.id === 'optica')!}
+          onClose={() => setOpticaModalOpen(false)}
         />
       )}
     </>
