@@ -28,11 +28,23 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') setReady(true)
+
+    // El middleware SSR consume el ?code= del PKCE ANTES de que el cliente monte,
+    // así que onAuthStateChange no dispara PASSWORD_RECOVERY. Chequeamos primero
+    // si ya hay sesión (el intercambio ya se hizo) — si sí, el link fue válido.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true)
     })
 
-    // Si en 12s no llega el evento, el link es inválido o expiró
+    // Fallback: si el intercambio ocurre en el cliente (ej: link con hash de
+    // implicit flow legacy) igual escuchamos el evento.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+        setReady(true)
+      }
+    })
+
+    // Si en 12s no llega ninguna señal, el link es inválido o expiró
     const timeout = setTimeout(() => {
       setExpired(true)
     }, 12000)
