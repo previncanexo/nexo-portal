@@ -27,8 +27,6 @@ interface FinalizeLeadInput {
   medio_pago?: string
   mp_email?: string
   plan_id?: string
-  /** Identificador estable del plan enviado por la landing (nexo-1/2/3). */
-  plan_slug?: string
   /** ID compartido con el pixel para dedup CAPI CompleteRegistration */
   event_id_complete_registration?: string
   /** ID compartido con el pixel para dedup CAPI InitiateCheckout */
@@ -99,7 +97,7 @@ export async function PATCH(
     return jsonWithCors({ success: false, error: 'Body inválido' }, { status: 400, origin })
   }
 
-  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, plan_id, plan_slug, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url } = body
+  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, plan_id, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url } = body
 
   // Identificadores del browser para CAPI Purchase / GA4 purchase server-side
   // (en el webhook MP no podremos leerlos — se persisten en el affiliate).
@@ -197,29 +195,11 @@ export async function PATCH(
     )
   }
 
-  // 3. Plan: precedencia plan_id → plan_slug (landing con card selector) →
-  //    plan legacy sin slug (landing prod actual) → más barato activo.
-  //    El legacy tiene prioridad sobre el más barato para que la landing prod
-  //    (que muestra "$19.500" y no envía plan_slug) siga cobrando ese precio
-  //    en vez de caer sobre Nexo III $7.000.
-  //    Si el cliente pidió un plan específico y no existe/está inactivo, aborta.
-  const planQuery = () => supabase.from('plans').select('id, name, price')
-  let plan: { id: string; name: string; price: number } | null = null
-  if (plan_id) {
-    plan = (await planQuery().eq('id', plan_id).eq('is_active', true).maybeSingle()).data
-  } else if (plan_slug) {
-    plan = (await planQuery().eq('slug', plan_slug).eq('is_active', true).maybeSingle()).data
-  } else {
-    plan = (await planQuery().eq('is_active', true).is('slug', null).limit(1).maybeSingle()).data
-      ?? (await planQuery().eq('is_active', true).order('price', { ascending: true }).limit(1).maybeSingle()).data
-  }
-
-  if ((plan_id || plan_slug) && !plan) {
-    return jsonWithCors(
-      { success: false, error: 'plan_not_found', message: 'El plan seleccionado no existe o no está disponible.' },
-      { status: 400, origin }
-    )
-  }
+  // 3. Plan (seleccionado o el más barato por default)
+  const planQuery = supabase.from('plans').select('id, name, price')
+  const { data: plan } = plan_id
+    ? await planQuery.eq('id', plan_id).maybeSingle()
+    : await planQuery.order('price', { ascending: true }).limit(1).maybeSingle()
 
   // 4. Armar domicilio
   const domicilio = [
