@@ -15,6 +15,11 @@ export interface UnifiedLead {
   primer_intento: string
   ultimo_intento: string
   intentos: number
+  /** Detalle de cada intento del grupo (ordenado del más viejo al más nuevo).
+   *  Solo lo llena el agrupador en `page.tsx`; los UnifiedLead intermedios
+   *  antes del agrupamiento no lo tienen. */
+  intenciones?: Array<{ fecha: string; plan_name: string | null; status: string }>
+
   para_quien: string | null
   nombre: string
   apellido: string
@@ -374,6 +379,36 @@ function LeadDetailModal({ lead: l, onClose }: { lead: UnifiedLead; onClose: () 
                 <Field label="Medio de pago" value={l.medio_pago ? MEDIO_PAGO_LABEL[l.medio_pago] ?? l.medio_pago : null} />
                 <Field label="Email MP (si aplica)" value={l.mp_email} />
               </div>
+
+              {l.intenciones && l.intenciones.length > 0 && (
+                <div style={{ marginTop: 20 }}>
+                  <p style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>
+                    Intenciones ({l.intenciones.length})
+                  </p>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, overflow: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ background: 'rgba(255,255,255,0.04)' }}>
+                          <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.10em', color: 'rgba(255,255,255,0.55)', fontWeight: 700 }}>#</th>
+                          <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.10em', color: 'rgba(255,255,255,0.55)', fontWeight: 700 }}>Fecha</th>
+                          <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.10em', color: 'rgba(255,255,255,0.55)', fontWeight: 700 }}>Plan</th>
+                          <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.10em', color: 'rgba(255,255,255,0.55)', fontWeight: 700 }}>Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {l.intenciones.map((it, idx) => (
+                          <tr key={idx} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                            <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.55)', fontFamily: 'monospace' }}>{idx + 1}</td>
+                            <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.85)', whiteSpace: 'nowrap' }}>{fmtDate(it.fecha)}</td>
+                            <td style={{ padding: '8px 12px', color: it.plan_name ? '#fff' : 'rgba(255,255,255,0.40)' }}>{it.plan_name || '—'}</td>
+                            <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.75)', fontFamily: 'monospace', fontSize: 12 }}>{it.status}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>

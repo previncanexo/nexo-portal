@@ -184,12 +184,17 @@ export default async function LeadsPage({
     const rep = hasCompleto ?? sorted[0]
     const primero = sorted[sorted.length - 1].fecha
     const ultimo = sorted[0].fecha
+    // Detalle de cada intento (más viejo → más nuevo) para mostrar en el modal.
+    const intenciones = [...group]
+      .sort((a, b) => (a.fecha < b.fecha ? -1 : 1))
+      .map((l) => ({ fecha: l.fecha, plan_name: l.plan_name, status: l.status }))
     return {
       ...rep,
       intentos: group.length,
       primer_intento: primero,
       ultimo_intento: ultimo,
       fecha: ultimo,
+      intenciones,
     }
   }).sort((a, b) => (a.ultimo_intento < b.ultimo_intento ? 1 : -1))
 
