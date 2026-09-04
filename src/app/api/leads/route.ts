@@ -32,6 +32,9 @@ interface CreateLeadInput {
   gclid?: string
   referer?: string
   landing_url?: string
+  /** Slug del plan elegido en la card de la landing (nexo-1/2/3). Persistir en
+   *  step 1 para no perder la elección si el usuario abandona antes del stage 2. */
+  plan_slug?: string
   /** ID compartido con el pixel para dedup CAPI ↔ pixel */
   event_id?: string
   /** URL donde ocurrió el evento (window.location.href del browser) */
@@ -52,7 +55,7 @@ export async function POST(req: Request) {
     return jsonWithCors({ success: false, error: 'Body inválido' }, { status: 400, origin })
   }
 
-  const { para_quien, nombre, apellido, email, whatsapp, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url, event_id, event_source_url } = body
+  const { para_quien, nombre, apellido, email, whatsapp, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url, plan_slug, event_id, event_source_url } = body
 
   // Validaciones de campos obligatorios
   if (!para_quien || !nombre || !apellido || !email || !whatsapp) {
@@ -94,6 +97,20 @@ export async function POST(req: Request) {
     )
   }
 
+  // Resolver plan_id desde el slug (si vino desde la card de la landing).
+  // Si el slug no matchea un plan activo, seguimos igual: el step 1 no debe
+  // frenarse por un plan raro; la resolución final la hace el PATCH.
+  let planIdResolved: string | null = null
+  if (plan_slug) {
+    const { data: p } = await supabase
+      .from('plans')
+      .select('id')
+      .eq('slug', plan_slug)
+      .eq('is_active', true)
+      .maybeSingle()
+    planIdResolved = p?.id ?? null
+  }
+
   // Insert lead
   const { data: lead, error: leadError } = await supabase
     .from('leads')
@@ -104,6 +121,7 @@ export async function POST(req: Request) {
       email: emailLower,
       whatsapp: whatsapp.trim(),
       status: 'partial',
+      plan_id: planIdResolved,
       utm_source: utm_source || null,
       utm_medium: utm_medium || null,
       utm_campaign: utm_campaign || null,
