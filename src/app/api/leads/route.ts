@@ -92,7 +92,7 @@ export async function POST(req: Request) {
 
   if (conflict === 'email') {
     return jsonWithCors(
-      { success: false, error: 'email_taken', message: 'Ya existe una cuenta activa con ese email. Iniciá sesión en el portal.' },
+      { success: false, error: 'email_taken', message: 'Intente con otro email.' },
       { status: 409, origin }
     )
   }

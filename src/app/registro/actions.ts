@@ -94,7 +94,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
   if (identityConflict === 'email') {
     return {
       success: false,
-      error: 'Ya existe una cuenta activa con ese email. Iniciá sesión en el portal.',
+      error: 'Intente con otro email.',
     }
   }
 

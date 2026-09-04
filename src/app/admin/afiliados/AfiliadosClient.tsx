@@ -115,7 +115,7 @@ export default function AfiliadosClient({
 }) {
   const router = useRouter()
   const [statusFilter, setStatusFilter] = useState<AffiliateStatus[]>(
-    initialStatus && initialStatus !== 'all' ? [initialStatus as AffiliateStatus] : ['active']
+    initialStatus && initialStatus !== 'all' ? [initialStatus as AffiliateStatus] : []
   )
   const [planFilter, setPlanFilter] = useState<string[]>([])
   const [search, setSearch] = useState('')
