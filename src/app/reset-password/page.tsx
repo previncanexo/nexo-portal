@@ -29,15 +29,34 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const supabase = createClient()
 
-    // El middleware SSR consume el ?code= del PKCE ANTES de que el cliente monte,
-    // así que onAuthStateChange no dispara PASSWORD_RECOVERY. Chequeamos primero
-    // si ya hay sesión (el intercambio ya se hizo) — si sí, el link fue válido.
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // El link de recovery puede venir en 2 formatos:
+    //  (a) PKCE: ?code=... → el middleware SSR ya lo consumió y dejó la sesión
+    //      en cookies. Solo chequeamos getSession().
+    //  (b) Implicit: #access_token=...&refresh_token=... → el hash NO llega al
+    //      server, hay que procesarlo acá con setSession().
+    async function bootstrap() {
+      // (b) Procesar hash si viene con access_token
+      if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
+        const params = new URLSearchParams(window.location.hash.slice(1))
+        const access_token = params.get('access_token')
+        const refresh_token = params.get('refresh_token')
+        if (access_token && refresh_token) {
+          const { error } = await supabase.auth.setSession({ access_token, refresh_token })
+          if (!error) {
+            setReady(true)
+            // Limpiar el hash de la URL para no dejar el token expuesto
+            history.replaceState(null, '', window.location.pathname)
+            return
+          }
+        }
+      }
+      // (a) Sesión ya establecida por el middleware (PKCE)
+      const { data: { session } } = await supabase.auth.getSession()
       if (session) setReady(true)
-    })
+    }
+    bootstrap()
 
-    // Fallback: si el intercambio ocurre en el cliente (ej: link con hash de
-    // implicit flow legacy) igual escuchamos el evento.
+    // Fallback: escuchar el evento por si algún link entra por otro camino.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
         setReady(true)
