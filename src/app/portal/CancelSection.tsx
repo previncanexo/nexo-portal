@@ -5,13 +5,20 @@ import { useRouter } from 'next/navigation'
 
 type Status = 'pending' | 'active' | 'suspended' | 'cancelled'
 
-export default function CancelSection({ status }: { status: Status }) {
+interface Props {
+  status: Status
+  cancelRequested: boolean
+  coberturaHastaLabel: string
+}
+
+export default function CancelSection({ status, cancelRequested, coberturaHastaLabel }: Props) {
   const router = useRouter()
   const [modalOpen, setModalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  if (status === 'cancelled' || status === 'suspended') return null
+  // No mostramos el botón si ya canceló o si nunca llegó a estar activo/al día.
+  if (cancelRequested || status === 'pending' || status === 'cancelled' || status === 'suspended') return null
 
   async function handleConfirm() {
     setLoading(true)
@@ -24,7 +31,8 @@ export default function CancelSection({ status }: { status: Status }) {
         setLoading(false)
         return
       }
-      router.push('/login')
+      setModalOpen(false)
+      router.refresh()
     } catch {
       setError('Error de red. Intentá de nuevo.')
       setLoading(false)
@@ -43,7 +51,7 @@ export default function CancelSection({ status }: { status: Status }) {
         </p>
         <div className="glass-card p-5 rounded-2xl flex items-center justify-between gap-4">
           <p className="text-sm" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
-            Podés cancelar tu suscripción en cualquier momento. Perderás el acceso a todos los beneficios.
+            Podés cancelar tu suscripción cuando quieras. Vas a mantener acceso a los beneficios hasta el final del período contratado.
           </p>
           <button
             onClick={() => setModalOpen(true)}
@@ -97,7 +105,7 @@ export default function CancelSection({ status }: { status: Status }) {
             </h3>
 
             <p className="text-sm text-center mb-1" style={{ color: 'var(--gray-600)', fontFamily: 'var(--font-dm-sans)' }}>
-              Vas a perder acceso a todos tus beneficios:
+              No se van a hacer cobros nuevos. {coberturaHastaLabel ? (<>Vas a conservar todos tus beneficios hasta el <strong>{coberturaHastaLabel}</strong> y después se dan de baja.</>) : 'Vas a conservar tus beneficios hasta el final del período ya pagado.'}
             </p>
             <ul className="text-sm text-center mb-5 space-y-1" style={{ color: 'var(--gray-500)', fontFamily: 'var(--font-dm-sans)' }}>
               <li>Teleconsultas DOC24</li>
