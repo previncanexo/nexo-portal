@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { syncMpPaymentsForAffiliate } from '@/lib/mpSync'
 import type { Affiliate, Payment } from '@/lib/types'
 import CredentialWithDownload from './CredentialWithDownload'
 import ServiceCards from './ServiceCards'
@@ -23,7 +24,9 @@ export default async function PortalPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: affiliate } = await supabase
+  const adminClient = createAdminClient()
+
+  let { data: affiliate } = await supabase
     .from('affiliates')
     .select('*, plan:plans(*)')
     .eq('user_id', user.id)
@@ -40,23 +43,41 @@ export default async function PortalPage() {
     )
   }
 
-  const firstName = affiliate.nombre
   const status = affiliate.status as 'pending' | 'active' | 'suspended' | 'cancelled'
   const isPending = status === 'pending'
 
-  // El acceso a servicios se abre por dos caminos independientes, no por uno solo:
-  //
-  //   1. La afiliación está activa. Es el caso normal y no depende de ninguna fecha.
-  //   2. La cobertura sigue vigente por fecha. Esto es lo que sostiene el acceso
-  //      DESPUÉS de cancelar o de que MP suspenda: la persona ya pagó ese período
-  //      y lo usa hasta el final.
-  //
-  // El segundo camino SUMA acceso, no lo condiciona. Cuando esto se escribió al
-  // revés — sólo la fecha — cualquier afiliado activo sin `cobertura_hasta`
-  // cargada perdía la credencial y las nueve tarjetas de servicio de golpe.
+  // Fallback lazy sync: si aparece sin cobertura vigente pero MP le sigue
+  // cobrando (webhook perdido, subs viejas con plan template), consultamos MP
+  // y registramos los pagos faltantes antes de renderizar el portal.
   const now = new Date()
+  const preliminaryCoberturaHasta = affiliate.cobertura_hasta ? new Date(affiliate.cobertura_hasta + 'T23:59:59') : null
+  const preliminaryVigente = !!preliminaryCoberturaHasta && preliminaryCoberturaHasta >= now
+
+  if (!preliminaryVigente && !isPending && affiliate.mp_subscription_id) {
+    const { synced } = await syncMpPaymentsForAffiliate(adminClient, {
+      id: affiliate.id,
+      mp_subscription_id: affiliate.mp_subscription_id,
+      cobertura_hasta: affiliate.cobertura_hasta,
+    })
+    if (synced > 0) {
+      const { data: refetched } = await supabase
+        .from('affiliates')
+        .select('*, plan:plans(*)')
+        .eq('user_id', user.id)
+        .single()
+      if (refetched) affiliate = refetched
+    }
+  }
+
+  const firstName = affiliate.nombre
   const coberturaHasta = affiliate.cobertura_hasta ? new Date(affiliate.cobertura_hasta + 'T23:59:59') : null
   const coberturaVigente = !!coberturaHasta && coberturaHasta >= now
+  // El acceso a servicios se abre por dos caminos independientes:
+  //   1. status='active' — caso normal, sin depender de fecha.
+  //   2. cobertura vigente por fecha — sostiene el acceso DESPUÉS de cancelar o
+  //      de que MP suspenda, mientras dure lo pagado.
+  // El segundo SUMA acceso; no lo condiciona. Escrito al revés (sólo fecha),
+  // cualquier afiliado activo sin `cobertura_hasta` cargada perdía credencial.
   const tieneCobertura = status === 'active' || coberturaVigente
   const cancelRequested = !!affiliate.cancel_requested_at
 
@@ -71,7 +92,6 @@ export default async function PortalPage() {
 
   let payments: Payment[] = []
   if (affiliate.id) {
-    const adminClient = createAdminClient()
     const { data } = await adminClient
       .from('payments')
       .select('*')
