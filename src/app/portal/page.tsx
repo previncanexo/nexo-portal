@@ -44,16 +44,26 @@ export default async function PortalPage() {
   const status = affiliate.status as 'pending' | 'active' | 'suspended' | 'cancelled'
   const isPending = status === 'pending'
 
-  // Fuente de verdad de acceso a servicios = cobertura vigente (fecha), no el
-  // status. Si `cobertura_hasta` está en el futuro, la persona tiene todo lo
-  // que pagó — aunque haya cancelado la sub o MP haya suspendido.
+  // El acceso a servicios se abre por dos caminos independientes, no por uno solo:
+  //
+  //   1. La afiliación está activa. Es el caso normal y no depende de ninguna fecha.
+  //   2. La cobertura sigue vigente por fecha. Esto es lo que sostiene el acceso
+  //      DESPUÉS de cancelar o de que MP suspenda: la persona ya pagó ese período
+  //      y lo usa hasta el final.
+  //
+  // El segundo camino SUMA acceso, no lo condiciona. Cuando esto se escribió al
+  // revés — sólo la fecha — cualquier afiliado activo sin `cobertura_hasta`
+  // cargada perdía la credencial y las nueve tarjetas de servicio de golpe.
   const now = new Date()
   const coberturaHasta = affiliate.cobertura_hasta ? new Date(affiliate.cobertura_hasta + 'T23:59:59') : null
-  const tieneCobertura = !!coberturaHasta && coberturaHasta >= now
+  const coberturaVigente = !!coberturaHasta && coberturaHasta >= now
+  const tieneCobertura = status === 'active' || coberturaVigente
   const cancelRequested = !!affiliate.cancel_requested_at
 
-  // Bloqueo real: sin cobertura vigente Y en estado terminal.
-  const bloqueadoSinCobertura = !tieneCobertura && (status === 'suspended' || status === 'cancelled')
+  // Acá `status` ya sólo puede ser active, suspended o cancelled: el pending
+  // devuelve antes su propia pantalla de pago. Así que quedarse sin cobertura
+  // implica, por definición, estar en un estado terminal.
+  const bloqueadoSinCobertura = !tieneCobertura
 
   const coberturaHastaLabel = coberturaHasta
     ? coberturaHasta.toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -134,7 +144,7 @@ export default async function PortalPage() {
         </p>
       </div>
 
-      {tieneCobertura && cancelRequested && (
+      {coberturaVigente && cancelRequested && (
         <div
           className="rounded-2xl px-4 py-4 flex items-start gap-3"
           style={{ background: 'rgba(251,191,36,0.10)', border: '1px solid rgba(251,191,36,0.25)' }}
