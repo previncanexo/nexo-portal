@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { syncMpPaymentsForAffiliate } from '@/lib/mpSync'
 import type { Affiliate, Payment } from '@/lib/types'
 import CredentialWithDownload from './CredentialWithDownload'
 import ServiceCards from './ServiceCards'
@@ -23,7 +24,9 @@ export default async function PortalPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: affiliate } = await supabase
+  const adminClient = createAdminClient()
+
+  let { data: affiliate } = await supabase
     .from('affiliates')
     .select('*, plan:plans(*)')
     .eq('user_id', user.id)
@@ -40,14 +43,33 @@ export default async function PortalPage() {
     )
   }
 
-  const firstName = affiliate.nombre
   const status = affiliate.status as 'pending' | 'active' | 'suspended' | 'cancelled'
   const isPending = status === 'pending'
 
-  // Fuente de verdad de acceso a servicios = cobertura vigente (fecha), no el
-  // status. Si `cobertura_hasta` está en el futuro, la persona tiene todo lo
-  // que pagó — aunque haya cancelado la sub o MP haya suspendido.
+  // Fallback lazy sync: si aparece sin cobertura vigente pero MP le sigue
+  // cobrando (webhook perdido, subs viejas con plan template), consultamos MP
+  // y registramos los pagos faltantes antes de renderizar el portal.
   const now = new Date()
+  const preliminaryCoberturaHasta = affiliate.cobertura_hasta ? new Date(affiliate.cobertura_hasta + 'T23:59:59') : null
+  const preliminaryVigente = !!preliminaryCoberturaHasta && preliminaryCoberturaHasta >= now
+
+  if (!preliminaryVigente && !isPending && affiliate.mp_subscription_id) {
+    const { synced } = await syncMpPaymentsForAffiliate(adminClient, {
+      id: affiliate.id,
+      mp_subscription_id: affiliate.mp_subscription_id,
+      cobertura_hasta: affiliate.cobertura_hasta,
+    })
+    if (synced > 0) {
+      const { data: refetched } = await supabase
+        .from('affiliates')
+        .select('*, plan:plans(*)')
+        .eq('user_id', user.id)
+        .single()
+      if (refetched) affiliate = refetched
+    }
+  }
+
+  const firstName = affiliate.nombre
   const coberturaHasta = affiliate.cobertura_hasta ? new Date(affiliate.cobertura_hasta + 'T23:59:59') : null
   const tieneCobertura = !!coberturaHasta && coberturaHasta >= now
   const cancelRequested = !!affiliate.cancel_requested_at
@@ -61,7 +83,6 @@ export default async function PortalPage() {
 
   let payments: Payment[] = []
   if (affiliate.id) {
-    const adminClient = createAdminClient()
     const { data } = await adminClient
       .from('payments')
       .select('*')
