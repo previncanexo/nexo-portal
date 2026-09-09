@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendSuspensionEmail, sendPaymentRejectedEmail, sendInternalPaymentRejectedEmail } from '@/lib/emails'
+import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendPaymentRejectedEmail, sendInternalPaymentRejectedEmail } from '@/lib/emails'
 import { sendMetaCapiEvents } from '@/lib/meta-capi'
 import { sendGa4Events } from '@/lib/ga4-mp'
 import { addOneMonth, todayAR } from '@/lib/dateUtils'
@@ -504,22 +504,22 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Cancelled or paused by MP → suspend active affiliate.
-      // Match por mp_subscription_id (guardado al activar). Si la sub no está
-      // registrada en la DB, es una sub fantasma — se ignora.
+      // Cancelled or paused by MP → NO cambiamos `status` acá. La cobertura
+      // ya pagada corre hasta `cobertura_hasta`; el usuario mantiene acceso
+      // hasta ese día. Solo dejamos rastro con `cancel_requested_at` si no
+      // había ya uno (evita pisar cancelaciones iniciadas desde el portal).
       if (preApproval.status === 'cancelled' || preApproval.status === 'paused') {
         const { data: affiliate } = await supabase
           .from('affiliates')
-          .select('id, status, nombre, email')
+          .select('id, cancel_requested_at')
           .eq('mp_subscription_id', subId)
           .maybeSingle()
 
-        if (affiliate?.status === 'active') {
+        if (affiliate && !affiliate.cancel_requested_at) {
           await supabase
             .from('affiliates')
-            .update({ status: 'suspended', updated_at: new Date().toISOString() })
+            .update({ cancel_requested_at: new Date().toISOString(), updated_at: new Date().toISOString() })
             .eq('id', affiliate.id)
-          await sendSuspensionEmail(affiliate.nombre, affiliate.email)
         } else if (!affiliate) {
           console.warn('[mp-webhook] cancel/pause de sub que no existe en DB (fantasma)', subId)
         }

@@ -44,3 +44,4 @@ Errores/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.vercel.json

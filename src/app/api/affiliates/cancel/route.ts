@@ -31,20 +31,14 @@ export async function PATCH() {
       }
     }
 
-    const { error } = await admin
+    // No tocamos `status` ni cerramos sesión: la cobertura ya pagada sigue
+    // vigente hasta `cobertura_hasta` y el usuario mantiene acceso al portal.
+    // Marcamos `cancel_requested_at` para saber que hay cancelación pendiente
+    // (banner suave, ocultar botón de cancelar).
+    await admin
       .from('affiliates')
-      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+      .update({ cancel_requested_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq('user_id', user.id)
-
-    if (error) {
-      console.error('[cancel] DB error:', error.message)
-      return NextResponse.json(
-        { error: 'No se pudo cancelar la suscripción. Intentá de nuevo.' },
-        { status: 500 }
-      )
-    }
-
-    await supabase.auth.signOut()
 
     return NextResponse.json({ ok: true })
   } catch (err) {
