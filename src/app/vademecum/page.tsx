@@ -85,7 +85,7 @@ export default function VademecumPage() {
           </div>
           <h1
             className="text-white mb-3 leading-tight"
-            style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic', fontSize: 'clamp(32px, 5vw, 52px)' }}
+            style={{ fontFamily: 'var(--font-dm-serif), serif', fontStyle: 'italic', fontSize: 'clamp(32px, 5vw, 52px)' }}
           >
             Medicamentos con cobertura
           </h1>

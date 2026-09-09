@@ -29,8 +29,11 @@
   --shadow-subtle: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
   --shadow-card: 0 4px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
   --shadow-elevated: 0 12px 40px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
-  --font-dm-serif: 'DM_Serif_Display';
-  --font-dm-sans: 'DM_Sans';
+  /*
+    --font-dm-sans y --font-dm-serif las inyecta next/font/google desde
+    layout.tsx (className en <html>) con nombres ofuscados. Nunca redefinir
+    acá con strings literales: pisa la variable y las fuentes caen a fallback.
+  */
 }
 
 @layer base {
@@ -47,7 +50,7 @@
     overflow-x: hidden;
     line-height: 1.5;
   }
-  h1, h2, h3 { font-family: 'DM Serif Display', serif; }
+  h1, h2, h3 { font-family: var(--font-dm-serif), 'DM Serif Display', serif; }
 }
 
 .glass-card {
