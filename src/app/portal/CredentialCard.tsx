@@ -111,7 +111,7 @@ export default function CredentialCard({ affiliate }: CredentialCardProps) {
             {/* Name */}
             <h2
               className="text-xl sm:text-2xl leading-tight mb-3 truncate"
-              style={{ color: 'white', fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
+              style={{ color: 'white', fontFamily: 'var(--font-dm-serif), serif', fontStyle: 'italic' }}
             >
               {affiliate ? `${affiliate.nombre} ${affiliate.apellido}` : 'Sin datos'}
             </h2>

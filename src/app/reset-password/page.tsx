@@ -140,7 +140,7 @@ export default function ResetPasswordPage() {
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
               </div>
-              <h2 className="text-2xl mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              <h2 className="text-2xl mb-2" style={{ fontFamily: 'var(--font-dm-serif), serif' }}>
                 ¡Contraseña actualizada!
               </h2>
               <p className="text-sm" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
@@ -155,7 +155,7 @@ export default function ResetPasswordPage() {
                   <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
               </div>
-              <h2 className="text-xl mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              <h2 className="text-xl mb-2" style={{ fontFamily: 'var(--font-dm-serif), serif' }}>
                 El enlace expiró
               </h2>
               <p className="text-sm mb-5" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
@@ -172,7 +172,7 @@ export default function ResetPasswordPage() {
           ) : (
             /* Formulario */
             <>
-              <h2 className="text-2xl mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              <h2 className="text-2xl mb-1" style={{ fontFamily: 'var(--font-dm-serif), serif' }}>
                 Nueva contraseña
               </h2>
               <p className="text-sm mb-6" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>

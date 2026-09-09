@@ -120,7 +120,7 @@ export default async function VerificarPage({ params }: { params: Promise<{ nume
             </div>
             <h2
               className="text-2xl text-white mb-2"
-              style={{ fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
+              style={{ fontFamily: 'var(--font-dm-serif), serif', fontStyle: 'italic' }}
             >
               No encontrado
             </h2>
@@ -185,7 +185,7 @@ export default async function VerificarPage({ params }: { params: Promise<{ nume
                 {/* Name */}
                 <h2
                   className="text-xl sm:text-2xl leading-tight mb-1"
-                  style={{ color: 'white', fontFamily: "'DM Serif Display', serif", fontStyle: 'italic' }}
+                  style={{ color: 'white', fontFamily: 'var(--font-dm-serif), serif', fontStyle: 'italic' }}
                 >
                   {affiliate.nombre} {affiliate.apellido}
                 </h2>

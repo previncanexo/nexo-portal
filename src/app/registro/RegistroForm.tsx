@@ -737,7 +737,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
 
             <h1
               className="text-white leading-[1.06] tracking-[-1.5px] mb-8"
-              style={{ fontFamily: "'DM Serif Display', serif", fontSize: 'clamp(40px, 4.5vw, 64px)' }}
+              style={{ fontFamily: 'var(--font-dm-serif), serif', fontSize: 'clamp(40px, 4.5vw, 64px)' }}
             >
               Tu salud y tu<br />
               bienestar sin<br />
@@ -780,7 +780,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
                 <p className="text-xs mb-0.5" style={{ color: 'var(--texto-tenue)', fontFamily: 'var(--font-dm-sans)' }}>por mes</p>
                 <p
                   className="font-bold leading-none"
-                  style={{ fontFamily: "'DM Serif Display', serif", fontSize: 'clamp(28px, 3vw, 40px)', background: 'linear-gradient(135deg, #fff 0%, var(--texto) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                  style={{ fontFamily: 'var(--font-dm-serif), serif', fontSize: 'clamp(28px, 3vw, 40px)', background: 'linear-gradient(135deg, #fff 0%, var(--texto) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
                 >
                   ${selectedPlan.price.toLocaleString('es-AR')}
                 </p>
@@ -808,7 +808,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
           <div className="mb-6 lg:mb-8">
             <h2
               className="text-2xl sm:text-3xl mb-2"
-              style={{ fontFamily: "'DM Serif Display', serif" }}
+              style={{ fontFamily: 'var(--font-dm-serif), serif' }}
             >
               {step === 1 ? 'Tus datos' : 'Resumen del plan'}
             </h2>

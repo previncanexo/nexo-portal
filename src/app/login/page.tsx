@@ -122,7 +122,7 @@ export default function LoginPage() {
             boxShadow: 'var(--sombra-elevada)',
           }}
         >
-          <h2 className="text-2xl mb-1" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--texto-fuerte)' }}>
+          <h2 className="text-2xl mb-1" style={{ fontFamily: 'var(--font-dm-serif), serif', color: 'var(--texto-fuerte)' }}>
             Ingresá a tu portal
           </h2>
           <p className="text-sm mb-7" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>

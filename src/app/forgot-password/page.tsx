@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
                   <polyline points="22,6 12,13 2,6"/>
                 </svg>
               </div>
-              <h2 className="text-2xl mb-3" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              <h2 className="text-2xl mb-3" style={{ fontFamily: 'var(--font-dm-serif), serif' }}>
                 Revisá tu email
               </h2>
               <p className="text-sm mb-5" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>
@@ -79,7 +79,7 @@ export default function ForgotPasswordPage() {
             </div>
           ) : (
             <>
-              <h2 className="text-2xl mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              <h2 className="text-2xl mb-1" style={{ fontFamily: 'var(--font-dm-serif), serif' }}>
                 Recuperar contraseña
               </h2>
               <p className="text-sm mb-6" style={{ color: 'var(--texto-suave)', fontFamily: 'var(--font-dm-sans)' }}>

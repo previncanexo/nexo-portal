@@ -51,7 +51,7 @@
     overflow-x: hidden;
     line-height: 1.5;
   }
-  h1, h2, h3 { font-family: 'DM Serif Display', serif; }
+  h1, h2, h3 { font-family: var(--font-dm-serif), 'DM Serif Display', serif; }
 }
 
 .glass-card {

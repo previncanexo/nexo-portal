@@ -103,7 +103,7 @@ function ApprovedState() {
 
       <h1
         className="text-2xl mb-2"
-        style={{ fontFamily: "'DM Serif Display', serif" }}
+        style={{ fontFamily: 'var(--font-dm-serif), serif' }}
       >
         ¡Pago recibido!
       </h1>
@@ -165,7 +165,7 @@ function PendingState() {
 
       <h1
         className="text-2xl mb-2"
-        style={{ fontFamily: "'DM Serif Display', serif" }}
+        style={{ fontFamily: 'var(--font-dm-serif), serif' }}
       >
         Pago en proceso
       </h1>
@@ -214,7 +214,7 @@ function FailedState() {
 
       <h1
         className="text-2xl mb-2"
-        style={{ fontFamily: "'DM Serif Display', serif" }}
+        style={{ fontFamily: 'var(--font-dm-serif), serif' }}
       >
         No se pudo confirmar el pago
       </h1>
