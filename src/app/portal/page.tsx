@@ -289,17 +289,6 @@ export default async function PortalPage() {
           sólo vivía chico, dentro del badge de la credencial (CredentialCard.tsx). */}
       {tieneCobertura && <PlanActivo affiliate={affiliate as Affiliate} />}
 
-      {/* Cambiar de plan: sólo tiene sentido con cobertura vigente — sin ella
-          no hay suscripción de MP sobre la que cambiar el monto ni cobertura
-          a comparar. */}
-      {tieneCobertura && (
-        <CambiarPlan
-          affiliate={affiliate as Affiliate}
-          opciones={opcionesPlan}
-          cambioPendienteNombre={cambioPendienteNombre}
-        />
-      )}
-
       {/* Credencial */}
       {tieneCobertura && (
         <section>
@@ -343,6 +332,24 @@ export default async function PortalPage() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* Cambiar de plan: al final, junto a cancelar, y no arriba.
+          Las dos son acciones de administración de la cuenta: excepcionales,
+          deliberadas y de las que uno se arrepiente. Lo que el afiliado viene a
+          hacer todos los días es usar su cobertura —credencial y servicios—, y
+          eso tiene que quedar primero. Además, ofrecer "cambiate de plan" antes
+          de mostrar lo que el plan incluye invita a decidir sin la información
+          delante.
+
+          Sólo con cobertura vigente: sin ella no hay suscripción de MP sobre la
+          que cambiar el monto ni cobertura contra la cual comparar. */}
+      {tieneCobertura && (
+        <CambiarPlan
+          affiliate={affiliate as Affiliate}
+          opciones={opcionesPlan}
+          cambioPendienteNombre={cambioPendienteNombre}
+        />
       )}
 
       {/* Cancelar suscripción */}
