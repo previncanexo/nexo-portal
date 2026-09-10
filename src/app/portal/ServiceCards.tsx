@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import type { Affiliate } from '@/lib/types'
 import { registerPsicologiaClick, registerSeguroHogarSolicitud, registerArbolVidaSolicitud } from './actions'
+import { prestacionesDePlan, type PrestacionPlan } from '@/lib/planes-catalogo'
 
 const PSICOLOGIA_URL = process.env.NEXT_PUBLIC_PSICOLOGIA_URL
 
@@ -115,11 +116,12 @@ const SEGURO_COBERTURA_COMPLETA = [
 // entorno y el mismo botón pasa a "Contratar" + redirección, sin tocar código.
 const ARBOL_VIDA_URL = process.env.NEXT_PUBLIC_ARBOL_VIDA_URL
 
-// Precio en revisión: acá se cobra $4.500, pero la landing (data/planes.ts,
-// ON_DEMAND → 'arbol-de-vida') dice $5.000. No se sabe cuál de los dos es el
-// correcto — falta confirmar con el cliente antes de tocar cualquiera de los
-// dos. La landing ya marca su entrada con `pendiente: true` para la revisión.
-const ARBOL_VIDA_PRECIO = '$4.500'
+// Discrepancia resuelta: el cliente confirmó que mandan los precios de la
+// landing (data/planes.ts, ON_DEMAND → 'arbol-de-vida' → $5.000), no los que
+// venía cobrando el portal ($4.500). Es un cambio seguro porque ARBOL_VIDA_URL
+// todavía está vacío: la card sale como "Próximamente" y no cobra nada, sólo
+// muestra el precio — no hay ningún cobro real en curso que quede desalineado.
+const ARBOL_VIDA_PRECIO = '$5.000'
 
 const ARBOL_VIDA_COBERTURA = [
   'Cremación ecológica',
@@ -130,6 +132,10 @@ const ARBOL_VIDA_COBERTURA = [
   'Sin costo de mantenimiento',
 ]
 
+// PENDIENTE: el documento de producto del cliente dice 90 días de carencia y
+// hasta 59 años de edad de ingreso — distinto a lo que hay acá (60 días / 65
+// años). A diferencia del precio de arriba, esto NO es un dato de precio, así
+// que no se toca sin que el cliente confirme cuál de las dos fuentes vale.
 const ARBOL_VIDA_CONDICIONES = [
   { titulo: 'Carencia', detalle: '60 días desde la contratación' },
   { titulo: 'Edad de ingreso', detalle: 'Hasta 65 años' },
@@ -274,6 +280,19 @@ function IconHogar() {
       <path d="M3 10.5 12 3l9 7.5" />
       <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" />
       <path d="M9.5 21v-6h5v6" />
+    </svg>
+  )
+}
+
+// Casa + cruz: se distingue de IconHogar (que es sólo la casa, para el seguro de
+// hogar) agregando la cruz médica, para no repetir el mismo ícono en dos cards
+// con significados distintos.
+function IconMedicoDomicilio() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" />
+      <path d="M12 12.5v5M9.5 15h5" />
     </svg>
   )
 }
@@ -1330,6 +1349,12 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
   const [opticaModalOpen, setOpticaModalOpen] = useState(false)
   const [infoService, setInfoService] = useState<ServiceItem | null>(null)
 
+  // Fuente de verdad de qué incluye el plan de ESTE afiliado. `prestacionesDePlan`
+  // ya resuelve el fallback legacy (afiliado sin `slug` → cobertura de nexo-1), así
+  // que acá no hace falta repetir esa lógica — sólo pasarle el slug, que puede
+  // venir undefined si `affiliate` todavía no cargó.
+  const prestaciones = prestacionesDePlan(affiliate?.plan?.slug)
+
   const services: ServiceItem[] = [
     {
       id: 'teleconsultas',
@@ -1429,13 +1454,12 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       ],
       whatsapp: 'https://wa.me/5493413077912?text=Hola%2C%20voy%20a%20concurrir%20a%20la%20guardia%20odontol%C3%B3gica',
     },
-    // Óptica se muestra a TODOS los afiliados, sin filtrar por plan. Es deliberado
-    // para este estado de staging: hoy toda la base está en el plan legado que la
-    // migración va a renombrar "Nexo I", y el documento de producto que define las
-    // prestaciones de Nexo I no incluye Óptica entre ellas. Antes de pasar a
-    // producción hay que decidir con el cliente si Óptica queda reservada a un
-    // plan superior o si termina integrando Nexo I; mientras esa decisión no
-    // exista, no hay un campo confiable en `affiliate` del que colgar el filtro.
+    // Óptica sigue mostrándose a los tres planes — pero ahora es porque la matriz
+    // de `planes-catalogo.ts` la marca `incluido` en los tres, no porque falte
+    // filtrar por plan (ese bug ya se resolvió, ver `prestaciones` más abajo). El
+    // pendiente real sigue abierto en nexo-1: el documento de producto no la lista
+    // ahí — ver el comentario en `PRESTACIONES_POR_PLAN['nexo-1']` dentro de
+    // `planes-catalogo.ts` para el detalle y qué hacer cuando el cliente confirme.
     {
       id: 'optica',
       group: 'nexo',
@@ -1458,27 +1482,88 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
         'Excedente con 20% de descuento si tu graduación o armazón supera lo cubierto',
       ],
     },
+    // Médico a Domicilio: coseguro exclusivo de Nexo II (ver `planes-catalogo.ts`,
+    // `PRESTACIONES_POR_PLAN['nexo-2']`). Sigue el mismo patrón visual que las
+    // demás cards `nexo` — el precio del coseguro no se hardcodea acá, lo agrega
+    // `servicioConCobertura` más abajo tomando el `detalle` de la matriz, para no
+    // tener el mismo dato escrito en dos lugares que puedan desincronizarse.
+    {
+      id: 'medico-a-domicilio',
+      group: 'nexo',
+      title: 'Médico a Domicilio',
+      subtitle: 'Consultas médicas en tu casa',
+      badge: 'Incluido en tu plan',
+      badgeColor: '#7c3aed',
+      badgeBg: 'rgba(124,58,237,0.08)',
+      buttonLabel: 'Ver información',
+      buttonAction: 'info',
+      accentColor: 'white',
+      accentBg: 'rgba(134,96,239,0.10)',
+      glowColor: 'rgba(134,96,239,0.12)',
+      Icon: IconMedicoDomicilio,
+      description: 'Un médico que va a tu domicilio cuando lo necesitás, sin tener que trasladarte. Beneficio de tu plan Nexo II, con coseguro por consulta.',
+      bullets: [
+        'Consultas médicas sin límite en tu domicilio',
+        'Coseguro por consulta luego de la cobertura',
+        'Ideal para cuando no podés trasladarte',
+      ],
+    },
+    // Seguro de Salud II: incluido en Nexo III (ver `planes-catalogo.ts`). Mismo
+    // patrón que Seguro de Salud I (línea ~1560 más abajo) pero con los montos y
+    // el alcance propios de este producto — fuente: documento de producto del
+    // cliente, 2026-09-01.
+    {
+      id: 'seguro-salud-2',
+      group: 'nexo',
+      title: 'Seguro de Salud II',
+      subtitle: 'Alta complejidad, enfermedades graves y rehabilitación',
+      badge: 'Incluido en tu plan',
+      badgeColor: '#7c3aed',
+      badgeBg: 'rgba(124,58,237,0.08)',
+      buttonLabel: 'Ver información',
+      buttonAction: 'info',
+      accentColor: 'white',
+      accentBg: 'rgba(134,96,239,0.10)',
+      glowColor: 'rgba(134,96,239,0.12)',
+      Icon: IconSeguroSalud,
+      description: 'Cobertura para intervenciones de alta complejidad, enfermedades graves y procesos de rehabilitación. Incluido en tu plan Nexo III, sin costo adicional.',
+      bullets: [
+        'Alta complejidad: hasta $3.000.000',
+        'Enfermedades graves (quemaduras graves, post-quirúrgico complicado, gran trauma): hasta $3.000.000',
+        'Quirúrgicas de alta frecuencia (Alt. II): hasta $1.000.000',
+        'Cuidados prolongados: $200.000 mensual por evento, máx. 12 meses, no retroactiva por accidente',
+        'Rehabilitación: $500.000, 4 sesiones/mes, máx. 180 días',
+        'Edad de incorporación: hasta 64 años',
+      ],
+    },
+    // Psicología deja de ser "on demand": el documento de producto (y la
+    // aclaración de Javier Talarn sobre los coseguros de Doc24, ver
+    // `planes-catalogo.ts`) la define como un COSEGURO dentro de los tres planes,
+    // no como un servicio que se contrata aparte. Por eso pasa a `group: 'nexo'` y
+    // se le saca el copy de "Pago aparte" / "se cobra aparte" / "contratar de
+    // manera independiente", que ya no describe cómo funciona. El tema TEAL
+    // también se saca: ese color está reservado para distinguir visualmente la
+    // sección on-demand (ver `GroupHeading`), y esta card ya no vive ahí.
     ...(PSICOLOGIA_URL
       ? [{
           id: 'psicologia',
-          group: 'ondemand' as const,
-          title: 'Psicología On Demand',
+          group: 'nexo' as const,
+          title: 'Psicología',
           subtitle: 'Tu bienestar emocional, cuando lo necesitás.',
-          badge: 'Pago aparte',
-          badgeColor: 'var(--teal)',
-          badgeBg: 'rgba(13,148,136,0.16)',
+          badge: 'Incluido en tu plan',
+          badgeColor: '#7c3aed',
+          badgeBg: 'rgba(124,58,237,0.08)',
           buttonLabel: 'Ver y reservar',
           buttonAction: 'modal' as const,
           accentColor: 'white',
-          accentBg: 'rgba(13,148,136,0.10)',
-          glowColor: 'rgba(13,148,136,0.16)',
-          theme: TEAL,
+          accentBg: 'rgba(134,96,239,0.10)',
+          glowColor: 'rgba(134,96,239,0.12)',
           Icon: IconPsicologia,
-          description: 'Accedé a sesiones de psicología online con profesionales, de forma simple y cuando lo necesites. Es un beneficio adicional a tu plan Previnca Nexo, que podés contratar de manera independiente.',
+          description: 'Accedé a sesiones de psicología online con profesionales, de forma simple y cuando lo necesites. Es un coseguro incluido en tu plan Previnca Nexo.',
           bullets: [
             'Sesiones con profesionales',
             'Reservás tu turno online',
-            'Servicio adicional, se cobra aparte',
+            'Coseguro incluido en tu plan',
           ],
         }]
       : []),
@@ -1563,6 +1648,11 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       ],
       whatsapp: waContratar('el Seguro de Salud I'),
     },
+    // PENDIENTE: el $2.750 de acá viene del documento del cliente, pero ese mismo
+    // documento trae una nota pegada encima: "chequear lista de precio de
+    // vendedores me parece q esta mal". No se cambia el número sin que el cliente
+    // confirme cuál es el precio real — mismo criterio que ya usa la landing
+    // (`data/planes.ts`, ON_DEMAND → 'vida', con `pendiente: true`).
     {
       id: 'seguro-vida',
       group: 'ondemand' as const,
@@ -1608,8 +1698,72 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
   const urgenciasService = services.find(s => s.id === 'urgencias')!
   const farmaciaService = services.find(s => s.id === 'farmacias')!
 
-  const coberturaNexo = services.filter((s) => s.group === 'nexo')
-  const onDemand = services.filter((s) => s.group === 'ondemand')
+  // Mapa por servicioId para lookup O(1) — `services` puede crecer y no vale la
+  // pena recorrer el array entero por cada card al construir las dos secciones.
+  const prestacionPorServicio = new Map(prestaciones.map((p) => [p.servicioId, p]))
+
+  /**
+   * Una card `group: 'ondemand'` (ej. Seguro de Salud I) puede terminar
+   * `incluido` en el plan de este afiliado en particular (ej. Nexo II). Cuando
+   * eso pasa no alcanza con moverla de sección: todo su copy fue escrito
+   * asumiendo que se vende aparte —badge "Pago aparte", botón "Quiero sumarlo",
+   * WhatsApp de contratación en el modal—, y mostrarlo así sería tan engañoso
+   * como el bug que esta migración vino a cerrar. Por eso se deriva una "vista
+   * de cobertura": pisa el subtitle con el `detalle` de la matriz (que es lo que
+   * el afiliado REALMENTE tiene), saca el botón/WhatsApp de contratación y pasa
+   * el `group` a `nexo` para que `ServiceCard` deje de tratarla como on-demand
+   * (ver su comentario: el badge sólo se renderiza para `group === 'ondemand'`).
+   */
+  function comoIncluido(service: ServiceItem, prestacion: PrestacionPlan): ServiceItem {
+    if (service.group !== 'ondemand' || prestacion.estado !== 'incluido') return service
+    return {
+      ...service,
+      group: 'nexo',
+      subtitle: prestacion.detalle ?? service.subtitle,
+      buttonLabel: 'Ver cobertura',
+      whatsapp: undefined,
+    }
+  }
+
+  /**
+   * Coseguro: el afiliado paga una parte. Hay que comunicarlo de forma visible
+   * para que no crea que es gratis — pero el `badge` no sirve para esto porque
+   * `ServiceCard` sólo lo muestra en `group === 'ondemand'` (ahí es donde aporta
+   * información nueva; en las cards incluidas el bloque ya aclara que están
+   * cubiertas). El `subtitle`, en cambio, se ve siempre sin importar el grupo, así
+   * que el precio del coseguro se concatena ahí.
+   */
+  function conDetalleDeCoseguro(service: ServiceItem, prestacion: PrestacionPlan): ServiceItem {
+    if (prestacion.estado !== 'coseguro' || !prestacion.detalle) return service
+    return { ...service, subtitle: `${service.subtitle} · ${prestacion.detalle}` }
+  }
+
+  // "Tu cobertura Nexo": lo que este afiliado YA tiene, sea cual sea el `group`
+  // original de la card. Se arma recorriendo `prestaciones` (no `services`) para
+  // que el orden en pantalla respete la prioridad de cada plan, y para que un
+  // `no-incluido` ni siquiera entre en el `.find` — el portal muestra TU
+  // cobertura, no una comparativa de tres columnas como la landing, así que la
+  // ausencia de una card ya comunica que no la tenés; listarla tachada sólo
+  // agregaría ruido.
+  const coberturaNexo = prestaciones
+    .filter((p) => p.estado === 'incluido' || p.estado === 'coseguro')
+    .map((p) => {
+      const card = services.find((s) => s.id === p.servicioId)
+      if (!card) return null
+      return conDetalleDeCoseguro(comoIncluido(card, p), p)
+    })
+    .filter((s): s is ServiceItem => s !== null)
+
+  // "Productos on-demand": cards `ondemand` que el plan NO cubre. Genérico a
+  // propósito — nada de "if id === 'seguro-salud-1' && plan === 'nexo-2'": un
+  // Nexo II no ve Seguro de Salud I acá porque su prestación da `incluido`, y el
+  // día que otro on-demand se sume a algún plan alcanza con agregarlo a la
+  // matriz de `planes-catalogo.ts`, sin tocar este filtro.
+  const onDemand = services.filter((s) => {
+    if (s.group !== 'ondemand') return false
+    const prestacion = prestacionPorServicio.get(s.id)
+    return prestacion?.estado !== 'incluido'
+  })
 
   return (
     <>
