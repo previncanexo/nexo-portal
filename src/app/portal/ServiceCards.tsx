@@ -226,6 +226,16 @@ const TEAL: CardTheme = {
 
 interface ServiceCardsProps {
   affiliate: Affiliate | null
+  /**
+   * `servicioId` de los on-demand que este afiliado ya tiene contratados (por
+   * fuera del plan). Genérica a propósito: hoy sólo `page.tsx` puede poblarla
+   * con `'seguro-hogar'`, porque es el único on-demand con una tabla propia de
+   * solicitudes (`seguro_hogar_solicitudes`). Árbol de Vida, Psicología,
+   * Seguro de Salud I y Seguro de Vida todavía no tienen dónde guardar ese
+   * estado — cuando lo tengan, se suman a esta misma lista sin tocar esta UI.
+   * Default `[]` para no romper si algún consumidor futuro no la pasa.
+   */
+  onDemandActivos?: string[]
 }
 
 function IconDOC24() {
@@ -1340,7 +1350,7 @@ function ServiceCard({ service, onAction }: { service: ServiceItem; onAction: (s
 }
 
 /* ── Componente principal ── */
-export default function ServiceCards({ affiliate }: ServiceCardsProps) {
+export default function ServiceCards({ affiliate, onDemandActivos = [] }: ServiceCardsProps) {
   const [farmaciaModalOpen, setFarmaciaModalOpen] = useState(false)
   const [urgenciasModalOpen, setUrgenciasModalOpen] = useState(false)
   const [psicologiaModalOpen, setPsicologiaModalOpen] = useState(false)
@@ -1733,6 +1743,43 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
     }
   }
 
+  // Lookup O(1) de los on-demand que este afiliado ya contrató (ver el
+  // comentario de `onDemandActivos` en `ServiceCardsProps`).
+  const onDemandActivosSet = new Set(onDemandActivos)
+
+  /**
+   * Un on-demand `dado_de_alta` (ej. Seguro de Hogar para este afiliado) NO es
+   * lo mismo que un on-demand `incluido` en el plan (ver `comoIncluido` arriba)
+   * y las dos cosas no pueden compartir la misma transformación:
+   *
+   * - `incluido` → el plan lo cubre, no se paga nada extra, la card pasa a
+   *   `group: 'nexo'` y pierde el tema teal — es cobertura de la cuota.
+   * - `dado_de_alta` (esta función) → el afiliado lo contrató APARTE y lo
+   *   SIGUE PAGANDO aparte; sigue siendo un producto on-demand, así que se
+   *   queda en `group: 'ondemand'` y mantiene el teal (ver el comentario junto
+   *   a `TEAL`: mezclar ese color con el violeta de "incluido" comunicaría
+   *   algo que no es cierto — que dejó de pagarlo). Lo único que cambia es que
+   *   ya no tiene sentido invitarlo a contratar: se reemplaza el badge, el
+   *   botón dejar de decir "Quiero sumarlo"/similar por algo informativo, y se
+   *   saca el WhatsApp de contratación del modal (`service.whatsapp`), porque
+   *   ese link es para pedir el alta, no para consultar algo que ya tiene.
+   */
+  function comoActivo(service: ServiceItem): ServiceItem {
+    if (service.group !== 'ondemand' || !onDemandActivosSet.has(service.id)) return service
+    return {
+      ...service,
+      badge: '✓ Activo',
+      // Mismo teal, tratamiento sólido en vez del tinte suave de "Pago aparte":
+      // la familia de color no cambia (sigue siendo on-demand), pero el badge
+      // se distingue por contraste, no por color — ver la nota de "Ojo con el
+      // color" en el pedido de esta migración.
+      badgeColor: 'white',
+      badgeBg: service.theme?.solid ?? 'var(--teal)',
+      buttonLabel: service.buttonAction === 'modal' ? 'Ver cobertura' : 'Ver información',
+      whatsapp: undefined,
+    }
+  }
+
   /**
    * Coseguro: el afiliado paga una parte. Hay que comunicarlo de forma visible
    * para que no crea que es gratis — pero el `badge` no sirve para esto porque
@@ -1767,11 +1814,13 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
   // Nexo II no ve Seguro de Salud I acá porque su prestación da `incluido`, y el
   // día que otro on-demand se sume a algún plan alcanza con agregarlo a la
   // matriz de `planes-catalogo.ts`, sin tocar este filtro.
-  const onDemand = services.filter((s) => {
-    if (s.group !== 'ondemand') return false
-    const prestacion = prestacionPorServicio.get(s.id)
-    return prestacion?.estado !== 'incluido'
-  })
+  const onDemand = services
+    .filter((s) => {
+      if (s.group !== 'ondemand') return false
+      const prestacion = prestacionPorServicio.get(s.id)
+      return prestacion?.estado !== 'incluido'
+    })
+    .map(comoActivo)
 
   return (
     <>

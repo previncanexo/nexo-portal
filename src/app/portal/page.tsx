@@ -8,6 +8,7 @@ import ServiceCards from './ServiceCards'
 import CancelSection from './CancelSection'
 import RetryPaymentButton from './RetryPaymentButton'
 import ActiveWatcher from './ActiveWatcher'
+import PlanActivo from './PlanActivo'
 
 const WA_NUMBER = process.env.NEXT_PUBLIC_WA_SUPPORT ?? '5493415056130'
 
@@ -91,15 +92,38 @@ export default async function PortalPage() {
     : ''
 
   let payments: Payment[] = []
+  // Único on-demand con estado de contratación persistido hoy: Seguro de Hogar
+  // (`seguro_hogar_solicitudes`, RLS restringida a service_role → adminClient).
+  // Los otros cuatro (Árbol de Vida, Psicología, Seguro de Salud I, Seguro de
+  // Vida) no tienen tabla propia todavía — ver comentario de `onDemandActivos`
+  // en ServiceCards.tsx. Se resuelve junto con `payments` en un solo
+  // `Promise.all` para no agregar un round-trip serial a `adminClient`.
+  let seguroHogarActivo = false
   if (affiliate.id) {
-    const { data } = await adminClient
-      .from('payments')
-      .select('*')
-      .eq('affiliate_id', affiliate.id)
-      .order('created_at', { ascending: false })
-      .limit(24)
-    payments = (data ?? []) as Payment[]
+    const [{ data: paymentsData }, { data: seguroHogarData }] = await Promise.all([
+      adminClient
+        .from('payments')
+        .select('*')
+        .eq('affiliate_id', affiliate.id)
+        .order('created_at', { ascending: false })
+        .limit(24),
+      adminClient
+        .from('seguro_hogar_solicitudes')
+        .select('id')
+        .eq('affiliate_id', affiliate.id)
+        .eq('status', 'dado_de_alta')
+        .limit(1),
+    ])
+    payments = (paymentsData ?? []) as Payment[]
+    seguroHogarActivo = (seguroHogarData ?? []).length > 0
   }
+
+  // Genérica a propósito: hoy sólo Seguro de Hogar puede poblarla (es el único
+  // on-demand con modelo de datos de contratación), pero el contrato de
+  // ServiceCards es "lista de servicioId contratados", no "estado de seguro de
+  // hogar". Cuando Árbol de Vida, Psicología, Seguro de Salud I o Seguro de
+  // Vida tengan su propia tabla, se agregan acá sin tocar ServiceCards.
+  const onDemandActivos: string[] = seguroHogarActivo ? ['seguro-hogar'] : []
 
   // Pending: show focused payment screen instead of locked portal
   if (isPending) {
@@ -214,6 +238,10 @@ export default async function PortalPage() {
         </div>
       )}
 
+      {/* Plan activo: lo primero que el afiliado ve sobre SU plan — hoy ese dato
+          sólo vivía chico, dentro del badge de la credencial (CredentialCard.tsx). */}
+      {tieneCobertura && <PlanActivo affiliate={affiliate as Affiliate} />}
+
       {/* Credencial */}
       {tieneCobertura && (
         <section>
@@ -229,7 +257,7 @@ export default async function PortalPage() {
 
       {/* Servicios */}
       {tieneCobertura ? (
-        <ServiceCards affiliate={affiliate as Affiliate | null} />
+        <ServiceCards affiliate={affiliate as Affiliate | null} onDemandActivos={onDemandActivos} />
       ) : (
         <section>
           <p
