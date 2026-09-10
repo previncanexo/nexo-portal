@@ -814,6 +814,90 @@ export async function POST(req: NextRequest) {
                   payment.currency_id ?? 'ARS',
                 )
               }
+
+              // Aplicar un cambio de plan pendiente (ver `cambiarPlan` en
+              // `src/app/portal/actions.ts` y `plan_changes` en
+              // `20260910000001_create_plan_changes.sql`).
+              //
+              // Éste es el punto correcto para tocar `affiliates.plan_id`: es
+              // el momento en que el pago de ESTE ciclo —con el monto del
+              // plan nuevo, porque `cambiarPlan` ya actualizó el monto de la
+              // suscripción en MP cuando se pidió el cambio— quedó aprobado y
+              // acreditado. Recién ahí le corresponde la cobertura nueva; si
+              // se aplicara antes (al pedirlo), se le estaría dando cobertura
+              // que todavía no pagó, o quitándole cobertura que sí pagó.
+              //
+              // Envuelto en su propio try/catch, deliberadamente: la plata ya
+              // se cobró y `cobertura_hasta` ya se extendió arriba, así que un
+              // error acá NO puede tirar el resto del webhook. Si tirara,
+              // Mercado Pago reintentaría la entrega de este mismo evento —y
+              // reintentar significa volver a entrar a esta rama y volver a
+              // extender `cobertura_hasta` un mes más de lo que corresponde,
+              // sin que el afiliado haya pagado ese mes extra. El problema del
+              // cambio de plan sin aplicar queda logueado para revisar a mano;
+              // el pago se procesa igual.
+              try {
+                // `mp_resultado = 'monto_actualizado'` NO es opcional en este
+                // filtro. `cambiarPlan` inserta la fila 'pendiente' ANTES de
+                // pedirle a MP el cambio de monto, así que existe una ventana
+                // real —proceso caído, timeout, deploy en el medio— donde
+                // queda una fila 'pendiente' con `mp_resultado` en null y la
+                // suscripción todavía cobrando el monto VIEJO.
+                //
+                // Sin este filtro, el próximo débito (por el monto viejo)
+                // haría que esta rama le cambie el plan igual: alguien que
+                // pidió pasar de Nexo III a Nexo I se quedaría con cobertura
+                // de $20.000 pagando $7.000 — y al revés, quien bajó de plan
+                // pagaría de más por menos cobertura. Aplicar sólo lo que MP
+                // confirmó es lo que ata el cambio de cobertura al cambio de
+                // lo que se cobra.
+                const { data: cambioPendiente } = await supabase
+                  .from('plan_changes')
+                  .select('id, to_plan_id')
+                  .eq('affiliate_id', ppa.external_reference)
+                  .eq('status', 'pendiente')
+                  .eq('mp_resultado', 'monto_actualizado')
+                  .maybeSingle()
+
+                // Una fila 'pendiente' que el filtro de arriba descarta quedaría
+                // colgada para siempre y en silencio: el afiliado ve "cambio en
+                // curso" en el portal y nunca se aplica. No se resuelve sola
+                // desde acá —no sabemos si MP llegó a tomar el monto— así que se
+                // deja el rastro para que alguien la revise a mano.
+                if (!cambioPendiente) {
+                  const { data: colgado } = await supabase
+                    .from('plan_changes')
+                    .select('id, mp_resultado')
+                    .eq('affiliate_id', ppa.external_reference)
+                    .eq('status', 'pendiente')
+                    .maybeSingle()
+                  if (colgado) {
+                    console.error('[mp-webhook] cambio de plan pendiente sin confirmacion de MP, no se aplica:', {
+                      cambio_id: colgado.id,
+                      mp_resultado: colgado.mp_resultado,
+                      affiliate_id: ppa.external_reference,
+                      payment_id: payment.id,
+                    })
+                  }
+                }
+
+                if (cambioPendiente) {
+                  await supabase
+                    .from('affiliates')
+                    .update({ plan_id: cambioPendiente.to_plan_id, updated_at: new Date().toISOString() })
+                    .eq('id', ppa.external_reference)
+
+                  await supabase
+                    .from('plan_changes')
+                    .update({ status: 'aplicado', applied_at: new Date().toISOString() })
+                    .eq('id', cambioPendiente.id)
+                }
+              } catch (planChangeErr) {
+                console.error('[mp-webhook] error aplicando cambio de plan pendiente:', planChangeErr, {
+                  affiliate_id: ppa.external_reference,
+                  payment_id: payment.id,
+                })
+              }
             }
           }
         }

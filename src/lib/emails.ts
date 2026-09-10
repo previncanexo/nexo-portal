@@ -777,6 +777,38 @@ export async function sendAbandonedPaymentEmail(args: {
   }).catch((err) => console.error('[abandoned-payment-email]', err))
 }
 
+// Alerta interna cuando falla el update de monto en MP durante un cambio de
+// plan (ver `cambiarPlan` en `src/app/portal/actions.ts`). El afiliado ya
+// pidió el cambio y quedó registrado como 'fallido' en `plan_changes`: alguien
+// de Previnca tiene que hacer el seguimiento manual porque, a propósito, NO
+// se reintenta solo ni se crea una suscripción nueva (ver el comentario grande
+// en `cambiarPlan` sobre por qué ese fallback está descartado).
+export async function sendInternalPlanChangeFailedEmail(args: {
+  affiliateId: string; nombre: string; apellido: string; email: string; whatsapp: string | null
+  planActualNombre: string; planDestinoNombre: string; mpError: string
+}): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return
+  const to = internalRecipients()
+  if (to.length === 0) return
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: resendFrom(),
+    to,
+    subject: `Cambio de plan fallido — ${args.nombre} ${args.apellido}`,
+    html: recoveryInternalEmailHtml({
+      titulo: 'No se pudo actualizar el monto de una suscripción',
+      etiqueta: 'Cambio de plan fallido',
+      nombre: args.nombre,
+      apellido: args.apellido,
+      email: args.email,
+      whatsapp: args.whatsapp,
+      detalle: `De ${args.planActualNombre} a ${args.planDestinoNombre} · Error MP: ${args.mpError}`,
+      adminUrl: `${appUrl}/admin/afiliados/${args.affiliateId}`,
+    }),
+  }).catch((err) => console.error('[internal-plan-change-failed-email]', err))
+}
+
 export async function sendInternalAbandonedEmail(args: {
   nombre: string; apellido: string | null; email: string; whatsapp: string | null;
   etapa: 'formulario' | 'pago'; adminPath: string

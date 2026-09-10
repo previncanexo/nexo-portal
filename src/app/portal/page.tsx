@@ -3,12 +3,15 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { syncMpPaymentsForAffiliate } from '@/lib/mpSync'
 import type { Affiliate, Payment } from '@/lib/types'
+import { puedeCambiarA } from '@/lib/cambio-de-plan'
+import type { PlanSlug } from '@/lib/planes-catalogo'
 import CredentialWithDownload from './CredentialWithDownload'
 import ServiceCards from './ServiceCards'
 import CancelSection from './CancelSection'
 import RetryPaymentButton from './RetryPaymentButton'
 import ActiveWatcher from './ActiveWatcher'
 import PlanActivo from './PlanActivo'
+import CambiarPlan, { type OpcionPlan } from './CambiarPlan'
 
 const WA_NUMBER = process.env.NEXT_PUBLIC_WA_SUPPORT ?? '5493415056130'
 
@@ -99,8 +102,15 @@ export default async function PortalPage() {
   // en ServiceCards.tsx. Se resuelve junto con `payments` en un solo
   // `Promise.all` para no agregar un round-trip serial a `adminClient`.
   let seguroHogarActivo = false
+  // Planes activos disponibles para ofrecer en el cambio de plan (Tarea 3) y el
+  // cambio pendiente, si lo hay (Tarea 1 lo crea, el webhook lo aplica). Se
+  // resuelven en el mismo `Promise.all` que `payments` y `seguroHogarData` por
+  // la misma razón que ese comentario ya explica: no agregar round-trips
+  // seriales a `adminClient`.
+  let planesActivos: { id: string; slug: string | null; name: string; price: number }[] = []
+  let cambioPendienteNombre: string | null = null
   if (affiliate.id) {
-    const [{ data: paymentsData }, { data: seguroHogarData }] = await Promise.all([
+    const [{ data: paymentsData }, { data: seguroHogarData }, { data: planesData }, { data: cambioPendienteData }] = await Promise.all([
       adminClient
         .from('payments')
         .select('*')
@@ -113,10 +123,47 @@ export default async function PortalPage() {
         .eq('affiliate_id', affiliate.id)
         .eq('status', 'dado_de_alta')
         .limit(1),
+      adminClient
+        .from('plans')
+        .select('id, slug, name, price')
+        .eq('is_active', true)
+        .order('price', { ascending: true }),
+      adminClient
+        .from('plan_changes')
+        .select('to_plan:plans(name)')
+        .eq('affiliate_id', affiliate.id)
+        .eq('status', 'pendiente')
+        .maybeSingle(),
     ])
     payments = (paymentsData ?? []) as Payment[]
     seguroHogarActivo = (seguroHogarData ?? []).length > 0
+    planesActivos = planesData ?? []
+    const rawToPlan = cambioPendienteData?.to_plan as any
+    const toPlan = Array.isArray(rawToPlan) ? rawToPlan[0] : rawToPlan
+    cambioPendienteNombre = toPlan?.name ?? null
   }
+
+  // Evaluación de reglas del lado del servidor por cada plan candidato (Tarea 3,
+  // último punto): `puedeCambiarA` es la ÚNICA fuente de verdad de estas reglas
+  // (`cambio-de-plan.ts`), así que se evalúa acá y se le pasa el resultado ya
+  // resuelto al client component — en vez de exponer la función y reevaluarla
+  // en el browser con la fecha del dispositivo del afiliado, que no es
+  // confiable para calcular una edad que bloquea o habilita una cobertura.
+  const opcionesPlan: OpcionPlan[] = planesActivos
+    .filter((plan) => plan.id !== affiliate.plan_id)
+    .map((plan) => ({
+      plan,
+      evaluacion: puedeCambiarA({
+        planDestinoId: plan.id,
+        planDestinoSlug: plan.slug as PlanSlug,
+        planDestinoActivo: true, // ya filtrado por is_active arriba
+        planActualId: affiliate.plan_id,
+        fecha_nacimiento: affiliate.fecha_nacimiento,
+        status,
+        cancel_requested_at: affiliate.cancel_requested_at,
+        tieneCambioPendiente: !!cambioPendienteNombre,
+      }),
+    }))
 
   // Genérica a propósito: hoy sólo Seguro de Hogar puede poblarla (es el único
   // on-demand con modelo de datos de contratación), pero el contrato de
@@ -241,6 +288,17 @@ export default async function PortalPage() {
       {/* Plan activo: lo primero que el afiliado ve sobre SU plan — hoy ese dato
           sólo vivía chico, dentro del badge de la credencial (CredentialCard.tsx). */}
       {tieneCobertura && <PlanActivo affiliate={affiliate as Affiliate} />}
+
+      {/* Cambiar de plan: sólo tiene sentido con cobertura vigente — sin ella
+          no hay suscripción de MP sobre la que cambiar el monto ni cobertura
+          a comparar. */}
+      {tieneCobertura && (
+        <CambiarPlan
+          affiliate={affiliate as Affiliate}
+          opciones={opcionesPlan}
+          cambioPendienteNombre={cambioPendienteNombre}
+        />
+      )}
 
       {/* Credencial */}
       {tieneCobertura && (
