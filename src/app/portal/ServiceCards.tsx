@@ -1722,6 +1722,14 @@ export default function ServiceCards({ affiliate }: ServiceCardsProps) {
       subtitle: prestacion.detalle ?? service.subtitle,
       buttonLabel: 'Ver cobertura',
       whatsapp: undefined,
+      // El teal no es decorativo: es el color con el que TODA la seccion
+      // on-demand se distingue de la cobertura incluida. Una card teal parada
+      // en medio del bloque violeta se lee como "esto se paga aparte" aunque el
+      // texto diga lo contrario, y el color gana esa discusion. Se vuelve al
+      // violeta de marca, que es lo que usan el resto de las cards incluidas.
+      theme: undefined,
+      accentBg: 'rgba(134,96,239,0.10)',
+      glowColor: 'rgba(134,96,239,0.12)',
     }
   }
 
