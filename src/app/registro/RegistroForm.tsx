@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import LogoNexo from '../components/LogoNexo'
 import { initiatePayment } from './actions'
+import { prestacionesDePlan, LABELS_SERVICIO } from '@/lib/planes-catalogo'
 
 declare global {
   interface Window {
@@ -274,12 +275,24 @@ const initialForm: FormData = {
   fecha_nacimiento: '',
 }
 
-const PLAN_BENEFITS = [
-  { label: 'Teleconsultas médicas: DOC 24', icon: '🩺' },
-  { label: 'Descuentos en farmacias', icon: '💊' },
-  { label: 'Emergencias médicas', icon: '🚑' },
-  { label: 'Guardias odontológicas', icon: '🦷' },
-]
+/**
+ * Beneficios reales del plan elegido, derivados de `planes-catalogo.ts` — antes
+ * esto era una lista fija de 4 ítems que se mostraba sin importar el plan, así
+ * que un afiliado de Nexo II o III veía "Emergencias médicas" y "Guardias
+ * odontológicas" en el resumen de compra aunque su plan no las incluye (mismo bug
+ * de fondo que el de `ServiceCards.tsx`, ver `docs/superpowers` del cambio).
+ *
+ * Incluye `incluido` Y `coseguro`: los dos son beneficios reales del plan, sólo
+ * cambia si el afiliado paga algo por usarlos. Este es un checklist corto para
+ * el registro, no el desglose de precios de coseguro que sí muestra el portal
+ * (`ServiceCards.tsx`) — mostrar acá "1 sesión a $15.000 · luego $30.000" sería
+ * demasiado detalle para esta pantalla.
+ */
+function beneficiosDePlan(slug: string | null | undefined) {
+  return prestacionesDePlan(slug)
+    .filter((p) => p.estado === 'incluido' || p.estado === 'coseguro')
+    .map((p) => LABELS_SERVICIO[p.servicioId] ?? { label: p.servicioId, icon: '✔️' })
+}
 
 const fieldBase: React.CSSProperties = {
   background: 'var(--superficie-sutil)',
@@ -531,12 +544,28 @@ interface PlanInfo {
   id: string
   name: string
   price: number
+  /** Resuelve los beneficios reales del plan vía `planes-catalogo.ts`. Null en el fallback sin Supabase. */
+  slug: string | null
 }
 
 export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<FormData>(initialForm)
   const [selectedPlan, setSelectedPlan] = useState<PlanInfo>(plans[0])
+  /**
+   * Decisión de diseño: NO hay un estado real de "todavía no hay plan elegido".
+   * `selectedPlan` arranca en `plans[0]` (el más barato, por el `order` ascendente
+   * de `registro/page.tsx`) y el panel de branding (izquierda, sólo desktop) ya
+   * mostraba precio y nombre atados a `selectedPlan` desde ANTES de este cambio
+   * (líneas del "Price footer" más abajo) — o sea que ese panel nunca tuvo un
+   * estado neutral, siempre reflejó algún plan concreto. Bindear los beneficios a
+   * `selectedPlan` en vez de inventar una lista "genérica" para el paso 1 evita
+   * una segunda fuente de verdad que se desincroniza del precio que el afiliado
+   * ya está viendo un renglón más abajo, y el picker de planes (visible en el
+   * paso 1, no en el 2) deja que el afiliado corrija el default antes de pasar
+   * sus datos.
+   */
+  const selectedPlanBenefits = beneficiosDePlan(selectedPlan.slug)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [checkoutUrl, setCheckoutUrl] = useState('')
@@ -748,9 +777,9 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
               Cobertura médica completa en minutos, sin papeles ni trámites presenciales.
             </p>
 
-            {/* Benefits */}
+            {/* Benefits — del plan seleccionado (ver comentario de selectedPlanBenefits arriba) */}
             <div className="flex flex-col gap-3.5">
-              {PLAN_BENEFITS.map((b) => (
+              {selectedPlanBenefits.map((b) => (
                 <div key={b.label} className="flex items-center gap-3">
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
@@ -984,7 +1013,7 @@ export default function RegistroForm({ plans }: { plans: PlanInfo[] }) {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2" style={{ borderTop: '1px solid var(--superficie-sutil)', paddingTop: '14px' }}>
-                    {PLAN_BENEFITS.map((b) => (
+                    {selectedPlanBenefits.map((b) => (
                       <div key={b.label} className="flex items-center gap-2.5">
                         <div
                           className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
