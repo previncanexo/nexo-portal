@@ -1369,7 +1369,7 @@ export default function ServiceCards({ affiliate, onDemandActivos = [] }: Servic
     {
       id: 'teleconsultas',
       group: 'nexo',
-      title: 'Teleconsultas Médicas 24/7',
+      title: 'Guardia clínica 24/7 · Doc24',
       subtitle: 'Médico online desde tu celular',
       badge: '24hs · En vivo',
       badgeColor: '#16a34a',
@@ -1558,7 +1558,7 @@ export default function ServiceCards({ affiliate, onDemandActivos = [] }: Servic
       ? [{
           id: 'psicologia',
           group: 'nexo' as const,
-          title: 'Psicología',
+          title: 'Psicología · Doc24',
           subtitle: 'Tu bienestar emocional, cuando lo necesitás.',
           badge: 'Incluido en tu plan',
           badgeColor: '#7c3aed',

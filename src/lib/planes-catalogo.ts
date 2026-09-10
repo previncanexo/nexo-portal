@@ -49,13 +49,15 @@ export const PRESTACIONES_POR_PLAN: Record<PlanSlug, PrestacionPlan[]> = {
     { servicioId: 'seguro-salud-1', estado: 'incluido', detalle: 'Alta complejidad, internación y trasplante' },
     { servicioId: 'farmacias', estado: 'incluido' },
     { servicioId: 'optica', estado: 'incluido', detalle: '1 par al año · Armazón y cristales de stock hasta 4.00 esf / 2.00 cil' },
-    // El `·` separa lo que recibís de lo que pagás, igual que en las líneas de
-    // Doc24. Fuente del dato: confirmación del cliente registrada en el commit
-    // b908c069 de la landing. Tensión sin cerrar: el documento de producto lista
-    // este servicio en Nexo II con "Cant. Cubierta 0", que se leería como que
-    // ninguna consulta viene sin cargo. Se respeta la confirmación por ser
-    // posterior y explícita, pero conviene cerrarlo con el cliente.
-    { servicioId: 'medico-a-domicilio', estado: 'coseguro', detalle: 'Consultas sin límite · luego $30.000' },
+    // TENSIÓN RESUELTA (2026-09-10). El documento de producto listaba este
+    // servicio con "Cant. Cubierta 0" y una confirmación anterior decía
+    // "consultas sin límite y luego $30.000", que se leía al revés. El cliente
+    // definió el texto final: se cobran TODAS las consultas a $30.000, y lo que
+    // no tiene límite es la cantidad. Coincide con el "Cant. Cubierta 0"
+    // original. Tiene que decir exactamente lo mismo que la landing
+    // (`Nexo 2.0 V9/src/app/data/planes.ts`); si divergen, vuelven a
+    // desincronizarse.
+    { servicioId: 'medico-a-domicilio', estado: 'coseguro', detalle: 'Consulta a $30.000 · sin límite' },
     { servicioId: 'teleconsultas', estado: 'coseguro', detalle: '1 consulta sin cargo · luego $18.000' },
     { servicioId: 'psicologia', estado: 'coseguro', detalle: '1 sesión a $15.000 · luego $30.000' },
     { servicioId: 'urgencias', estado: 'no-incluido' },
@@ -146,12 +148,12 @@ export const ON_DEMAND: ServicioOnDemand[] = [
  * registro necesita solamente una etiqueta corta — este mapa es esa fuente única.
  */
 export const LABELS_SERVICIO: Record<string, { label: string; icon: string }> = {
-  teleconsultas: { label: 'Teleconsultas médicas: DOC 24', icon: '🩺' },
+  teleconsultas: { label: 'Guardia clínica 24/7 · Doc24', icon: '🩺' },
   urgencias: { label: 'Emergencias médicas', icon: '🚑' },
   odontologia: { label: 'Guardias odontológicas', icon: '🦷' },
   farmacias: { label: 'Descuentos en farmacias', icon: '💊' },
   optica: { label: 'Óptica: 1 par de anteojos por año', icon: '👓' },
-  psicologia: { label: 'Psicología: sesiones con profesionales', icon: '🧠' },
+  psicologia: { label: 'Psicología · Doc24', icon: '🧠' },
   'medico-a-domicilio': { label: 'Médico a domicilio', icon: '🏠' },
   'seguro-salud-1': { label: 'Seguro de Salud I', icon: '🏥' },
   'seguro-salud-2': { label: 'Seguro de Salud II', icon: '🏥' },
