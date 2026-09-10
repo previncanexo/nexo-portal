@@ -49,7 +49,13 @@ export const PRESTACIONES_POR_PLAN: Record<PlanSlug, PrestacionPlan[]> = {
     { servicioId: 'seguro-salud-1', estado: 'incluido', detalle: 'Alta complejidad, internación y trasplante' },
     { servicioId: 'farmacias', estado: 'incluido' },
     { servicioId: 'optica', estado: 'incluido', detalle: '1 par al año · Armazón y cristales de stock hasta 4.00 esf / 2.00 cil' },
-    { servicioId: 'medico-a-domicilio', estado: 'coseguro', detalle: 'Consultas sin límite luego $30.000' },
+    // El `·` separa lo que recibís de lo que pagás, igual que en las líneas de
+    // Doc24. Fuente del dato: confirmación del cliente registrada en el commit
+    // b908c069 de la landing. Tensión sin cerrar: el documento de producto lista
+    // este servicio en Nexo II con "Cant. Cubierta 0", que se leería como que
+    // ninguna consulta viene sin cargo. Se respeta la confirmación por ser
+    // posterior y explícita, pero conviene cerrarlo con el cliente.
+    { servicioId: 'medico-a-domicilio', estado: 'coseguro', detalle: 'Consultas sin límite · luego $30.000' },
     { servicioId: 'teleconsultas', estado: 'coseguro', detalle: '1 consulta sin cargo · luego $18.000' },
     { servicioId: 'psicologia', estado: 'coseguro', detalle: '1 sesión a $15.000 · luego $30.000' },
     { servicioId: 'urgencias', estado: 'no-incluido' },
