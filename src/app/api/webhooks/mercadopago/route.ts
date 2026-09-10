@@ -259,6 +259,63 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ ok: true })
         }
 
+        // Reactivación: external_reference apunta a un affiliate existente que
+        // canceló (o quedó suspended) y ahora creó una sub nueva desde el
+        // portal. No es alta nueva — reconectamos la nueva sub, limpiamos
+        // cancel_requested_at y extendemos cobertura +1 mes. Preserva número
+        // de afiliado, farmacia, user_id y todo el historial.
+        if (pa.external_reference) {
+          const { data: reactivating } = await supabase
+            .from('affiliates')
+            .select('id, status, cobertura_hasta, nombre, email')
+            .eq('id', pa.external_reference)
+            .in('status', ['active', 'cancelled', 'suspended'])
+            .maybeSingle()
+          if (reactivating) {
+            const hoy = todayAR()
+            const baseDate = reactivating.cobertura_hasta && reactivating.cobertura_hasta > hoy
+              ? reactivating.cobertura_hasta
+              : hoy
+            const newCobertura = addOneMonth(baseDate)
+            await supabase
+              .from('affiliates')
+              .update({
+                status: 'active',
+                mp_subscription_id: subId,
+                cancel_requested_at: null,
+                cobertura_hasta: newCobertura,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', reactivating.id)
+
+            const placeholderId = `sub-${subId}`
+            const { count: existingPlaceholder } = await supabase
+              .from('payments')
+              .select('id', { count: 'exact', head: true })
+              .eq('mp_payment_id', placeholderId)
+            if ((existingPlaceholder ?? 0) === 0) {
+              const amount = Math.round(pa.auto_recurring?.transaction_amount ?? 0)
+              if (amount > 0) {
+                await supabase.from('payments').insert({
+                  affiliate_id: reactivating.id,
+                  mp_payment_id: placeholderId,
+                  mp_status: 'approved',
+                  amount,
+                  currency: pa.auto_recurring?.currency_id ?? 'ARS',
+                  paid_at: new Date().toISOString(),
+                  period_from: baseDate,
+                  period_to: newCobertura,
+                })
+              }
+            }
+
+            revalidatePath('/admin')
+            revalidatePath('/admin/afiliados')
+            revalidatePath(`/admin/afiliados/${reactivating.id}`)
+            return NextResponse.json({ ok: true, reactivated: true })
+          }
+        }
+
         // Match #2: por external_reference (source of truth con sub sin plan).
         // MP ahora respeta external_reference 1:1 porque las subs se crean sin
         // plan template. Payer info se resuelve solo para persistir mp_payer_id
