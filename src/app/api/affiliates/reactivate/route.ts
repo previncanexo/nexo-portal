@@ -88,7 +88,18 @@ export async function POST() {
       },
     })
     const subExt = sub as unknown as { id?: string; init_point?: string }
-    const checkoutUrl = subExt.init_point
+    // Quitamos `activation=true` del init_point (mismo motivo que en /api/leads):
+    // ese flow exige sesión MP del payer_email o tira 404 sin ofrecer login.
+    let checkoutUrl: string | undefined
+    if (subExt.init_point) {
+      try {
+        const u = new URL(subExt.init_point)
+        u.searchParams.delete('activation')
+        checkoutUrl = u.toString()
+      } catch {
+        checkoutUrl = subExt.init_point
+      }
+    }
     if (!checkoutUrl) {
       return NextResponse.json({ error: 'MP no devolvió URL de pago.' }, { status: 500 })
     }

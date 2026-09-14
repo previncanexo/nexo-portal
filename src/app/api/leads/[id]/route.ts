@@ -271,7 +271,21 @@ export async function PATCH(
       },
     })
     const subExt = sub as unknown as { id?: string; init_point?: string }
-    const checkoutUrl = subExt.init_point
+    // MP devuelve el init_point con `activation=true`, un flow que EXIGE que
+    // el usuario esté logueado en MP con la cuenta del `payer_email` — si no
+    // lo está, MP muestra "Esta página no existe" en vez de ofrecer login o
+    // pago como invitado. Quitamos el flag para que caiga siempre al checkout
+    // de medios de pago normal, sin requerir sesión previa.
+    let checkoutUrl: string | undefined
+    if (subExt.init_point) {
+      try {
+        const u = new URL(subExt.init_point)
+        u.searchParams.delete('activation')
+        checkoutUrl = u.toString()
+      } catch {
+        checkoutUrl = subExt.init_point
+      }
+    }
     const mpSubId = subExt.id
     if (!checkoutUrl || !mpSubId) throw new Error('MP no devolvió init_point/id')
 
