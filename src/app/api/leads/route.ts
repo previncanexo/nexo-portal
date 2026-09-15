@@ -57,8 +57,11 @@ export async function POST(req: Request) {
 
   const { para_quien, nombre, apellido, email, whatsapp, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url, plan_slug, event_id, event_source_url } = body
 
-  // Validaciones de campos obligatorios
-  if (!para_quien || !nombre || !apellido || !email || !whatsapp) {
+  // Validaciones de campos obligatorios. `email` es OPCIONAL en este stage:
+  // ahora se pide recién antes del pago (junto al email de MP), así que puede
+  // no venir todavía y el lead queda partial sin email. El chequeo de
+  // email_taken se hace más tarde, en el PATCH que finaliza el lead.
+  if (!para_quien || !nombre || !apellido || !whatsapp) {
     return jsonWithCors(
       { success: false, error: 'missing_fields', message: 'Faltan campos obligatorios.' },
       { status: 400, origin }
@@ -70,7 +73,7 @@ export async function POST(req: Request) {
       { status: 400, origin }
     )
   }
-  if (!EMAIL_RE.test(email.trim())) {
+  if (email && !EMAIL_RE.test(email.trim())) {
     return jsonWithCors(
       { success: false, error: 'invalid_email', message: 'Email inválido.' },
       { status: 400, origin }
@@ -84,17 +87,18 @@ export async function POST(req: Request) {
   }
 
   const supabase = createAdminClient()
-  const emailLower = email.trim().toLowerCase()
+  const emailLower = email ? email.trim().toLowerCase() : null
 
   // Bloquear solo si el email ya pertenece a un affiliate PAGADO (active/suspended).
   // Los 'pending' no reservan identidad: pueden existir N leads con los mismos datos.
-  const conflict = await findPaidIdentityConflict(supabase, { email: emailLower })
-
-  if (conflict === 'email') {
-    return jsonWithCors(
-      { success: false, error: 'email_taken', message: 'Intente con otro email.' },
-      { status: 409, origin }
-    )
+  if (emailLower) {
+    const conflict = await findPaidIdentityConflict(supabase, { email: emailLower })
+    if (conflict === 'email') {
+      return jsonWithCors(
+        { success: false, error: 'email_taken', message: 'Intente con otro email.' },
+        { status: 409, origin }
+      )
+    }
   }
 
   // Resolver plan_id desde el slug (si vino desde la card de la landing).
@@ -118,7 +122,7 @@ export async function POST(req: Request) {
       para_quien,
       nombre: nombre.trim(),
       apellido: apellido.trim(),
-      email: emailLower,
+      email: emailLower,   // puede ser null: se completa en el PATCH final
       whatsapp: whatsapp.trim(),
       status: 'partial',
       plan_id: planIdResolved,
@@ -151,7 +155,7 @@ export async function POST(req: Request) {
       event_id,
       event_source_url,
       user_data: {
-        email: emailLower,
+        email: emailLower ?? undefined,
         phone: whatsapp.trim(),
         firstName: nombre.trim(),
         lastName: apellido.trim(),

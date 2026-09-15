@@ -26,6 +26,10 @@ interface FinalizeLeadInput {
   depto?: string
   medio_pago?: string
   mp_email?: string
+  /** Email de contacto de la persona. Puede llegar recién en este PATCH porque
+   *  ahora el step 2 de la landing no lo pide — se pide junto al email MP en
+   *  el paso previo al pago. Si no viene, se usa `mp_email` como fallback. */
+  email?: string
   plan_id?: string
   /**
    * Identificador estable del plan, que manda la landing. La landing es SSG puro
@@ -103,7 +107,7 @@ export async function PATCH(
     return jsonWithCors({ success: false, error: 'Body inválido' }, { status: 400, origin })
   }
 
-  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, plan_id, plan_slug, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url } = body
+  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, email, plan_id, plan_slug, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url } = body
 
   // Identificadores del browser para CAPI Purchase / GA4 purchase server-side
   // (en el webhook MP no podremos leerlos — se persisten en el affiliate).
@@ -111,8 +115,10 @@ export async function PATCH(
   const clientIp = extractClientIp(req)
   const clientUserAgent = req.headers.get('user-agent') ?? undefined
 
-  // Validaciones
-  if (!dni || !fecha_nacimiento || !ciudad || !calle || !numero || !medio_pago) {
+  // Validaciones. `medio_pago` es opcional: el nuevo flow no lo pregunta, MP
+  // deja elegir tarjeta o dinero en cuenta adentro del checkout. Si no viene,
+  // default `mp_balance` (equivalente a "el usuario pagará con su cuenta MP").
+  if (!dni || !fecha_nacimiento || !ciudad || !calle || !numero) {
     return jsonWithCors(
       { success: false, error: 'missing_fields', message: 'Faltan campos obligatorios.' },
       { status: 400, origin }
@@ -124,9 +130,20 @@ export async function PATCH(
       { status: 400, origin }
     )
   }
-  if (!['tarjeta', 'mp_balance'].includes(medio_pago)) {
+  const medioPagoEfectivo = medio_pago && ['tarjeta', 'mp_balance'].includes(medio_pago)
+    ? medio_pago
+    : 'mp_balance'
+  // Email principal del usuario en Nexo. Precedencia:
+  //   1. `email` explícito del body (nuevo campo del flow simplificado).
+  //   2. `mp_email` (mismo email, viaja duplicado por compat con el flow viejo).
+  //   3. `lead.email` que ya existía en el lead (flow viejo, POST inicial con email).
+  // Sin ninguno de los tres → error: no podemos crear la sub sin `payer_email`
+  // ni activar la cuenta en el portal sin email de contacto.
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const emailProvided = (email ?? mp_email ?? '').trim().toLowerCase()
+  if (emailProvided && !EMAIL_RE.test(emailProvided)) {
     return jsonWithCors(
-      { success: false, error: 'invalid_medio_pago' },
+      { success: false, error: 'invalid_email', message: 'Email inválido.' },
       { status: 400, origin }
     )
   }
@@ -182,11 +199,21 @@ export async function PATCH(
     )
   }
 
+  // El email definitivo del lead: el nuevo se aplica, si no había ninguno
+  // conservamos lo que ya estaba (null si vino todo del flow nuevo).
+  const emailFinal = emailProvided || lead.email || null
+  if (!emailFinal) {
+    return jsonWithCors(
+      { success: false, error: 'missing_email', message: 'Necesitamos tu email para generar la suscripción.' },
+      { status: 400, origin }
+    )
+  }
+
   // 2. La identidad (DNI/email) la reservan SOLO los afiliados pagados.
   //    Mientras no haya pago, se pueden generar todos los leads que hagan falta.
   const identityConflict = await findPaidIdentityConflict(supabase, {
     dni: dni.trim(),
-    email: lead.email,
+    email: emailFinal,
   })
   if (identityConflict) {
     return jsonWithCors(
@@ -243,7 +270,9 @@ export async function PATCH(
   //
   //    external_reference = leadId: el affiliate NO existe todavía — lo crea el
   //    webhook de MP recién cuando el pago queda aprobado.
-  const payerEmail = medio_pago === 'mp_balance' && mp_email ? mp_email.trim() : lead.email
+  // El payer_email de la sub es SIEMPRE el email que el usuario declaró para
+  // Mercado Pago — el mismo que va a usar Nexo para credenciales y contacto.
+  const payerEmail = emailFinal
   const planPrice = plan?.price ?? 19500
   const planName = plan?.name ?? 'Previnca Nexo'
 
@@ -301,8 +330,12 @@ export async function PATCH(
       fecha_nacimiento,
       ciudad,
       domicilio,
-      medio_pago,
-      mp_email: mp_email?.trim() || null,
+      medio_pago: medioPagoEfectivo,
+      // El email declarado ahora es la fuente de verdad de contacto y de pago;
+      // se persiste en ambas columnas para no romper compat con otros lugares
+      // del código que hoy leen `mp_email` como el "email del pagador".
+      email: emailFinal,
+      mp_email: emailFinal,
       plan_id: plan?.id ?? null,
       checkout_url: checkoutUrl,
       mp_subscription_id: mpSubId,
@@ -337,7 +370,7 @@ export async function PATCH(
     failStep = 'capi'
     if (event_id_complete_registration || event_id_initiate_checkout) {
       const userData = {
-        email: lead.email,
+        email: emailFinal,
         phone: lead.whatsapp,
         firstName: lead.nombre,
         lastName: lead.apellido,
