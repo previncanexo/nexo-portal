@@ -12,8 +12,23 @@ const ALLOWED_ORIGINS = [
   'http://localhost:4173',
 ]
 
+// Cada preview de Vercel para la landing staging vive en un dominio distinto
+// (hash del deploy + slug del team) — sin este comodín habría que agregarlos
+// a mano en cada deploy. Solo se acepta el patrón de landing staging, no
+// cualquier vercel.app.
+const ALLOWED_ORIGIN_PATTERNS = [
+  /^https:\/\/nexo-landing-staging-[a-z0-9]+-previncanexos-projects\.vercel\.app$/,
+  /^https:\/\/nexo-landing-staging-git-[a-z0-9-]+-previncanexos-projects\.vercel\.app$/,
+]
+
+function isAllowed(origin: string | null): boolean {
+  if (!origin) return false
+  if (ALLOWED_ORIGINS.includes(origin)) return true
+  return ALLOWED_ORIGIN_PATTERNS.some((rx) => rx.test(origin))
+}
+
 export function corsHeaders(origin: string | null): Record<string, string> {
-  const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
+  const allowed = isAllowed(origin) ? (origin as string) : ALLOWED_ORIGINS[0]
   return {
     'Access-Control-Allow-Origin': allowed,
     'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
