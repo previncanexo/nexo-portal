@@ -10,6 +10,10 @@ export const dynamic = 'force-dynamic'
 
 const MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
+/** Reporte de DataStudio (Looker Studio) con las metricas del negocio. */
+const DATASTUDIO_URL =
+  'https://datastudio.google.com/u/0/reporting/2f1a845b-4c66-4471-a958-fc4f62b08e15/page/gQD0F'
+
 interface Bucket { label: string; value: number }
 
 /** Agrega registros con `created_at`/`paid_at` en buckets según el rango:
@@ -159,9 +163,35 @@ export default async function AdminDashboardPage({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-      <div className="section-heading">
-        <h1>Dashboard</h1>
-        <p>Resumen general de afiliados, ingresos y leads del periodo seleccionado{periodLabel(preset) ? ` (${periodLabel(preset)})` : ''}.</p>
+      <div
+        className="section-heading"
+        style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}
+      >
+        <div>
+          <h1>Dashboard</h1>
+          <p>Resumen general de afiliados, ingresos y leads del periodo seleccionado{periodLabel(preset) ? ` (${periodLabel(preset)})` : ''}.</p>
+        </div>
+        <a
+          href={DATASTUDIO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-primary-admin"
+          style={{
+            padding: '10px 20px',
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}
+        >
+          Ir a DataStudio
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M7 17 17 7" />
+            <path d="M9 7h8v8" />
+          </svg>
+        </a>
       </div>
 
       <Suspense fallback={<div style={{ height: 48 }} />}>
