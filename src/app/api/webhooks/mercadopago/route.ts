@@ -10,6 +10,7 @@ import { sendGa4Events } from '@/lib/ga4-mp'
 import { addOneMonth, todayAR } from '@/lib/dateUtils'
 import { findPaidIdentityConflict } from '@/lib/affiliateIdentity'
 import { materializeAffiliateFromLead, resolveAffiliateIdFromReference, findCompletedLeadId } from '@/lib/leadConversion'
+import { buildLeadIntakeBody, sendLeadIntake, getSfLeadIdForLead } from '@/lib/salesforce/leads'
 
 // -------------------------------------------------------------------------
 // HELPERS — matching por email (en vez de external_reference)
@@ -243,6 +244,52 @@ export async function POST(req: NextRequest) {
       const preApproval = await preApprovalClient.get({ id: body.data.id })
       const subId = String(body.data.id)
       const pa = preApproval as unknown as MPPreApprovalExt
+
+      // Staging proxy: cuando el portal de producción recibe un webhook cuyo
+      // external_reference termina en `-test`, es un pago hecho desde staging
+      // usando credenciales productivas (el único modo de recibir webhooks
+      // reales de MP para Suscripciones — los pagos de test no notifican).
+      // Reenviamos el POST original al webhook de staging con firma
+      // re-generada, sin materializar afiliado en la DB de producción.
+      const stagingUrl = process.env.STAGING_WEBHOOK_URL
+      const stagingSecret = process.env.STAGING_WEBHOOK_SECRET
+      if (
+        stagingUrl && stagingSecret &&
+        typeof pa.external_reference === 'string' &&
+        pa.external_reference.endsWith('-test')
+      ) {
+        try {
+          const ts = Math.floor(Date.now() / 1000)
+          const reqId = `staging-fwd-${randomBytes(8).toString('hex')}`
+          const message = `id:${subId};request-id:${reqId};ts:${ts};`
+          const sig = createHmac('sha256', stagingSecret).update(message).digest('hex')
+          const fwdRes = await fetch(stagingUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-signature': `ts=${ts},v1=${sig}`,
+              'x-request-id': reqId,
+            },
+            body: JSON.stringify(body),
+          })
+          console.info('[mp-webhook] forwarded to staging', {
+            subId,
+            external_reference: pa.external_reference,
+            status: fwdRes.status,
+          })
+        } catch (err) {
+          console.error('[mp-webhook] staging forward error', err)
+        }
+        return NextResponse.json({ ok: true, forwarded: 'staging' })
+      }
+
+      // Si el evento no requirió forward (o STAGING_WEBHOOK_URL no está seteado
+      // y estamos EN staging procesando localmente), normalizamos el sufijo
+      // `-test` del external_reference para que el resto del handler pueda
+      // buscar el lead/affiliate por su UUID limpio.
+      if (typeof pa.external_reference === 'string' && pa.external_reference.endsWith('-test')) {
+        pa.external_reference = pa.external_reference.slice(0, -'-test'.length)
+      }
 
       if (preApproval.status === 'authorized') {
         // Match #1: affiliate YA activo con este mp_subscription_id (re-notificación
@@ -554,6 +601,43 @@ export async function POST(req: NextRequest) {
             }).catch(() => {})
           }
 
+          // Salesforce /leads — envío final del step "authorized" (pago
+          // confirmado). Reusa el sf_lead_id de envíos previos para que SF
+          // haga merge sobre el mismo Prospecto. Después de esto, el
+          // Prospecto queda `readyToSell: true` — el /sales (I-2) es el
+          // siguiente paso, bloqueado hoy por el catálogo offerCode.
+          after(async () => {
+            try {
+              const { data: linkedLead } = await supabase
+                .from('leads')
+                .select('id')
+                .eq('affiliate_id', affiliateId)
+                .maybeSingle()
+              const linkedLeadId = linkedLead?.id ?? null
+              const sfLeadId = linkedLeadId ? await getSfLeadIdForLead(linkedLeadId) : null
+              const payload = buildLeadIntakeBody({
+                sfLeadId,
+                firstName: affiliate.nombre,
+                lastName: affiliate.apellido ?? '',
+                email: affiliate.email,
+                mobilePhone: affiliate.whatsapp ?? null,
+                documentNumber: affiliate.dni,
+                birthdate: affiliate.fecha_nacimiento ?? null,
+                address: {
+                  street: affiliate.domicilio ?? null,
+                  city: affiliate.ciudad ?? null,
+                },
+              })
+              await sendLeadIntake({
+                leadId: linkedLeadId,
+                affiliateId,
+                payload,
+              })
+            } catch (err) {
+              console.error('[sf/leads authorized] error', err)
+            }
+          })
+
           revalidatePath('/admin')
           revalidatePath('/admin/afiliados')
           revalidatePath(`/admin/afiliados/${affiliateId}`)
@@ -635,6 +719,10 @@ export async function POST(req: NextRequest) {
             } catch (planErr) {
               console.error('[mp-webhook] payment: could not fetch plan for external_reference:', planErr)
             }
+          }
+          // Normalizar sufijo `-test` del proxy staging (idem branch preapproval)
+          if (paymentAffiliateId && paymentAffiliateId.endsWith('-test')) {
+            paymentAffiliateId = paymentAffiliateId.slice(0, -'-test'.length)
           }
           if (paymentAffiliateId) {
             ppa.external_reference = paymentAffiliateId
@@ -889,6 +977,10 @@ export async function POST(req: NextRequest) {
               const planClient = new PreApprovalPlan(mpClient)
               const mpPlan = await planClient.get({ preApprovalPlanId: String(preExt.preapproval_plan_id) })
               rejAffiliateId = (mpPlan as unknown as MPPlanExt).external_reference || null
+            }
+            // Normalizar sufijo `-test` del proxy staging
+            if (rejAffiliateId && rejAffiliateId.endsWith('-test')) {
+              rejAffiliateId = rejAffiliateId.slice(0, -'-test'.length)
             }
           } catch (rejErr) {
             console.error('[mp-webhook] rejected: no se pudo resolver el afiliado:', rejErr)

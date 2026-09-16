@@ -11,11 +11,13 @@
  * Returns: { success: true, leadId, affiliateId: null, checkoutUrl }
  */
 
+import { after } from 'next/server'
 import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { corsHeaders, jsonWithCors } from '@/lib/cors'
 import { sendMetaCapiEvents, extractFbCookies, extractClientIp } from '@/lib/meta-capi'
 import { findPaidIdentityConflict } from '@/lib/affiliateIdentity'
+import { buildLeadIntakeBody, sendLeadIntake, getSfLeadIdForLead, type SalesChannel, type DocumentType } from '@/lib/salesforce/leads'
 
 interface FinalizeLeadInput {
   dni?: string
@@ -24,8 +26,18 @@ interface FinalizeLeadInput {
   calle?: string
   numero?: string
   depto?: string
+  /** Landing v2 ya no lo manda (el usuario elige en el checkout MP) — opcional */
   medio_pago?: string
+  /** Email principal del afiliado. Landing v2 lo manda recién en el PATCH
+   *  (step 5) porque el POST inicial lo omite. Si el lead nació sin email
+   *  (nuevo flow), este campo es el que lo persiste. */
+  email?: string
+  /** Email de la cuenta MP para la suscripción. En el nuevo flow del landing
+   *  es el mismo que `email` (el usuario declara una sola dirección). */
   mp_email?: string
+  /** Plan seleccionado por slug ('nexo-1', 'nexo-2', 'nexo-3') — landing v2. */
+  plan_slug?: string
+  /** Plan por UUID — compat con clientes viejos. */
   plan_id?: string
   /** ID compartido con el pixel para dedup CAPI CompleteRegistration */
   event_id_complete_registration?: string
@@ -47,6 +59,13 @@ interface FinalizeLeadInput {
   gclid?: string
   referer?: string
   landing_url?: string
+  // Constantes del canal para SF (opcionales — hay defaults en SF_NEXO_DEFAULTS)
+  sales_channel?: string
+  document_type?: string
+  country?: string
+  state?: string
+  declared_members_count?: number
+  senior_members_count?: number
 }
 
 export async function OPTIONS(req: Request) {
@@ -97,7 +116,7 @@ export async function PATCH(
     return jsonWithCors({ success: false, error: 'Body inválido' }, { status: 400, origin })
   }
 
-  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, mp_email, plan_id, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url } = body
+  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, email: bodyEmail, mp_email, plan_id, plan_slug, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url } = body
 
   // Identificadores del browser para CAPI Purchase / GA4 purchase server-side
   // (en el webhook MP no podremos leerlos — se persisten en el affiliate).
@@ -105,8 +124,10 @@ export async function PATCH(
   const clientIp = extractClientIp(req)
   const clientUserAgent = req.headers.get('user-agent') ?? undefined
 
-  // Validaciones
-  if (!dni || !fecha_nacimiento || !ciudad || !calle || !numero || !medio_pago) {
+  // Validaciones. El landing v2 ya no pregunta medio_pago (el usuario elige
+  // dentro del checkout MP), así que dejamos de exigirlo. Si algún cliente
+  // viejo lo manda igual, validamos el enum.
+  if (!dni || !fecha_nacimiento || !ciudad || !calle || !numero) {
     return jsonWithCors(
       { success: false, error: 'missing_fields', message: 'Faltan campos obligatorios.' },
       { status: 400, origin }
@@ -118,7 +139,7 @@ export async function PATCH(
       { status: 400, origin }
     )
   }
-  if (!['tarjeta', 'mp_balance'].includes(medio_pago)) {
+  if (medio_pago && !['tarjeta', 'mp_balance'].includes(medio_pago)) {
     return jsonWithCors(
       { success: false, error: 'invalid_medio_pago' },
       { status: 400, origin }
@@ -176,11 +197,16 @@ export async function PATCH(
     )
   }
 
+  // Resolver email definitivo: el landing v2 puede mandar el email recién en
+  // este PATCH (si el lead nació sin email en step 2). Usamos el body primero
+  // (última fuente), y como fallback lo que ya estaba en el lead.
+  const finalEmail = (bodyEmail?.trim().toLowerCase()) || lead.email || null
+
   // 2. La identidad (DNI/email) la reservan SOLO los afiliados pagados.
   //    Mientras no haya pago, se pueden generar todos los leads que hagan falta.
   const identityConflict = await findPaidIdentityConflict(supabase, {
     dni: dni.trim(),
-    email: lead.email,
+    email: finalEmail ?? undefined,
   })
   if (identityConflict) {
     return jsonWithCors(
@@ -195,11 +221,14 @@ export async function PATCH(
     )
   }
 
-  // 3. Plan (seleccionado o el más barato por default)
+  // 3. Plan: aceptamos `plan_slug` (landing v2) o `plan_id` (clientes viejos).
+  //    Si no viene ninguno, cae al más barato como default histórico.
   const planQuery = supabase.from('plans').select('id, name, price')
   const { data: plan } = plan_id
     ? await planQuery.eq('id', plan_id).maybeSingle()
-    : await planQuery.order('price', { ascending: true }).limit(1).maybeSingle()
+    : plan_slug
+      ? await planQuery.eq('slug', plan_slug).maybeSingle()
+      : await planQuery.order('price', { ascending: true }).limit(1).maybeSingle()
 
   // 4. Armar domicilio
   const domicilio = [
@@ -217,7 +246,16 @@ export async function PATCH(
   //
   //    external_reference = leadId: el affiliate NO existe todavía — lo crea el
   //    webhook de MP recién cuando el pago queda aprobado.
-  const payerEmail = medio_pago === 'mp_balance' && mp_email ? mp_email.trim() : lead.email
+  // El payer_email es el email de la cuenta MP. Priorizamos `mp_email` del
+  // body (landing v2 lo manda siempre en step 5), después `finalEmail` como
+  // fallback. Nunca debería quedar vacío después de la validación previa.
+  const payerEmail = (mp_email?.trim()) || finalEmail || ''
+  if (!payerEmail) {
+    return jsonWithCors(
+      { success: false, error: 'missing_email', message: 'Falta el email de la cuenta de MP.' },
+      { status: 400, origin }
+    )
+  }
   const planPrice = plan?.price ?? 19500
   const planName = plan?.name ?? 'Previnca Nexo'
 
@@ -229,12 +267,28 @@ export async function PATCH(
 
     const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
     const preApprovalClient = new PreApproval(mpClient)
+    // Nota crítica del soporte MP (2026-09-16): para Suscripciones, la
+    // URL del webhook configurada en el panel de la app NO dispara. Hay que
+    // mandar `notification_url` en el body al crear cada preapproval. Sin
+    // esto, MP nunca envía el POST /api/webhooks/mercadopago y el affiliate
+    // nunca se materializa aunque el pago se apruebe.
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://nexo.portal.previncasalud.com.ar'
+    const notificationUrl = `${appUrl}/api/webhooks/mercadopago`
+    // Cuando staging usa credenciales de producción de MP para poder recibir
+    // webhooks reales (MP no notifica pagos hechos con credenciales de test),
+    // marcamos el external_reference con sufijo `-test` para que el portal de
+    // producción lo detecte al recibir la notificación y la forwardee a
+    // staging en vez de materializar en su propia DB.
+    const isStagingForwarding = process.env.MP_STAGING_FORWARDING === 'true'
+    const externalReference = isStagingForwarding ? `${leadId}-test` : leadId
+    // `notification_url` no está tipado en el SDK pero MP lo acepta — cast.
     const sub = await preApprovalClient.create({
       body: {
         reason: planName,
-        external_reference: leadId,
+        external_reference: externalReference,
         payer_email: payerEmail,
-        back_url: 'https://nexo.portal.previncasalud.com.ar/registro/exito',
+        back_url: `${appUrl}/registro/exito`,
+        notification_url: notificationUrl,
         status: 'pending',
         auto_recurring: {
           frequency: 1,
@@ -242,7 +296,7 @@ export async function PATCH(
           transaction_amount: planPrice,
           currency_id: 'ARS',
         },
-      },
+      } as unknown as Parameters<typeof preApprovalClient.create>[0]['body'],
     })
     const subExt = sub as unknown as { id?: string; init_point?: string }
     // MP devuelve el init_point con `activation=true`, un flow que EXIGE que
@@ -275,7 +329,13 @@ export async function PATCH(
       fecha_nacimiento,
       ciudad,
       domicilio,
-      medio_pago,
+      // medio_pago puede no venir en el landing v2 (el user elige en el
+      // checkout MP). Guardamos null en ese caso.
+      medio_pago: medio_pago ?? null,
+      // Email: si el lead nació sin email (step 2 landing v2), lo persistimos
+      // ahora desde el body. Si ya lo tenía, dejamos el valor existente en la
+      // DB (finalEmail resuelve a lead.email en ese caso).
+      email: finalEmail,
       mp_email: mp_email?.trim() || null,
       plan_id: plan?.id ?? null,
       checkout_url: checkoutUrl,
@@ -311,7 +371,7 @@ export async function PATCH(
     failStep = 'capi'
     if (event_id_complete_registration || event_id_initiate_checkout) {
       const userData = {
-        email: lead.email,
+        email: finalEmail ?? undefined,
         phone: lead.whatsapp,
         firstName: lead.nombre,
         lastName: lead.apellido,
@@ -354,6 +414,38 @@ export async function PATCH(
       }
       sendMetaCapiEvents(events).catch(() => {})
     }
+
+    // Salesforce /leads — envío del step 3+4 (documento + domicilio). Reusa el
+    // sf_lead_id si ya lo guardamos en un envío previo (step 2) para que SF
+    // haga merge sobre el mismo Prospecto en vez de crear otro.
+    after(async () => {
+      try {
+        const sfLeadId = await getSfLeadIdForLead(leadId)
+        const payload = buildLeadIntakeBody({
+          sfLeadId,
+          firstName: lead.nombre,
+          lastName: lead.apellido ?? '',
+          email: finalEmail,
+          mobilePhone: lead.whatsapp ?? null,
+          documentNumber: dni.trim(),
+          birthdate: fecha_nacimiento,
+          address: {
+            street: domicilio,
+            city: ciudad,
+            apartment: depto?.trim() || null,
+          },
+          salesChannel: body.sales_channel as SalesChannel | undefined,
+          documentType: body.document_type as DocumentType | undefined,
+          // state/country deshabilitados hasta que Nespon confirme el API
+          // name exacto del picklist SF ("Argentina" no es válido).
+          declaredMembersCount: body.declared_members_count,
+          seniorMembersCount: body.senior_members_count,
+        })
+        await sendLeadIntake({ leadId, payload })
+      } catch (err) {
+        console.error('[sf/leads step3+4] error', err)
+      }
+    })
 
     return jsonWithCors(
       { success: true, leadId, affiliateId: null, checkoutUrl },

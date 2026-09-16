@@ -24,6 +24,13 @@ export const env = {
   resendApiKey: optionalEnv('RESEND_API_KEY'),
   resendFrom: optionalEnv('RESEND_FROM', 'Previnca Nexo <onboarding@resend.dev>'),
 
+  // Salesforce (integración Nespon — client_credentials sobre External Client App
+  // propia del canal digital). Sin estas vars el envío se omite (log warning).
+  sfInstanceUrl: optionalEnv('SF_INSTANCE_URL'),
+  sfTokenUrl: optionalEnv('SF_TOKEN_URL'),
+  sfClientId: optionalEnv('SF_CLIENT_ID'),
+  sfClientSecret: optionalEnv('SF_CLIENT_SECRET'),
+
   // App
   appUrl: optionalEnv('NEXT_PUBLIC_APP_URL', 'https://nexo.portal.previncasalud.com.ar'),
   adminEmails: optionalEnv('ADMIN_EMAILS').split(',').map(e => e.trim()).filter(Boolean),

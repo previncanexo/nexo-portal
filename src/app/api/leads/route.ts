@@ -36,6 +36,13 @@ interface CreateLeadInput {
   event_id?: string
   /** URL donde ocurrió el evento (window.location.href del browser) */
   event_source_url?: string
+  // Constantes del canal (opcionales — server tiene defaults en SF_NEXO_DEFAULTS)
+  sales_channel?: string
+  document_type?: string
+  country?: string
+  state?: string
+  declared_members_count?: number
+  senior_members_count?: number
 }
 
 export async function OPTIONS(req: Request) {
@@ -54,8 +61,11 @@ export async function POST(req: Request) {
 
   const { para_quien, nombre, apellido, email, whatsapp, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url, event_id, event_source_url } = body
 
-  // Validaciones de campos obligatorios
-  if (!para_quien || !nombre || !apellido || !email || !whatsapp) {
+  // Validaciones de campos obligatorios. El email dejó de pedirse en el step 2
+  // del landing v2 — el usuario lo carga recién en el step 5 junto al email de
+  // MP, y llega al backend en el PATCH. Acá aceptamos el lead sin email y lo
+  // guardamos como null hasta que el PATCH lo complete.
+  if (!para_quien || !nombre || !apellido || !whatsapp) {
     return jsonWithCors(
       { success: false, error: 'missing_fields', message: 'Faltan campos obligatorios.' },
       { status: 400, origin }
@@ -67,7 +77,8 @@ export async function POST(req: Request) {
       { status: 400, origin }
     )
   }
-  if (!EMAIL_RE.test(email.trim())) {
+  // Si el landing manda email (compat con clientes viejos), validamos formato.
+  if (email && !EMAIL_RE.test(email.trim())) {
     return jsonWithCors(
       { success: false, error: 'invalid_email', message: 'Email inválido.' },
       { status: 400, origin }
@@ -81,17 +92,19 @@ export async function POST(req: Request) {
   }
 
   const supabase = createAdminClient()
-  const emailLower = email.trim().toLowerCase()
+  const emailLower = email ? email.trim().toLowerCase() : null
 
   // Bloquear solo si el email ya pertenece a un affiliate PAGADO (active/suspended).
   // Los 'pending' no reservan identidad: pueden existir N leads con los mismos datos.
-  const conflict = await findPaidIdentityConflict(supabase, { email: emailLower })
-
-  if (conflict === 'email') {
-    return jsonWithCors(
-      { success: false, error: 'email_taken', message: 'Ya existe una cuenta activa con ese email. Iniciá sesión en el portal.' },
-      { status: 409, origin }
-    )
+  // Skip si el lead no trae email todavía (step 2 del landing v2).
+  if (emailLower) {
+    const conflict = await findPaidIdentityConflict(supabase, { email: emailLower })
+    if (conflict === 'email') {
+      return jsonWithCors(
+        { success: false, error: 'email_taken', message: 'Ya existe una cuenta activa con ese email. Iniciá sesión en el portal.' },
+        { status: 409, origin }
+      )
+    }
   }
 
   // Insert lead
@@ -125,6 +138,13 @@ export async function POST(req: Request) {
     )
   }
 
+  // Salesforce /leads — NO se envía en step 2. Aunque el contrato-YAML de SF
+  // dice `required: [messageId, sentAt, lastName]`, la implementación real de
+  // la org rechaza con 400 si el cuerpo no trae al menos una "clave de
+  // reconocimiento": `leadId` o `documentType + documentNumber`. En step 2
+  // todavía no tenemos el DNI (se pide en step 3), así que el primer envío
+  // arranca en el PATCH cuando ya está el documento.
+
   // CAPI: Meta Conversions API — fire-and-forget para no demorar la respuesta
   if (event_id) {
     const fb = extractFbCookies(req)
@@ -133,7 +153,7 @@ export async function POST(req: Request) {
       event_id,
       event_source_url,
       user_data: {
-        email: emailLower,
+        email: emailLower ?? undefined,
         phone: whatsapp.trim(),
         firstName: nombre.trim(),
         lastName: apellido.trim(),

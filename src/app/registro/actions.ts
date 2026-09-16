@@ -148,12 +148,16 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
   try {
     const mpClient = new MercadoPagoConfig({ accessToken: mpToken })
     const preApprovalClient = new PreApproval(mpClient)
+    // `notification_url` es requerido para que MP dispare el webhook — la
+    // config del panel no aplica para Suscripciones (confirmado por soporte MP
+    // 2026-09-16).
     const sub = await preApprovalClient.create({
       body: {
         reason: plan?.name ?? 'Previnca Nexo',
         external_reference: lead.id,
         payer_email: email,
         back_url: `${appUrl}/registro/exito`,
+        notification_url: `${appUrl}/api/webhooks/mercadopago`,
         status: 'pending',
         auto_recurring: {
           frequency: 1,
@@ -161,7 +165,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
           transaction_amount: plan?.price ?? 19500,
           currency_id: 'ARS',
         },
-      },
+      } as unknown as Parameters<typeof preApprovalClient.create>[0]['body'],
     })
     const subExt = sub as unknown as { id?: string; init_point?: string }
     const checkoutUrl = subExt.init_point
