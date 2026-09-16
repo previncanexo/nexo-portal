@@ -11,6 +11,7 @@ import { addOneMonth, todayAR } from '@/lib/dateUtils'
 import { findPaidIdentityConflict } from '@/lib/affiliateIdentity'
 import { materializeAffiliateFromLead, resolveAffiliateIdFromReference, findCompletedLeadId } from '@/lib/leadConversion'
 import { buildLeadIntakeBody, sendLeadIntake, getSfLeadIdForLead } from '@/lib/salesforce/leads'
+import { buildSaleIntakeBody, sendSaleIntake, resolveOfferCode } from '@/lib/salesforce/sales'
 
 // -------------------------------------------------------------------------
 // HELPERS — matching por email (en vez de external_reference)
@@ -601,11 +602,12 @@ export async function POST(req: NextRequest) {
             }).catch(() => {})
           }
 
-          // Salesforce /leads — envío final del step "authorized" (pago
-          // confirmado). Reusa el sf_lead_id de envíos previos para que SF
-          // haga merge sobre el mismo Prospecto. Después de esto, el
-          // Prospecto queda `readyToSell: true` — el /sales (I-2) es el
-          // siguiente paso, bloqueado hoy por el catálogo offerCode.
+          // Salesforce /leads + /sales — envíos finales del step "authorized"
+          // (pago confirmado). Primero enriquecemos el Prospecto con /leads
+          // reusando `sf_lead_id`, y después materializamos la venta con
+          // /sales (I-2). SF devuelve `accountId` que persistimos en el
+          // affiliate. Placeholders documentados en `salesforce/sales.ts`
+          // (offerCode = plan.slug hasta que Nespon entregue el catálogo).
           after(async () => {
             try {
               const { data: linkedLead } = await supabase
@@ -615,7 +617,8 @@ export async function POST(req: NextRequest) {
                 .maybeSingle()
               const linkedLeadId = linkedLead?.id ?? null
               const sfLeadId = linkedLeadId ? await getSfLeadIdForLead(linkedLeadId) : null
-              const payload = buildLeadIntakeBody({
+
+              const leadPayload = buildLeadIntakeBody({
                 sfLeadId,
                 firstName: affiliate.nombre,
                 lastName: affiliate.apellido ?? '',
@@ -628,13 +631,71 @@ export async function POST(req: NextRequest) {
                   city: affiliate.ciudad ?? null,
                 },
               })
-              await sendLeadIntake({
+              const leadResult = await sendLeadIntake({
                 leadId: linkedLeadId,
                 affiliateId,
-                payload,
+                payload: leadPayload,
               })
+
+              // /sales: usa el `sf_lead_id` que acabamos de obtener/reusar.
+              // Datos de tarjeta del pago inicial (last_four + expiración)
+              // para armar `accountNumber` y `cardExpiration*` — MP los expone
+              // en el /v1/payments detail. Best-effort: si no los conseguimos,
+              // SF acepta el payload sin esos campos.
+              let cardInfo: { firstSixDigits?: string | null; lastFourDigits?: string | null; expirationMonth?: string | null; expirationYear?: string | null } = {}
+              try {
+                const paymentsRes = await fetch(
+                  `https://api.mercadopago.com/authorized_payments/search?preapproval_id=${subId}`,
+                  { headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` } }
+                )
+                const paymentsData = await paymentsRes.json()
+                const paymentId = paymentsData?.results?.[0]?.payment?.id
+                if (paymentId) {
+                  const payRes = await fetch(
+                    `https://api.mercadopago.com/v1/payments/${paymentId}`,
+                    { headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` } }
+                  )
+                  const pay = await payRes.json() as { card?: { first_six_digits?: string; last_four_digits?: string; expiration_month?: number; expiration_year?: number } }
+                  if (pay?.card) {
+                    cardInfo = {
+                      firstSixDigits: pay.card.first_six_digits ?? null,
+                      lastFourDigits: pay.card.last_four_digits ?? null,
+                      expirationMonth: pay.card.expiration_month ? String(pay.card.expiration_month).padStart(2, '0') : null,
+                      expirationYear: pay.card.expiration_year ? String(pay.card.expiration_year) : null,
+                    }
+                  }
+                }
+              } catch (payErr) {
+                console.error('[sf/sales] payment fetch error', payErr)
+              }
+
+              const planForSale = Array.isArray(affiliate.plan) ? affiliate.plan[0] : affiliate.plan
+              const { data: planRow } = await supabase
+                .from('plans')
+                .select('slug')
+                .eq('name', planForSale?.name ?? '')
+                .maybeSingle()
+              const offerCode = resolveOfferCode(planRow?.slug ?? null)
+
+              const salePayload = buildSaleIntakeBody({
+                sfLeadId: leadResult.sfLeadId ?? sfLeadId ?? null,
+                effectiveDate: new Date().toISOString().slice(0, 10),
+                policyholder: {
+                  documentType: 'DNI',
+                  documentNumber: affiliate.dni,
+                  firstName: affiliate.nombre,
+                  lastName: affiliate.apellido ?? affiliate.nombre,
+                  birthdate: affiliate.fecha_nacimiento ?? null,
+                  email: affiliate.email,
+                  mobilePhone: affiliate.whatsapp ?? null,
+                },
+                offerCode,
+                card: cardInfo,
+                method: 'CreditCard',
+              })
+              await sendSaleIntake({ affiliateId, payload: salePayload })
             } catch (err) {
-              console.error('[sf/leads authorized] error', err)
+              console.error('[sf/leads+sales authorized] error', err)
             }
           })
 
