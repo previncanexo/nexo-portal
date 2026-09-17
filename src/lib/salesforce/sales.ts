@@ -93,18 +93,22 @@ export interface SaleIntakeAck {
 // -------------------------------------------------------------------------
 
 /**
- * Mapping de slugs de plan Nexo → offerCode SF. Hasta que Nespon entregue
- * el catálogo, usamos el propio slug como código. Si SF rechaza con
- * `INVALID_OFFER_CODE` u similar, hay que reemplazar los valores acá.
+ * Mapping de slugs de plan Nexo → offerCode SF (catálogo entregado por
+ * Nespon 2026-09-16). Los códigos son los `ProductCode` del objeto
+ * `Product2` en la org de SF.
+ *
+ * `XTEFO-ONESHOT-SF` y `XTEFO-SUSCRIPCION-SF` también existen en el
+ * catálogo pero son categorías / tipos de venta (no planes por sí solos),
+ * no las usamos en el flow del canal digital.
  */
 const PLAN_SLUG_TO_OFFER_CODE: Record<string, string> = {
-  'nexo-1': 'nexo-1',
-  'nexo-2': 'nexo-2',
-  'nexo-3': 'nexo-3',
+  'nexo-1': 'XTEFO-NEXO1-SF',
+  'nexo-2': 'XTEFO-NEXO2-SF',
+  'nexo-3': 'XTEFO-NEXO3-SF',
 }
 
 export function resolveOfferCode(planSlug: string | null | undefined): string {
-  if (!planSlug) return 'nexo-1'
+  if (!planSlug) return 'XTEFO-NEXO1-SF'
   return PLAN_SLUG_TO_OFFER_CODE[planSlug] ?? planSlug
 }
 

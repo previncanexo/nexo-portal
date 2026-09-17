@@ -102,14 +102,13 @@ export function buildLeadIntakeBody(src: LeadIntakeSource): LeadIntakePayload {
   if (src.address?.street) address.street = src.address.street
   if (src.address?.city) address.city = src.address.city
   if (src.address?.apartment) address.apartment = src.address.apartment
-  // `state` y `country` NO se aplican por default. La org UAT rechaza con
-  // `FIELD_INTEGRITY_EXCEPTION A country/territory must be specified before
-  // specifying a state value` cuando mandamos `country="Argentina"` — el
-  // picklist SF no acepta ese valor literal. Hasta que Nespon confirme el
-  // API name exacto del picklist, mandamos solo lo que el caller pase
-  // explícitamente (hoy: nada — el landing no los manda tampoco).
-  if (src.state) address.state = src.state
-  if (src.country) address.country = src.country
+  // `state` y `country`: SF acepta código o texto (Nespon 2026-09-16). Solo
+  // los mandamos si hay algún campo del address — evita "state suelto" que
+  // en la org UAT rompía por `FIELD_INTEGRITY_EXCEPTION`.
+  if (Object.keys(address).length > 0) {
+    address.state = src.state ?? SF_NEXO_DEFAULTS.state
+    address.country = src.country ?? SF_NEXO_DEFAULTS.country
+  }
 
   const body: LeadIntakePayload = {
     messageId: randomUUID(),
