@@ -17,6 +17,7 @@ import { randomUUID } from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sfPost, isSfConfigured } from './client'
 import { SF_NEXO_DEFAULTS } from './defaults'
+import { sanitizeEmail, sanitizePhone, sanitizeText, sanitizeDni, sanitizeDate } from './sanitize'
 
 // -------------------------------------------------------------------------
 // TYPES — matchean el contrato del YAML (Lead-Intake-API.yaml)
@@ -104,26 +105,34 @@ export function buildLeadIntakeBody(src: LeadIntakeSource): LeadIntakePayload {
   // specified before specifying a state value`. Por eso construimos el
   // address con country y state al principio.
   const address: SfAddress = {}
-  const hasAnyAddressField = Boolean(src.address?.street || src.address?.city || src.address?.apartment)
+  const cleanStreet = sanitizeText(src.address?.street, 255)
+  const cleanCity = sanitizeText(src.address?.city, 40)
+  const cleanApartment = sanitizeText(src.address?.apartment, 10)
+  const hasAnyAddressField = Boolean(cleanStreet || cleanCity || cleanApartment)
   if (hasAnyAddressField) {
-    address.country = src.country ?? SF_NEXO_DEFAULTS.country
-    address.state = src.state ?? SF_NEXO_DEFAULTS.state
+    address.country = sanitizeText(src.country, 80) ?? SF_NEXO_DEFAULTS.country
+    address.state = sanitizeText(src.state, 80) ?? SF_NEXO_DEFAULTS.state
   }
-  if (src.address?.street) address.street = src.address.street
-  if (src.address?.city) address.city = src.address.city
-  if (src.address?.apartment) address.apartment = src.address.apartment
+  if (cleanStreet) address.street = cleanStreet
+  if (cleanCity) address.city = cleanCity
+  if (cleanApartment) address.apartment = cleanApartment
 
+  const cleanLastName = sanitizeText(src.lastName, 80) ?? src.lastName
   const body: LeadIntakePayload = {
     messageId: randomUUID(),
     sentAt: new Date().toISOString(),
-    lastName: src.lastName,
+    lastName: cleanLastName,
   }
 
   if (src.sfLeadId) body.leadId = src.sfLeadId
-  if (src.firstName) body.firstName = src.firstName
-  if (src.email) body.email = src.email
-  if (src.mobilePhone) body.mobilePhone = src.mobilePhone
-  if (src.birthdate) body.birthdate = src.birthdate
+  const cleanFirstName = sanitizeText(src.firstName, 40)
+  if (cleanFirstName) body.firstName = cleanFirstName
+  const cleanEmail = sanitizeEmail(src.email)
+  if (cleanEmail) body.email = cleanEmail
+  const cleanPhone = sanitizePhone(src.mobilePhone)
+  if (cleanPhone) body.mobilePhone = cleanPhone
+  const cleanBirthdate = sanitizeDate(src.birthdate)
+  if (cleanBirthdate) body.birthdate = cleanBirthdate
 
   // Constantes del canal — siempre las mandamos aunque el front las omita.
   body.salesChannel = src.salesChannel ?? SF_NEXO_DEFAULTS.salesChannel
@@ -131,9 +140,10 @@ export function buildLeadIntakeBody(src: LeadIntakeSource): LeadIntakePayload {
   body.seniorMembersCount = src.seniorMembersCount ?? SF_NEXO_DEFAULTS.seniorMembersCount
 
   // documentType/Number solo si hay número (evita mandar el enum solo).
-  if (src.documentNumber) {
+  const cleanDni = sanitizeDni(src.documentNumber)
+  if (cleanDni) {
     body.documentType = src.documentType ?? SF_NEXO_DEFAULTS.documentType
-    body.documentNumber = src.documentNumber
+    body.documentNumber = cleanDni
   }
 
   if (Object.keys(address).length > 0) body.address = address

@@ -25,6 +25,35 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sfPost, isSfConfigured } from './client'
 import { SF_NEXO_DEFAULTS } from './defaults'
 import type { DocumentType, SalesChannel, SfAddress } from './leads'
+import { sanitizeEmail, sanitizePhone, sanitizeText, sanitizeDni, sanitizeDate } from './sanitize'
+
+/** Aplica sanitización a un Person antes de mandarlo a SF. */
+function sanitizePerson(p: SfPerson): SfPerson {
+  const cleanAddress: SfAddress | undefined = p.address ? (() => {
+    const a: SfAddress = {}
+    const street = sanitizeText(p.address?.street, 255)
+    const city = sanitizeText(p.address?.city, 40)
+    if (street || city) {
+      a.country = sanitizeText(p.address?.country, 80) ?? SF_NEXO_DEFAULTS.country
+      a.state = sanitizeText(p.address?.state, 80) ?? SF_NEXO_DEFAULTS.state
+    }
+    if (street) a.street = street
+    if (city) a.city = city
+    const apt = sanitizeText(p.address?.apartment, 10)
+    if (apt) a.apartment = apt
+    return Object.keys(a).length > 0 ? a : undefined
+  })() : undefined
+  return {
+    documentType: p.documentType,
+    documentNumber: sanitizeDni(p.documentNumber) ?? p.documentNumber,
+    firstName: sanitizeText(p.firstName, 40),
+    lastName: sanitizeText(p.lastName, 80) ?? p.lastName,
+    birthdate: sanitizeDate(p.birthdate),
+    email: sanitizeEmail(p.email),
+    mobilePhone: sanitizePhone(p.mobilePhone),
+    ...(cleanAddress ? { address: cleanAddress } : {}),
+  }
+}
 
 // -------------------------------------------------------------------------
 // TYPES
@@ -165,10 +194,10 @@ export function buildSaleIntakeBody(src: SaleIntakeSource): SaleIntakePayload {
     messageId: randomUUID(),
     sentAt: new Date().toISOString(),
     salesChannel: src.salesChannel ?? SF_NEXO_DEFAULTS.salesChannel,
-    policyholder: src.policyholder,
+    policyholder: sanitizePerson(src.policyholder),
     declaredMembersCount: src.declaredMembersCount ?? SF_NEXO_DEFAULTS.declaredMembersCount,
     seniorMembersCount: src.seniorMembersCount ?? SF_NEXO_DEFAULTS.seniorMembersCount,
-    offers: [{ offerCode: src.offerCode }],
+    offers: [{ offerCode: sanitizeText(src.offerCode, 255) ?? src.offerCode }],
     firstPayment: paymentBase,
     recurringPayment: paymentBase,
   }
