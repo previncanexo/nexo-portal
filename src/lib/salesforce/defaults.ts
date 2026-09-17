@@ -9,11 +9,12 @@
 export const SF_NEXO_DEFAULTS = {
   salesChannel: 'Nexo',
   documentType: 'DNI',
-  // Códigos ISO / picklist confirmados por Nespon (2026-09-16). SF acepta
-  // tanto texto ("Santa Fe" / "Argentina") como código ("S" / "AR"). Usamos
-  // código: es más robusto ante cambios de nombre / capitalización.
-  state: 'S',
-  country: 'AR',
+  // Picklist SF UAT: solo acepta el TEXTO ("Santa Fe" / "Argentina").
+  // Los códigos ISO ("S" / "AR") que sugería Nespon fueron rechazados por
+  // la org con `FIELD_INTEGRITY_EXCEPTION There's a problem with this state`
+  // (verificado empíricamente 2026-09-16).
+  state: 'Santa Fe',
+  country: 'Argentina',
   declaredMembersCount: 1,
   seniorMembersCount: 0,
 } as const

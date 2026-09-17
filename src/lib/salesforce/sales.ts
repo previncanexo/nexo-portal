@@ -134,13 +134,14 @@ export interface SaleIntakeSource {
 }
 
 /**
- * Formato PCI-DSS-safe para `accountNumber` cuando MP solo expone 6+4 dígitos.
- * Si el caller no tiene la tarjeta enmascarada, retorna null y el campo se
- * omite del payload.
+ * SF UAT rechaza cualquier `accountNumber` que no sean 16 dígitos numéricos
+ * completos (verificado empíricamente 2026-09-16: mask `6+XXXXXX+4` responde
+ * `INVALID_PAYMENT_METHOD: El número de la tarjeta es inválido`). Como MP no
+ * expone el PAN completo por PCI-DSS, la única opción segura es OMITIR el
+ * campo — SF acepta el `/sales` sin `accountNumber`.
  */
-function maskCardNumber(firstSix?: string | null, lastFour?: string | null): string | null {
-  if (!firstSix || !lastFour) return null
-  return `${firstSix}XXXXXX${lastFour}`
+function maskCardNumber(_firstSix?: string | null, _lastFour?: string | null): string | null {
+  return null
 }
 
 export function buildSaleIntakeBody(src: SaleIntakeSource): SaleIntakePayload {
