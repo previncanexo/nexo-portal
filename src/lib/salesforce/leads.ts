@@ -98,17 +98,20 @@ export interface LeadIntakeSource {
 }
 
 export function buildLeadIntakeBody(src: LeadIntakeSource): LeadIntakePayload {
+  // SF UAT valida el orden de keys en el JSON: exige `country` ANTES de
+  // `state` (verificado empíricamente 2026-09-17). Con `state` primero,
+  // responde `FIELD_INTEGRITY_EXCEPTION A country/territory must be
+  // specified before specifying a state value`. Por eso construimos el
+  // address con country y state al principio.
   const address: SfAddress = {}
+  const hasAnyAddressField = Boolean(src.address?.street || src.address?.city || src.address?.apartment)
+  if (hasAnyAddressField) {
+    address.country = src.country ?? SF_NEXO_DEFAULTS.country
+    address.state = src.state ?? SF_NEXO_DEFAULTS.state
+  }
   if (src.address?.street) address.street = src.address.street
   if (src.address?.city) address.city = src.address.city
   if (src.address?.apartment) address.apartment = src.address.apartment
-  // `state` y `country`: SF acepta código o texto (Nespon 2026-09-16). Solo
-  // los mandamos si hay algún campo del address — evita "state suelto" que
-  // en la org UAT rompía por `FIELD_INTEGRITY_EXCEPTION`.
-  if (Object.keys(address).length > 0) {
-    address.state = src.state ?? SF_NEXO_DEFAULTS.state
-    address.country = src.country ?? SF_NEXO_DEFAULTS.country
-  }
 
   const body: LeadIntakePayload = {
     messageId: randomUUID(),

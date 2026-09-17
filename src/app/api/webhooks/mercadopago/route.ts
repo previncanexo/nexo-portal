@@ -677,6 +677,13 @@ export async function POST(req: NextRequest) {
                 .maybeSingle()
               const offerCode = resolveOfferCode(planRow?.slug ?? null)
 
+              // Address del policyholder desde el affiliate (SF exige address
+              // completo en /sales — sino rechaza con POLICYHOLDER_INCOMPLETE).
+              const policyholderAddress = affiliate.domicilio || affiliate.ciudad ? {
+                street: affiliate.domicilio ?? affiliate.ciudad ?? '',
+                city: affiliate.ciudad ?? '',
+              } : undefined
+
               const salePayload = buildSaleIntakeBody({
                 sfLeadId: leadResult.sfLeadId ?? sfLeadId ?? null,
                 effectiveDate: new Date().toISOString().slice(0, 10),
@@ -688,10 +695,18 @@ export async function POST(req: NextRequest) {
                   birthdate: affiliate.fecha_nacimiento ?? null,
                   email: affiliate.email,
                   mobilePhone: affiliate.whatsapp ?? null,
+                  address: policyholderAddress ? {
+                    country: 'Argentina',
+                    state: 'Santa Fe',
+                    street: policyholderAddress.street,
+                    city: policyholderAddress.city,
+                  } : undefined,
                 },
                 offerCode,
                 card: cardInfo,
-                method: 'CreditCard',
+                // MercadoPago default: SF exige cardExpiration si method=CreditCard
+                // y el fetch del card de MP puede fallar por carrera de tiempo.
+                method: 'MercadoPago',
               })
               await sendSaleIntake({ affiliateId, payload: salePayload })
             } catch (err) {

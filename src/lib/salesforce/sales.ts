@@ -145,7 +145,13 @@ function maskCardNumber(_firstSix?: string | null, _lastFour?: string | null): s
 }
 
 export function buildSaleIntakeBody(src: SaleIntakeSource): SaleIntakePayload {
-  const method = src.method ?? 'CreditCard'
+  // Default = MercadoPago (no CreditCard): SF exige cardExpiration para
+  // CreditCard, y MP no siempre devuelve esos datos a tiempo desde el
+  // webhook (carrera con /authorized_payments/search). Con MercadoPago SF
+  // no exige card details y el semántico también es correcto — el pago
+  // efectivamente vino por MP. Si el caller sabe que hay tarjeta y tiene
+  // los datos del card, puede pasar method='CreditCard' explícito.
+  const method = src.method ?? 'MercadoPago'
   const accountNumber = maskCardNumber(src.card?.firstSixDigits, src.card?.lastFourDigits)
 
   const paymentBase: SfPaymentMethod = { method }
