@@ -61,11 +61,11 @@ export async function POST(req: Request) {
 
   const { para_quien, nombre, apellido, email, whatsapp, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url, event_id, event_source_url } = body
 
-  // Validaciones de campos obligatorios. El email dejó de pedirse en el step 2
-  // del landing v2 — el usuario lo carga recién en el step 5 junto al email de
-  // MP, y llega al backend en el PATCH. Acá aceptamos el lead sin email y lo
-  // guardamos como null hasta que el PATCH lo complete.
-  if (!para_quien || !nombre || !apellido || !whatsapp) {
+  // Validaciones de campos obligatorios. El email es la identidad de la
+  // cuenta Nexo — obligatorio desde step 2, único a nivel de afiliado
+  // pagado. El `mp_email` (payer_email de MP) llega recién en el PATCH y
+  // NO valida unicidad (un pagador puede pagar por N afiliados).
+  if (!para_quien || !nombre || !apellido || !email || !whatsapp) {
     return jsonWithCors(
       { success: false, error: 'missing_fields', message: 'Faltan campos obligatorios.' },
       { status: 400, origin }
@@ -77,8 +77,7 @@ export async function POST(req: Request) {
       { status: 400, origin }
     )
   }
-  // Si el landing manda email (compat con clientes viejos), validamos formato.
-  if (email && !EMAIL_RE.test(email.trim())) {
+  if (!EMAIL_RE.test(email.trim())) {
     return jsonWithCors(
       { success: false, error: 'invalid_email', message: 'Email inválido.' },
       { status: 400, origin }
@@ -92,19 +91,16 @@ export async function POST(req: Request) {
   }
 
   const supabase = createAdminClient()
-  const emailLower = email ? email.trim().toLowerCase() : null
+  const emailLower = email.trim().toLowerCase()
 
-  // Bloquear solo si el email ya pertenece a un affiliate PAGADO (active/suspended).
+  // Bloquear si el email ya pertenece a un affiliate PAGADO (active/suspended).
   // Los 'pending' no reservan identidad: pueden existir N leads con los mismos datos.
-  // Skip si el lead no trae email todavía (step 2 del landing v2).
-  if (emailLower) {
-    const conflict = await findPaidIdentityConflict(supabase, { email: emailLower })
-    if (conflict === 'email') {
-      return jsonWithCors(
-        { success: false, error: 'email_taken', message: 'Ya existe una cuenta activa con ese email. Iniciá sesión en el portal.' },
-        { status: 409, origin }
-      )
-    }
+  const conflict = await findPaidIdentityConflict(supabase, { email: emailLower })
+  if (conflict === 'email') {
+    return jsonWithCors(
+      { success: false, error: 'email_taken', message: 'Ya existe una cuenta activa con ese email. Iniciá sesión en el portal.' },
+      { status: 409, origin }
+    )
   }
 
   // Insert lead
@@ -153,7 +149,7 @@ export async function POST(req: Request) {
       event_id,
       event_source_url,
       user_data: {
-        email: emailLower ?? undefined,
+        email: emailLower,
         phone: whatsapp.trim(),
         firstName: nombre.trim(),
         lastName: apellido.trim(),

@@ -124,10 +124,10 @@ export async function PATCH(
   const clientIp = extractClientIp(req)
   const clientUserAgent = req.headers.get('user-agent') ?? undefined
 
-  // Validaciones. El landing v2 ya no pregunta medio_pago (el usuario elige
-  // dentro del checkout MP), así que dejamos de exigirlo. Si algún cliente
-  // viejo lo manda igual, validamos el enum.
-  if (!dni || !fecha_nacimiento || !ciudad || !calle || !numero) {
+  // Validaciones. El landing v2 pide `medio_pago` en el step 5 junto al
+  // `mp_email`, así que lo tratamos como required (con fallback a "tarjeta"
+  // por compat con clientes viejos que no lo mandaban).
+  if (!dni || !fecha_nacimiento || !ciudad || !calle || !numero || !mp_email) {
     return jsonWithCors(
       { success: false, error: 'missing_fields', message: 'Faltan campos obligatorios.' },
       { status: 400, origin }
