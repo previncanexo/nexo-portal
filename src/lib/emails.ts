@@ -802,3 +802,23 @@ export async function sendInternalAbandonedEmail(args: {
     }),
   }).catch((err) => console.error('[internal-abandoned-email]', err))
 }
+
+export async function sendMonthlyActiveAffiliatesReport(args: {
+  to: string
+  periodLabel: string
+  totalActivos: number
+  xlsxBuffer: Buffer
+}): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: resendFrom(),
+    to: args.to,
+    subject: `Nexo — Afiliados activos ${args.periodLabel}`,
+    html: `<p>Adjunto el reporte de afiliados activos al ${args.periodLabel}.</p><p>Total: <strong>${args.totalActivos}</strong>.</p>`,
+    attachments: [{
+      filename: `nexo-afiliados-activos-${args.periodLabel}.xlsx`,
+      content: args.xlsxBuffer,
+    }],
+  }).catch((err) => console.error('[monthly-report-email]', err))
+}

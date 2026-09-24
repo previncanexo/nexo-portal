@@ -1,7 +1,8 @@
 {
   "crons": [
     { "path": "/api/cron/coverage-reminder", "schedule": "0 12 * * *" },
-    { "path": "/api/cron/abandoned-recovery", "schedule": "*/30 * * * *" }
+    { "path": "/api/cron/abandoned-recovery", "schedule": "*/30 * * * *" },
+    { "path": "/api/cron/monthly-report", "schedule": "0 12 1 * *" }
   ],
   "buildCommand": "npm run build",
   "framework": "nextjs"
