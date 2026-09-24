@@ -84,6 +84,8 @@ export interface SfPaymentMethod {
   accountNumber?: string | null
   cardExpirationMonth?: string | null
   cardExpirationYear?: string | null
+  /** `payment.id` de MP (solo firstPayment). Sale-Intake-API v0.3.0. */
+  paymentReference?: string | null
 }
 
 export interface SfOffer {
@@ -160,6 +162,14 @@ export interface SaleIntakeSource {
   salesChannel?: SalesChannel | null
   declaredMembersCount?: number
   seniorMembersCount?: number
+  /**
+   * `payment.id` de MP para el pago de la primera cuota. Se manda solo en
+   * `firstPayment.paymentReference` (Sale-Intake-API v0.3.0) para que SF lo
+   * reenvíe al Core como trazabilidad del cobro ya realizado. No sustituye a
+   * `Payment-Confirmation-API`: la activación de la Cuenta sigue llegando
+   * por ese canal.
+   */
+  paymentReference?: string | null
 }
 
 /**
@@ -190,6 +200,15 @@ export function buildSaleIntakeBody(src: SaleIntakeSource): SaleIntakePayload {
     if (src.card?.expirationYear) paymentBase.cardExpirationYear = src.card.expirationYear
   }
 
+  // firstPayment y recurringPayment se separan porque `paymentReference` solo
+  // aplica al primero (spec Sale-Intake-API v0.3.0: "Sólo aplica a firstPayment").
+  const firstPayment: SfPaymentMethod = { ...paymentBase }
+  if (src.paymentReference) {
+    // El pattern del contrato exige solo dígitos.
+    const digits = String(src.paymentReference).replace(/\D/g, '')
+    if (digits) firstPayment.paymentReference = digits
+  }
+
   const body: SaleIntakePayload = {
     messageId: randomUUID(),
     sentAt: new Date().toISOString(),
@@ -198,7 +217,7 @@ export function buildSaleIntakeBody(src: SaleIntakeSource): SaleIntakePayload {
     declaredMembersCount: src.declaredMembersCount ?? SF_NEXO_DEFAULTS.declaredMembersCount,
     seniorMembersCount: src.seniorMembersCount ?? SF_NEXO_DEFAULTS.seniorMembersCount,
     offers: [{ offerCode: sanitizeText(src.offerCode, 255) ?? src.offerCode }],
-    firstPayment: paymentBase,
+    firstPayment,
     recurringPayment: paymentBase,
   }
 

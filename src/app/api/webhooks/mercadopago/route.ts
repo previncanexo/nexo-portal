@@ -643,6 +643,10 @@ export async function POST(req: NextRequest) {
               // en el /v1/payments detail. Best-effort: si no los conseguimos,
               // SF acepta el payload sin esos campos.
               let cardInfo: { firstSixDigits?: string | null; lastFourDigits?: string | null; expirationMonth?: string | null; expirationYear?: string | null } = {}
+              // `payment.id` de MP para mandar como firstPayment.paymentReference
+              // en /sales (Sale-Intake-API v0.3.0). Sale del mismo hop de MP
+              // que ya usamos para el card info.
+              let firstPaymentId: string | null = null
               try {
                 const paymentsRes = await fetch(
                   `https://api.mercadopago.com/authorized_payments/search?preapproval_id=${subId}`,
@@ -651,6 +655,7 @@ export async function POST(req: NextRequest) {
                 const paymentsData = await paymentsRes.json()
                 const paymentId = paymentsData?.results?.[0]?.payment?.id
                 if (paymentId) {
+                  firstPaymentId = String(paymentId)
                   const payRes = await fetch(
                     `https://api.mercadopago.com/v1/payments/${paymentId}`,
                     { headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` } }
@@ -707,6 +712,7 @@ export async function POST(req: NextRequest) {
                 // MercadoPago default: SF exige cardExpiration si method=CreditCard
                 // y el fetch del card de MP puede fallar por carrera de tiempo.
                 method: 'MercadoPago',
+                paymentReference: firstPaymentId,
               })
               await sendSaleIntake({ affiliateId, payload: salePayload })
             } catch (err) {
