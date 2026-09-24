@@ -3,10 +3,10 @@ import ExcelJS from 'exceljs'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendMonthlyActiveAffiliatesReport } from '@/lib/emails'
 
-// Destinatario del reporte. Hardcoded a fedecuellos@gmail.com para el test
-// inicial. Cuando el reporte esté validado, mover a env var (ej:
-// MONTHLY_REPORT_EMAILS) para no requerir redeploy al cambiar destinatarios.
-const REPORT_RECIPIENT = 'fedecuellos@gmail.com'
+// Destinatario del reporte (equipo de liquidaciones de Rosario). Hardcoded
+// porque hoy es un único mail. Si en el futuro hay que sumar destinatarios,
+// mover a env var (ej: MONTHLY_REPORT_EMAILS) separados por coma.
+const REPORT_RECIPIENT = 'cmorosario.liquidaciones@gmail.com'
 
 function isAuthorized(req: NextRequest): boolean {
   const secret = process.env.CRON_SECRET
