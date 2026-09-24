@@ -815,7 +815,7 @@ export async function sendMonthlyActiveAffiliatesReport(args: {
     from: resendFrom(),
     to: args.to,
     subject: `Nexo — Afiliados activos ${args.periodLabel}`,
-    html: `<p>Adjunto el reporte de afiliados activos al ${args.periodLabel}.</p><p>Total: <strong>${args.totalActivos}</strong>.</p>`,
+    html: `<p>Hola,</p><p>Adjunto el reporte de afiliados activos al ${args.periodLabel}.</p><p>Total: <strong>${args.totalActivos}</strong>.</p>`,
     attachments: [{
       filename: `nexo-afiliados-activos-${args.periodLabel}.xlsx`,
       content: args.xlsxBuffer,
