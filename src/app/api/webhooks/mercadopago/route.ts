@@ -646,34 +646,47 @@ export async function POST(req: NextRequest) {
               // SF acepta el payload sin esos campos.
               let cardInfo: { firstSixDigits?: string | null; lastFourDigits?: string | null; expirationMonth?: string | null; expirationYear?: string | null } = {}
               // `payment.id` de MP para mandar como firstPayment.paymentReference
-              // en /sales (Sale-Intake-API v0.3.0). Sale del mismo hop de MP
-              // que ya usamos para el card info.
+              // en /sales (Sale-Intake-API v0.3.0). MP a veces no indexa el
+              // authorized_payment inmediatamente después del webhook — reintentamos
+              // con backoff exponencial (1s, 2s, 4s, 8s ≈ 15s total peor caso)
+              // hasta obtenerlo. Si tras los 4 intentos sigue vacío, seguimos sin
+              // él (best-effort — spec lo trata como opcional).
               let firstPaymentId: string | null = null
-              try {
-                const paymentsRes = await fetch(
-                  `https://api.mercadopago.com/authorized_payments/search?preapproval_id=${subId}`,
-                  { headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` } }
-                )
-                const paymentsData = await paymentsRes.json()
-                const paymentId = paymentsData?.results?.[0]?.payment?.id
-                if (paymentId) {
-                  firstPaymentId = String(paymentId)
-                  const payRes = await fetch(
-                    `https://api.mercadopago.com/v1/payments/${paymentId}`,
+              const backoffMs = [1000, 2000, 4000, 8000]
+              for (let attempt = 0; attempt < backoffMs.length; attempt++) {
+                try {
+                  const paymentsRes = await fetch(
+                    `https://api.mercadopago.com/authorized_payments/search?preapproval_id=${subId}`,
                     { headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` } }
                   )
-                  const pay = await payRes.json() as { card?: { first_six_digits?: string; last_four_digits?: string; expiration_month?: number; expiration_year?: number } }
-                  if (pay?.card) {
-                    cardInfo = {
-                      firstSixDigits: pay.card.first_six_digits ?? null,
-                      lastFourDigits: pay.card.last_four_digits ?? null,
-                      expirationMonth: pay.card.expiration_month ? String(pay.card.expiration_month).padStart(2, '0') : null,
-                      expirationYear: pay.card.expiration_year ? String(pay.card.expiration_year) : null,
+                  const paymentsData = await paymentsRes.json()
+                  const paymentId = paymentsData?.results?.[0]?.payment?.id
+                  if (paymentId) {
+                    firstPaymentId = String(paymentId)
+                    const payRes = await fetch(
+                      `https://api.mercadopago.com/v1/payments/${paymentId}`,
+                      { headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` } }
+                    )
+                    const pay = await payRes.json() as { card?: { first_six_digits?: string; last_four_digits?: string; expiration_month?: number; expiration_year?: number } }
+                    if (pay?.card) {
+                      cardInfo = {
+                        firstSixDigits: pay.card.first_six_digits ?? null,
+                        lastFourDigits: pay.card.last_four_digits ?? null,
+                        expirationMonth: pay.card.expiration_month ? String(pay.card.expiration_month).padStart(2, '0') : null,
+                        expirationYear: pay.card.expiration_year ? String(pay.card.expiration_year) : null,
+                      }
                     }
+                    break
                   }
+                } catch (payErr) {
+                  console.error(`[sf/sales] payment fetch error (attempt ${attempt + 1})`, payErr)
                 }
-              } catch (payErr) {
-                console.error('[sf/sales] payment fetch error', payErr)
+                if (attempt < backoffMs.length - 1) {
+                  await new Promise((r) => setTimeout(r, backoffMs[attempt]))
+                }
+              }
+              if (!firstPaymentId) {
+                console.warn('[sf/sales] payment.id no disponible tras retries — /sales sin paymentReference', { subId })
               }
 
               const planForSale = Array.isArray(affiliate.plan) ? affiliate.plan[0] : affiliate.plan
