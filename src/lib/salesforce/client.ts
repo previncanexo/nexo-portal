@@ -47,7 +47,7 @@ function getConfig() {
  * Devuelve un access token válido, refrescándolo si expiró (buffer de 60s).
  * OAuth client_credentials no da refresh_token — se pide uno nuevo cada vez.
  */
-async function getAccessToken(): Promise<{ accessToken: string; instanceUrl: string }> {
+export async function getAccessToken(): Promise<{ accessToken: string; instanceUrl: string }> {
   const now = Date.now()
   if (tokenCache && tokenCache.expiresAt - 60_000 > now) {
     return { accessToken: tokenCache.accessToken, instanceUrl: tokenCache.instanceUrl }
