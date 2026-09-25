@@ -124,22 +124,27 @@ export interface SaleIntakeAck {
 // -------------------------------------------------------------------------
 
 /**
- * Mapping de slugs de plan Nexo → offerCode SF (catálogo entregado por
- * Nespon 2026-09-16). Los códigos son los `ProductCode` del objeto
- * `Product2` en la org de SF.
+ * Mapping de slugs de plan Nexo → offerCode SF.
  *
- * `XTEFO-ONESHOT-SF` y `XTEFO-SUSCRIPCION-SF` también existen en el
- * catálogo pero son categorías / tipos de venta (no planes por sí solos),
- * no las usamos en el flow del canal digital.
+ * Catálogo entregado por Nespon 2026-09-24 (ProductCode del `Product2`):
+ *   - `XTEFO` — NEXO (todas las edades)
+ *   - `NX2`   — NEXO2 (menores de 70 años)
+ *   - `NX3`   — NEXO3 (menores de 70 años)
+ *   - `NXO`   — NEXO ONE SHOT (todas las edades)
+ *   - `NXS`   — NEXO SUSCRIPCION (menores de 70 años)
+ *
+ * Para la fase actual de tests todos los planes salen contra `NXS`
+ * (indicado por el user 2026-09-24). Cuando quede definido el mapeo
+ * definitivo por plan comercial, actualizar este objeto.
  */
 const PLAN_SLUG_TO_OFFER_CODE: Record<string, string> = {
-  'nexo-1': 'XTEFO-NEXO1-SF',
-  'nexo-2': 'XTEFO-NEXO2-SF',
-  'nexo-3': 'XTEFO-NEXO3-SF',
+  'nexo-1': 'NXS',
+  'nexo-2': 'NXS',
+  'nexo-3': 'NXS',
 }
 
 export function resolveOfferCode(planSlug: string | null | undefined): string {
-  if (!planSlug) return 'XTEFO-NEXO1-SF'
+  if (!planSlug) return 'NXS'
   return PLAN_SLUG_TO_OFFER_CODE[planSlug] ?? planSlug
 }
 
