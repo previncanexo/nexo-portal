@@ -133,18 +133,23 @@ export interface SaleIntakeAck {
  *   - `NXO`   — NEXO ONE SHOT (todas las edades)
  *   - `NXS`   — NEXO SUSCRIPCION (menores de 70 años)
  *
- * Para la fase actual de tests todos los planes salen contra `NXS`
- * (indicado por el user 2026-09-24). Cuando quede definido el mapeo
- * definitivo por plan comercial, actualizar este objeto.
+ * Test 2026-09-25: `XTEFO` respondió 201 con cuenta `InPreparation` correcta.
+ * `NXS` falla con `OFFER_HAS_PARTIAL_COVERAGE` porque incluye coberturas
+ * per-persona que este canal no puede asignar (SH1, SH2, Póliza vida 1498,
+ * Póliza sepelio 1342). NX2/NX3/NXO no se probaron aún (bloqueados por
+ * `LEAD_ALREADY_CONVERTED` en la corrida donde probamos XTEFO).
+ *
+ * Todos los planes salen contra `XTEFO` mientras se define el mapeo
+ * comercial definitivo por plan.
  */
 const PLAN_SLUG_TO_OFFER_CODE: Record<string, string> = {
-  'nexo-1': 'NXS',
-  'nexo-2': 'NXS',
-  'nexo-3': 'NXS',
+  'nexo-1': 'XTEFO',
+  'nexo-2': 'XTEFO',
+  'nexo-3': 'XTEFO',
 }
 
 export function resolveOfferCode(planSlug: string | null | undefined): string {
-  if (!planSlug) return 'NXS'
+  if (!planSlug) return 'XTEFO'
   return PLAN_SLUG_TO_OFFER_CODE[planSlug] ?? planSlug
 }
 
