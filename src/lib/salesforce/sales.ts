@@ -33,7 +33,8 @@ function sanitizePerson(p: SfPerson): SfPerson {
     const a: SfAddress = {}
     const street = sanitizeText(p.address?.street, 255)
     const city = sanitizeText(p.address?.city, 40)
-    if (street || city) {
+    const postalCode = sanitizeText(p.address?.postalCode, 20)
+    if (street || city || postalCode) {
       a.country = sanitizeText(p.address?.country, 80) ?? SF_NEXO_DEFAULTS.country
       a.state = sanitizeText(p.address?.state, 80) ?? SF_NEXO_DEFAULTS.state
     }
@@ -41,6 +42,7 @@ function sanitizePerson(p: SfPerson): SfPerson {
     if (city) a.city = city
     const apt = sanitizeText(p.address?.apartment, 10)
     if (apt) a.apartment = apt
+    if (postalCode) a.postalCode = postalCode
     return Object.keys(a).length > 0 ? a : undefined
   })() : undefined
   return {

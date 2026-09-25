@@ -87,6 +87,7 @@ export interface LeadIntakeSource {
     street?: string | null
     city?: string | null
     apartment?: string | null
+    postalCode?: string | null
   }
   /** Overrides opcionales de las constantes del canal (el front puede mandar
    *  distintos valores; si no, se usa el default de Nexo). */
@@ -108,7 +109,8 @@ export function buildLeadIntakeBody(src: LeadIntakeSource): LeadIntakePayload {
   const cleanStreet = sanitizeText(src.address?.street, 255)
   const cleanCity = sanitizeText(src.address?.city, 40)
   const cleanApartment = sanitizeText(src.address?.apartment, 10)
-  const hasAnyAddressField = Boolean(cleanStreet || cleanCity || cleanApartment)
+  const cleanPostalCode = sanitizeText(src.address?.postalCode, 20)
+  const hasAnyAddressField = Boolean(cleanStreet || cleanCity || cleanApartment || cleanPostalCode)
   if (hasAnyAddressField) {
     address.country = sanitizeText(src.country, 80) ?? SF_NEXO_DEFAULTS.country
     address.state = sanitizeText(src.state, 80) ?? SF_NEXO_DEFAULTS.state
@@ -116,6 +118,7 @@ export function buildLeadIntakeBody(src: LeadIntakeSource): LeadIntakePayload {
   if (cleanStreet) address.street = cleanStreet
   if (cleanCity) address.city = cleanCity
   if (cleanApartment) address.apartment = cleanApartment
+  if (cleanPostalCode) address.postalCode = cleanPostalCode
 
   const cleanLastName = sanitizeText(src.lastName, 80) ?? src.lastName
   const body: LeadIntakePayload = {

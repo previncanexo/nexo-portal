@@ -93,6 +93,7 @@ type PendingAffiliate = {
   affiliate_number: string | null
   fecha_nacimiento: string | null
   domicilio: string | null
+  codigo_postal: string | null
   plan: { name: string; price: number } | { name: string; price: number }[] | null
   purchase_event_sent_at: string | null
 }
@@ -101,7 +102,7 @@ async function findPendingAffiliate(
   supabase: ReturnType<typeof createAdminClient>,
   info: PayerInfo,
 ): Promise<PendingAffiliate | null> {
-  const affSelect = 'id, status, user_id, nombre, apellido, dni, email, whatsapp, ciudad, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name, price), purchase_event_sent_at'
+  const affSelect = 'id, status, user_id, nombre, apellido, dni, email, whatsapp, ciudad, affiliate_number, fecha_nacimiento, domicilio, codigo_postal, plan:plans(name, price), purchase_event_sent_at'
 
   // 1) match por DNI (señal fuerte — es único legal por persona)
   if (info.dni) {
@@ -371,7 +372,7 @@ export async function POST(req: NextRequest) {
         //
         // Fallback: matching por DNI/email del pagador para subs legacy que se
         // crearon con plan template (external_reference pisado por MP).
-        const affSelect = 'id, status, user_id, nombre, apellido, dni, email, whatsapp, ciudad, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name, price), purchase_event_sent_at'
+        const affSelect = 'id, status, user_id, nombre, apellido, dni, email, whatsapp, ciudad, affiliate_number, fecha_nacimiento, domicilio, codigo_postal, plan:plans(name, price), purchase_event_sent_at'
         let affiliate: PendingAffiliate | null = null
         if (pa.external_reference) {
           const { data: byExtRef } = await supabase
@@ -629,6 +630,7 @@ export async function POST(req: NextRequest) {
                 address: {
                   street: affiliate.domicilio ?? null,
                   city: affiliate.ciudad ?? null,
+                  postalCode: affiliate.codigo_postal ?? null,
                 },
               })
               const leadResult = await sendLeadIntake({
@@ -687,6 +689,7 @@ export async function POST(req: NextRequest) {
               const policyholderAddress = affiliate.domicilio || affiliate.ciudad ? {
                 street: affiliate.domicilio ?? affiliate.ciudad ?? '',
                 city: affiliate.ciudad ?? '',
+                postalCode: affiliate.codigo_postal ?? '',
               } : undefined
 
               const salePayload = buildSaleIntakeBody({
@@ -705,6 +708,7 @@ export async function POST(req: NextRequest) {
                     state: 'Santa Fe',
                     street: policyholderAddress.street,
                     city: policyholderAddress.city,
+                    postalCode: policyholderAddress.postalCode,
                   } : undefined,
                 },
                 offerCode,

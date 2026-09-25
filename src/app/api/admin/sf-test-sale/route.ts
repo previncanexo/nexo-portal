@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
   const supabase = createAdminClient()
   const { data: aff, error: affErr } = await supabase
     .from('affiliates')
-    .select('id, nombre, apellido, dni, email, whatsapp, fecha_nacimiento, domicilio, ciudad')
+    .select('id, nombre, apellido, dni, email, whatsapp, fecha_nacimiento, domicilio, ciudad, codigo_postal')
     .eq('id', affiliateId)
     .maybeSingle()
 
@@ -61,6 +61,7 @@ export async function GET(req: NextRequest) {
     state: 'Santa Fe',
     street: aff.domicilio ?? aff.ciudad ?? '',
     city: aff.ciudad ?? '',
+    postalCode: aff.codigo_postal ?? '',
   } : undefined
 
   const payload = buildSaleIntakeBody({

@@ -26,6 +26,7 @@ interface FinalizeLeadInput {
   calle?: string
   numero?: string
   depto?: string
+  codigo_postal?: string
   /** Landing v2 ya no lo manda (el usuario elige en el checkout MP) — opcional */
   medio_pago?: string
   /** Email principal del afiliado. Landing v2 lo manda recién en el PATCH
@@ -116,7 +117,7 @@ export async function PATCH(
     return jsonWithCors({ success: false, error: 'Body inválido' }, { status: 400, origin })
   }
 
-  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, medio_pago, email: bodyEmail, mp_email, plan_id, plan_slug, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url } = body
+  const { dni, fecha_nacimiento, ciudad, calle, numero, depto, codigo_postal, medio_pago, email: bodyEmail, mp_email, plan_id, plan_slug, event_id_complete_registration, event_id_initiate_checkout, event_source_url, ga_client_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, fbclid, gclid, referer, landing_url } = body
 
   // Identificadores del browser para CAPI Purchase / GA4 purchase server-side
   // (en el webhook MP no podremos leerlos — se persisten en el affiliate).
@@ -329,6 +330,7 @@ export async function PATCH(
       fecha_nacimiento,
       ciudad,
       domicilio,
+      codigo_postal: codigo_postal?.trim() || null,
       // medio_pago puede no venir en el landing v2 (el user elige en el
       // checkout MP). Guardamos null en ese caso.
       medio_pago: medio_pago ?? null,
@@ -433,6 +435,7 @@ export async function PATCH(
             street: domicilio,
             city: ciudad,
             apartment: depto?.trim() || null,
+            postalCode: codigo_postal?.trim() || null,
           },
           salesChannel: body.sales_channel as SalesChannel | undefined,
           documentType: body.document_type as DocumentType | undefined,

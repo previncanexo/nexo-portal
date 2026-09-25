@@ -24,6 +24,7 @@ interface EnrichLeadInput {
   calle?: string
   numero?: string
   depto?: string
+  codigo_postal?: string
   email?: string
   mp_email?: string
   // Constantes del canal (opcionales — SF_NEXO_DEFAULTS los defaultea)
@@ -58,7 +59,7 @@ export async function PATCH(
   // 1. Verificar que el lead exista y no esté ya convertido
   const { data: lead, error: leadFetchError } = await supabase
     .from('leads')
-    .select('id, status, nombre, apellido, email, whatsapp, dni, fecha_nacimiento, ciudad, domicilio')
+    .select('id, status, nombre, apellido, email, whatsapp, dni, fecha_nacimiento, ciudad, domicilio, codigo_postal')
     .eq('id', leadId)
     .maybeSingle()
 
@@ -86,6 +87,7 @@ export async function PATCH(
   if (body.dni) patch.dni = body.dni.trim()
   if (body.fecha_nacimiento) patch.fecha_nacimiento = body.fecha_nacimiento
   if (body.ciudad) patch.ciudad = body.ciudad
+  if (body.codigo_postal) patch.codigo_postal = body.codigo_postal.trim()
   if (domicilio && domicilio !== lead.domicilio) patch.domicilio = domicilio
   if (bodyEmailLower) patch.email = bodyEmailLower
   if (body.mp_email) patch.mp_email = body.mp_email.trim()
@@ -106,6 +108,7 @@ export async function PATCH(
   const currentBirthdate = (patch.fecha_nacimiento as string | undefined) ?? lead.fecha_nacimiento ?? null
   const currentCiudad = (patch.ciudad as string | undefined) ?? lead.ciudad ?? null
   const currentDomicilio = (patch.domicilio as string | undefined) ?? lead.domicilio ?? null
+  const currentPostalCode = (patch.codigo_postal as string | undefined) ?? lead.codigo_postal ?? null
 
   // 4. SF /leads solo si ya tenemos DNI (SF exige documentType+documentNumber
   //    como clave de reconocimiento; sin DNI el envío rebota con 400).
@@ -121,10 +124,11 @@ export async function PATCH(
           mobilePhone: lead.whatsapp ?? null,
           documentNumber: currentDni,
           birthdate: currentBirthdate,
-          address: currentDomicilio || currentCiudad ? {
+          address: currentDomicilio || currentCiudad || currentPostalCode ? {
             street: currentDomicilio,
             city: currentCiudad,
             apartment: body.depto?.trim() || null,
+            postalCode: currentPostalCode,
           } : undefined,
           salesChannel: body.sales_channel as SalesChannel | undefined,
           documentType: body.document_type as DocumentType | undefined,

@@ -13,7 +13,7 @@ import { findPaidIdentityConflict } from '@/lib/affiliateIdentity'
  */
 
 export const AFFILIATE_SELECT =
-  'id, status, user_id, nombre, apellido, dni, email, whatsapp, ciudad, affiliate_number, fecha_nacimiento, domicilio, plan:plans(name, price), purchase_event_sent_at'
+  'id, status, user_id, nombre, apellido, dni, email, whatsapp, ciudad, affiliate_number, fecha_nacimiento, domicilio, codigo_postal, plan:plans(name, price), purchase_event_sent_at'
 
 export interface MaterializeOptions {
   mpSubscriptionId?: string | null
@@ -33,7 +33,7 @@ export async function materializeAffiliateFromLead(
 ) {
   const { data: lead } = await supabase
     .from('leads')
-    .select('id, status, affiliate_id, nombre, apellido, email, whatsapp, dni, fecha_nacimiento, ciudad, domicilio, plan_id, checkout_url, mp_subscription_id')
+    .select('id, status, affiliate_id, nombre, apellido, email, whatsapp, dni, fecha_nacimiento, ciudad, domicilio, codigo_postal, plan_id, checkout_url, mp_subscription_id')
     .eq('id', leadId)
     .maybeSingle()
 
@@ -102,6 +102,7 @@ export async function materializeAffiliateFromLead(
       whatsapp: lead.whatsapp,
       ciudad: lead.ciudad,
       domicilio: lead.domicilio,
+      codigo_postal: lead.codigo_postal,
       fecha_nacimiento: lead.fecha_nacimiento,
       plan_id: lead.plan_id,
       user_id: null,
