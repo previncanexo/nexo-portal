@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from 'mercadopago'
+import { buildCopaymentBody, sendCopaymentConsumption, COPAYMENT_PRODUCT_CODES } from '@/lib/salesforce/copayments'
 
 type RetryResult =
   | { success: true; checkoutUrl: string }
@@ -86,13 +87,26 @@ export async function registerPsicologiaClick(): Promise<void> {
     const admin = createAdminClient()
     const { data: affiliate } = await admin
       .from('affiliates')
-      .select('id')
+      .select('id, sf_account_id')
       .eq('user_id', user.id)
       .single()
 
     await admin.from('psicologia_clicks').insert({
       affiliate_id: affiliate?.id ?? null,
     })
+
+    // Dispara /copayments a SF si la cuenta tiene sf_account_id.
+    // Best-effort: si SF rechaza, no interrumpe el redirect al proveedor
+    // externo. El log queda en sf_messages para auditoría.
+    if (affiliate?.id && affiliate?.sf_account_id) {
+      const payload = buildCopaymentBody({
+        accountId: affiliate.sf_account_id,
+        productCode: COPAYMENT_PRODUCT_CODES.psicologia,
+        quantity: 1,
+        consumedOn: new Date().toISOString().slice(0, 10),
+      })
+      await sendCopaymentConsumption({ affiliateId: affiliate.id, payload })
+    }
   } catch (err) {
     console.error('[psicologia-click]', err)
   }
@@ -111,7 +125,7 @@ export async function registerSeguroHogarSolicitud(
     const admin = createAdminClient()
     const { data: affiliate } = await admin
       .from('affiliates')
-      .select('id')
+      .select('id, sf_account_id')
       .eq('user_id', user.id)
       .single()
 
@@ -119,6 +133,18 @@ export async function registerSeguroHogarSolicitud(
       affiliate_id: affiliate?.id ?? null,
       plan,
     })
+
+    // Dispara /copayments a SF si la cuenta tiene sf_account_id.
+    // Best-effort: no interrumpe el redirect al proveedor.
+    if (affiliate?.id && affiliate?.sf_account_id) {
+      const payload = buildCopaymentBody({
+        accountId: affiliate.sf_account_id,
+        productCode: COPAYMENT_PRODUCT_CODES.seguro_hogar,
+        quantity: 1,
+        consumedOn: new Date().toISOString().slice(0, 10),
+      })
+      await sendCopaymentConsumption({ affiliateId: affiliate.id, payload })
+    }
   } catch (err) {
     console.error('[seguro-hogar-solicitud]', err)
   }
