@@ -804,7 +804,7 @@ export async function sendInternalAbandonedEmail(args: {
 }
 
 export async function sendMonthlyActiveAffiliatesReport(args: {
-  to: string
+  to: string | string[]
   periodLabel: string
   totalActivos: number
   xlsxBuffer: Buffer

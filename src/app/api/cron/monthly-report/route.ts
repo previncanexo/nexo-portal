@@ -3,10 +3,12 @@ import ExcelJS from 'exceljs'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendMonthlyActiveAffiliatesReport } from '@/lib/emails'
 
-// Destinatario del reporte (equipo de liquidaciones de Rosario). Hardcoded
-// porque hoy es un único mail. Si en el futuro hay que sumar destinatarios,
-// mover a env var (ej: MONTHLY_REPORT_EMAILS) separados por coma.
-const REPORT_RECIPIENT = 'cmorosario.liquidaciones@gmail.com'
+// Destinatarios del reporte. Hardcoded por ahora — si crecen, mover a env
+// var (ej: MONTHLY_REPORT_EMAILS separados por coma).
+const REPORT_RECIPIENTS = [
+  'cmorosario.liquidaciones@gmail.com',
+  'mlopez@previncasalud.com.ar',
+]
 
 function isAuthorized(req: NextRequest): boolean {
   const secret = process.env.CRON_SECRET
@@ -108,7 +110,7 @@ export async function GET(req: NextRequest) {
 
   const period = periodLabel()
   await sendMonthlyActiveAffiliatesReport({
-    to: REPORT_RECIPIENT,
+    to: REPORT_RECIPIENTS,
     periodLabel: period,
     totalActivos: rows.length,
     xlsxBuffer,
@@ -118,6 +120,6 @@ export async function GET(req: NextRequest) {
     ok: true,
     period,
     total: rows.length,
-    to: REPORT_RECIPIENT,
+    to: REPORT_RECIPIENTS,
   })
 }
