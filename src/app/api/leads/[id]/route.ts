@@ -288,7 +288,9 @@ export async function PATCH(
         reason: planName,
         external_reference: externalReference,
         payer_email: payerEmail,
-        back_url: `${appUrl}/registro/exito`,
+        // Flujo onboarding desde el landing: volvemos al landing en vez
+        // de al portal para no cambiar de dominio después del pago.
+        back_url: 'https://nexo.previncasalud.com.ar/gracias',
         notification_url: notificationUrl,
         status: 'pending',
         auto_recurring: {
