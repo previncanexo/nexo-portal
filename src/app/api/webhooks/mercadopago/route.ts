@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendPaymentRejectedEmail, sendInternalPaymentRejectedEmail } from '@/lib/emails'
+import { sendActivationEmail, sendWelcomeWithCredentialsEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendPaymentRejectedEmail, sendInternalPaymentRejectedEmail } from '@/lib/emails'
 import { sendMetaCapiEvents } from '@/lib/meta-capi'
 import { sendGa4Events } from '@/lib/ga4-mp'
 import { addOneMonth, todayAR } from '@/lib/dateUtils'
@@ -505,7 +505,8 @@ export async function POST(req: NextRequest) {
           const resolvedPlan = Array.isArray(affiliate.plan) ? (affiliate.plan[0] ?? null) : affiliate.plan
 
           if (tempPassword) {
-            await sendCredentialsEmail({
+            // Nuevo alta: bienvenida + credenciales en un único correo.
+            await sendWelcomeWithCredentialsEmail({
               nombre: affiliate.nombre,
               email: affiliate.email,
               affiliate_number: affiliateNumber,
@@ -513,15 +514,16 @@ export async function POST(req: NextRequest) {
               temp_password: tempPassword,
               plan: resolvedPlan,
             })
+          } else {
+            // Afiliado ya tenía cuenta — solo bienvenida.
+            await sendActivationEmail({
+              nombre: affiliate.nombre,
+              email: affiliate.email,
+              affiliate_number: affiliateNumber,
+              farmacia_number: farmaciaNumber,
+              plan: resolvedPlan,
+            })
           }
-
-          await sendActivationEmail({
-            nombre: affiliate.nombre,
-            email: affiliate.email,
-            affiliate_number: affiliateNumber,
-            farmacia_number: farmaciaNumber,
-            plan: resolvedPlan,
-          })
 
           await sendInternalNewMemberEmail({
             id: affiliateId,
@@ -926,7 +928,8 @@ export async function POST(req: NextRequest) {
                 : affiliateData.plan
 
               if (tempPassword) {
-                await sendCredentialsEmail({
+                // Nuevo alta: bienvenida + credenciales en un único correo.
+                await sendWelcomeWithCredentialsEmail({
                   nombre: affiliateData.nombre,
                   email: affiliateData.email,
                   affiliate_number: affiliateData.affiliate_number,
@@ -934,15 +937,16 @@ export async function POST(req: NextRequest) {
                   temp_password: tempPassword,
                   plan: resolvedPlan,
                 })
+              } else {
+                // Afiliado ya tenía cuenta — solo bienvenida.
+                await sendActivationEmail({
+                  nombre: affiliateData.nombre,
+                  email: affiliateData.email,
+                  affiliate_number: affiliateData.affiliate_number,
+                  farmacia_number: farmaciaNumber,
+                  plan: resolvedPlan,
+                })
               }
-
-              await sendActivationEmail({
-                nombre: affiliateData.nombre,
-                email: affiliateData.email,
-                affiliate_number: affiliateData.affiliate_number,
-                farmacia_number: farmaciaNumber,
-                plan: resolvedPlan,
-              })
 
               await sendInternalNewMemberEmail({
                 id: ppa.external_reference,

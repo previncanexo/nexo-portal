@@ -4,7 +4,7 @@ import { randomBytes } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { sendActivationEmail, sendCredentialsEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendResubscribeEmail, sendSuspensionEmail, sendCancellationEmail, sendPasswordResetEmail } from '@/lib/emails'
+import { sendActivationEmail, sendWelcomeWithCredentialsEmail, sendInternalNewMemberEmail, sendPaymentConfirmedEmail, sendResubscribeEmail, sendSuspensionEmail, sendCancellationEmail, sendPasswordResetEmail } from '@/lib/emails'
 import { MercadoPagoConfig, PreApproval } from 'mercadopago'
 import type { AffiliateStatus } from '@/lib/types'
 import { addOneMonth } from '@/lib/dateUtils'
@@ -336,7 +336,8 @@ export async function addPayment(affiliateId: string, formData: FormData) {
     const farmaciaNumber = numbered?.farmacia_number ?? ''
 
     if (tempPassword) {
-      await sendCredentialsEmail({
+      // Nuevo alta: bienvenida + credenciales en un único correo.
+      await sendWelcomeWithCredentialsEmail({
         nombre: affiliate.nombre,
         email: affiliate.email,
         affiliate_number: affiliate.affiliate_number,
@@ -344,15 +345,16 @@ export async function addPayment(affiliateId: string, formData: FormData) {
         temp_password: tempPassword,
         plan: resolvedPlan,
       })
+    } else {
+      // Afiliado ya tenía cuenta (no se generó temp_password) — solo bienvenida.
+      await sendActivationEmail({
+        nombre: affiliate.nombre,
+        email: affiliate.email,
+        affiliate_number: affiliate.affiliate_number,
+        farmacia_number: farmaciaNumber,
+        plan: resolvedPlan,
+      })
     }
-
-    await sendActivationEmail({
-      nombre: affiliate.nombre,
-      email: affiliate.email,
-      affiliate_number: affiliate.affiliate_number,
-      farmacia_number: farmaciaNumber,
-      plan: resolvedPlan,
-    })
 
     await sendInternalNewMemberEmail({
       id: affiliateId,
