@@ -558,7 +558,7 @@ export async function POST(req: NextRequest) {
               .eq('affiliate_id', affiliateId)
               .maybeSingle()
 
-            const purchaseValue = Math.round(pa.auto_recurring?.transaction_amount ?? resolvedPlan?.price ?? 19500)
+            const purchaseValue = Math.round(pa.auto_recurring?.transaction_amount ?? resolvedPlan?.price ?? 15000)
             const purchaseCurrency = pa.auto_recurring?.currency_id ?? 'ARS'
             const purchasePlanName = resolvedPlan?.name ?? 'Previnca Nexo'
 
@@ -979,7 +979,7 @@ export async function POST(req: NextRequest) {
                   .eq('affiliate_id', ppa.external_reference)
                   .maybeSingle()
 
-                const purchaseValue = Math.round(payment.transaction_amount ?? resolvedPlan?.price ?? 19500)
+                const purchaseValue = Math.round(payment.transaction_amount ?? resolvedPlan?.price ?? 15000)
                 const purchaseCurrency = payment.currency_id ?? 'ARS'
                 const purchasePlanName = resolvedPlan?.name ?? 'Previnca Nexo'
 

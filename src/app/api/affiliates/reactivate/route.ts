@@ -64,7 +64,7 @@ export async function POST() {
     //    volverla a authorized. `external_reference` apunta al affiliate para
     //    que el webhook reconecte los datos existentes al confirmar el pago.
     const plan = Array.isArray(affiliate.plan) ? affiliate.plan[0] : affiliate.plan
-    const price = plan?.price ?? 19500
+    const price = plan?.price ?? 15000
     const planName = plan?.name ?? 'Previnca Nexo'
 
     const headersList = await headers()

@@ -162,7 +162,7 @@ export async function initiatePayment(input: RegisterInput): Promise<InitiatePay
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',
-          transaction_amount: plan?.price ?? 19500,
+          transaction_amount: plan?.price ?? 15000,
           currency_id: 'ARS',
         },
       } as unknown as Parameters<typeof preApprovalClient.create>[0]['body'],

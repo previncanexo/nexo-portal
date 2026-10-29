@@ -257,7 +257,7 @@ export async function PATCH(
       { status: 400, origin }
     )
   }
-  const planPrice = plan?.price ?? 19500
+  const planPrice = plan?.price ?? 15000
   const planName = plan?.name ?? 'Previnca Nexo'
 
   // Paso donde estamos, para logging estructurado si algo falla y disparamos rollback
@@ -387,7 +387,7 @@ export async function PATCH(
         clientIp,
         clientUserAgent,
       }
-      const value = plan?.price ?? 19500
+      const value = plan?.price ?? 15000
       const events = []
       if (event_id_complete_registration) {
         events.push({

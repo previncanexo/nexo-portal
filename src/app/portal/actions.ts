@@ -49,7 +49,7 @@ export async function retryPayment(): Promise<RetryResult> {
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',
-          transaction_amount: plan?.price ?? 19500,
+          transaction_amount: plan?.price ?? 15000,
           currency_id: 'ARS',
         },
         back_url: `${appUrl}/registro/exito`,
