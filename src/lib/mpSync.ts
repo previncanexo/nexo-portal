@@ -5,6 +5,11 @@ interface AffiliateForSync {
   id: string
   mp_subscription_id: string | null
   cobertura_hasta: string | null
+  /** Si está seteado, el afiliado pidió la baja: no extendemos cobertura con
+   *  renovaciones posteriores a esa fecha aunque MP las marque `approved`.
+   *  (Caso real: usuario cancela el 20/10, MP cobra renovación zombie el 21/10,
+   *  después se refundea — pero entre medio el sync extendía cobertura a nov.) */
+  cancel_requested_at?: string | null
 }
 
 interface MpAuthorizedPayment {
@@ -43,8 +48,16 @@ export async function syncMpPaymentsForAffiliate(
 
     // Ordenar cronologicamente para extender cobertura en el mismo orden que
     // cobró MP (si hay 2 pagos perdidos, primero jul → después ago).
+    // Si el usuario pidió cancelación, ignoramos pagos que MP cobró DESPUÉS del
+    // cancel (renovaciones zombie que después se refundean). Esto evita que la
+    // cobertura se extienda post-cancelación.
+    const cancelCutoff = affiliate.cancel_requested_at ?? null
     const approved = results
-      .filter((r) => r.payment?.status === 'approved' && r.payment.id)
+      .filter((r) => {
+        if (r.payment?.status !== 'approved' || !r.payment.id) return false
+        if (cancelCutoff && r.date_created && r.date_created > cancelCutoff) return false
+        return true
+      })
       .sort((a, b) => (a.date_created ?? '').localeCompare(b.date_created ?? ''))
 
     if (approved.length === 0) return { synced: 0, newCobertura: affiliate.cobertura_hasta }

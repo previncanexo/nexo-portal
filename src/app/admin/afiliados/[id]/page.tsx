@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Affiliate, AffiliateStatus, Payment, Plan } from '@/lib/types'
 import { formatDateAR } from '@/lib/dateUtils'
+import { ensureCoberturaStatus } from '@/lib/coverageStatus'
 import StatusForm from './StatusForm'
 
 export const dynamic = 'force-dynamic'
@@ -88,6 +89,19 @@ export default async function AfiliadoDetailPage({ params }: { params: Promise<{
   if (error || !affiliateData) notFound()
 
   const affiliate = affiliateData as Affiliate
+
+  // Consolida `status='cancelled'` cuando ya venció la cobertura y había
+  // cancel pedido. Mismo chequeo que corre el portal del cliente: así admin
+  // y cliente ven el mismo estado sin esperar a que el usuario se loguee.
+  const statusConsolidado = await ensureCoberturaStatus(supabase, {
+    id: affiliate.id,
+    status: affiliate.status,
+    cobertura_hasta: affiliate.cobertura_hasta,
+    cancel_requested_at: affiliate.cancel_requested_at,
+  })
+  if (statusConsolidado !== affiliate.status) {
+    affiliate.status = statusConsolidado as AffiliateStatus
+  }
   const payments = (paymentsData ?? []) as Payment[]
   const plans = (plansData ?? []) as Plan[]
   const psicologiaPromoUsadaEn = psicologiaData?.[0]?.consumed_at ?? null

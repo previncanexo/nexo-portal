@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { syncMpPaymentsForAffiliate } from '@/lib/mpSync'
+import { ensureCoberturaStatus } from '@/lib/coverageStatus'
 import type { Affiliate, Payment } from '@/lib/types'
 import CredentialWithDownload from './CredentialWithDownload'
 import ServiceCards from './ServiceCards'
@@ -57,6 +58,7 @@ export default async function PortalPage() {
       id: affiliate.id,
       mp_subscription_id: affiliate.mp_subscription_id,
       cobertura_hasta: affiliate.cobertura_hasta,
+      cancel_requested_at: affiliate.cancel_requested_at,
     })
     if (synced > 0) {
       const { data: refetched } = await supabase
@@ -66,6 +68,20 @@ export default async function PortalPage() {
         .single()
       if (refetched) affiliate = refetched
     }
+  }
+
+  // Si la cobertura venció y el usuario había pedido baja, consolidamos el
+  // status a 'cancelled' acá mismo. Antes nadie lo hacía y quedaban
+  // `active zombie` sin cobertura paga. Esto se refleja de inmediato en el
+  // portal + credencial + admin (todos leen `affiliate.status`).
+  const statusFinal = await ensureCoberturaStatus(adminClient, {
+    id: affiliate.id,
+    status: affiliate.status,
+    cobertura_hasta: affiliate.cobertura_hasta,
+    cancel_requested_at: affiliate.cancel_requested_at,
+  })
+  if (statusFinal !== affiliate.status) {
+    affiliate = { ...affiliate, status: statusFinal }
   }
 
   const firstName = affiliate.nombre
