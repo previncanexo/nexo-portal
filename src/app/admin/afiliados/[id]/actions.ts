@@ -583,11 +583,41 @@ export async function refundLastPayment(affiliateId: string): Promise<{ success:
     return { success: false, message: `Devolución en MP procesada, pero falló al registrar la nota de crédito: ${insErr.message}` }
   }
 
+  // Consolidación inmediata del affiliate: corta cobertura al día + marca
+  // cancelled. El webhook de MP (payment.refunded) también lo haría cuando
+  // llegue, pero puede tardar varios segundos. Hacerlo acá sincrónico deja
+  // la ficha consistente ni bien el admin recarga.
+  const hoyRefund = new Date().toISOString().slice(0, 10)
+  const nowRefund = new Date().toISOString()
+  await supabase
+    .from('affiliates')
+    .update({
+      status: 'cancelled',
+      cobertura_hasta: hoyRefund,
+      updated_at: nowRefund,
+    })
+    .eq('id', affiliateId)
+  // Si no tenía cancel_requested_at (refund hecho por admin sin baja previa),
+  // dejamos marca con fecha del refund para auditoría.
+  await supabase
+    .from('affiliates')
+    .update({ cancel_requested_at: nowRefund })
+    .eq('id', affiliateId)
+    .is('cancel_requested_at', null)
+
+  // Marcar el payment refundeado para que el admin vea el estado al instante.
+  if (/^\d+$/.test(mpId)) {
+    await supabase
+      .from('payments')
+      .update({ mp_status: 'refunded' })
+      .eq('mp_payment_id', mpId)
+  }
+
   revalidatePath('/admin')
   revalidatePath('/admin/pagos')
   revalidatePath(`/admin/afiliados/${affiliateId}`)
   const monto = payment.amount.toLocaleString('es-AR')
-  return { success: true, message: `Devolución registrada: nota de crédito de ${payment.currency ?? 'ARS'} -${monto}${mpNote}.` }
+  return { success: true, message: `Devolución registrada: nota de crédito de ${payment.currency ?? 'ARS'} -${monto}${mpNote}. Cobertura cerrada hoy.` }
 }
 
 export async function sendAffiliatePasswordReset(affiliateId: string): Promise<{ success: boolean; message: string }> {
