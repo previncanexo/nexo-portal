@@ -1149,6 +1149,68 @@ export async function POST(req: NextRequest) {
           }
         }
       }
+
+      // Refund: MP emite este status cuando se cancela un cobro ya realizado
+      // (manual desde el dashboard o vía POST /v1/payments/:id/refunds). Antes
+      // no lo manejábamos y el affiliate quedaba con cobertura vigente aunque
+      // le hubieran devuelto la plata. Ahora cortamos cobertura al día y
+      // consolidamos status='cancelled' de inmediato.
+      if (payment.status === 'refunded') {
+        let refAffiliateId: string | null = null
+        if (mp.subscription_id) {
+          try {
+            const preApprovalClient = new PreApproval(mpClient)
+            const pre = await preApprovalClient.get({ id: mp.subscription_id as string })
+            const preExt = pre as unknown as MPPreApprovalExt
+            refAffiliateId = preExt.external_reference || null
+            if (!refAffiliateId && preExt.preapproval_plan_id) {
+              const planClient = new PreApprovalPlan(mpClient)
+              const mpPlan = await planClient.get({ preApprovalPlanId: String(preExt.preapproval_plan_id) })
+              refAffiliateId = (mpPlan as unknown as MPPlanExt).external_reference || null
+            }
+            if (refAffiliateId && refAffiliateId.endsWith('-test')) {
+              refAffiliateId = refAffiliateId.slice(0, -'-test'.length)
+            }
+          } catch (refErr) {
+            console.error('[mp-webhook] refunded: no se pudo resolver el afiliado:', refErr)
+          }
+        }
+
+        if (refAffiliateId) {
+          const hoy = todayAR()
+          const nowIso = new Date().toISOString()
+          // Marcamos cancel_requested_at si no estaba (refund hecho por admin
+          // sin baja previa del usuario) y cortamos cobertura al día.
+          await supabase
+            .from('affiliates')
+            .update({
+              status: 'cancelled',
+              cobertura_hasta: hoy,
+              cancel_requested_at: nowIso,
+              updated_at: nowIso,
+            })
+            .eq('id', refAffiliateId)
+            .is('cancel_requested_at', null)
+
+          // Si ya tenía cancel_requested_at, solo cortamos cobertura+status.
+          await supabase
+            .from('affiliates')
+            .update({
+              status: 'cancelled',
+              cobertura_hasta: hoy,
+              updated_at: nowIso,
+            })
+            .eq('id', refAffiliateId)
+            .not('cancel_requested_at', 'is', null)
+
+          // Marcamos el payment como refunded para que el admin lo vea en
+          // el listado de pagos con el estado actualizado.
+          await supabase
+            .from('payments')
+            .update({ mp_status: 'refunded' })
+            .eq('mp_payment_id', String(payment.id))
+        }
+      }
     }
   } catch (err) {
     console.error('[mp-webhook]', err)
