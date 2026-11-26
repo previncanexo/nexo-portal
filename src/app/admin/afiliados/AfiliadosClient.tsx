@@ -286,13 +286,14 @@ export default function AfiliadosClient({
                 <th>Plan</th>
                 <th>Estado</th>
                 <th>Fecha de creación</th>
+                <th>Fecha de cancelación</th>
                 <th style={{ textAlign: 'right' }}></th>
               </tr>
             </thead>
             <tbody>
               {paged.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ padding: '48px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
+                  <td colSpan={7} style={{ padding: '48px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
                     No hay afiliados para los filtros seleccionados.
                   </td>
                 </tr>
@@ -315,6 +316,9 @@ export default function AfiliadosClient({
                   </td>
                   <td style={{ color: 'rgba(255,255,255,0.65)', whiteSpace: 'nowrap' }}>
                     {formatDateTime(a.created_at)}
+                  </td>
+                  <td style={{ color: 'rgba(255,255,255,0.65)', whiteSpace: 'nowrap' }}>
+                    {a.cancel_requested_at ? formatDateTime(a.cancel_requested_at) : '—'}
                   </td>
                   <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                     <button

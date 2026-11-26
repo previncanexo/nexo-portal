@@ -26,24 +26,19 @@ export async function ensureCoberturaStatus(
   },
 ): Promise<string> {
   if (affiliate.status !== 'active') return affiliate.status
+  // Solo consolidamos a `cancelled` cuando el usuario pidió baja
+  // explícitamente desde el portal (cancel_requested_at seteado).
+  // El caso "MP pausó/canceló sin que el usuario pida baja" se detectó
+  // peligroso en producción: afiliados cuyo `cobertura_hasta` DB está
+  // desactualizado (porque syncMp no corrió) pero MP sí sigue cobrando
+  // quedaban cancelled por error. Mientras no consultemos MP inline,
+  // nos quedamos con el criterio conservador.
+  if (!affiliate.cancel_requested_at) return affiliate.status
   if (!affiliate.cobertura_hasta) return affiliate.status
 
   const hoy = new Date().toISOString().slice(0, 10)
   if (affiliate.cobertura_hasta >= hoy) return affiliate.status
 
-  // Cobertura vencida y el affiliate sigue marcado active → zombie.
-  // Dos subcasos cubren el 100% de los casos vistos:
-  //  (a) el afiliado pidió baja desde el portal (cancel_requested_at seteado).
-  //  (b) MP pausó o canceló por falta de fondos, fraude, etc. → el affiliate
-  //      nunca inició una baja pero la cobertura no se renueva más.
-  // En ambos casos el comportamiento correcto es pasar a `cancelled`. Antes
-  // solo contemplábamos (a) y los de (b) quedaban active zombie para siempre
-  // aunque MP ya no estaba cobrando.
-  //
-  // `syncMpPaymentsForAffiliate` corre ANTES que esta función en el portal
-  // del cliente: si MP cobró algo nuevo, ya extendió `cobertura_hasta` y
-  // no llegamos acá. Por eso si acá seguimos con cobertura vencida, es
-  // definitivo que no hay cobro reciente en MP.
   const { error } = await supabase
     .from('affiliates')
     .update({ status: 'cancelled', updated_at: new Date().toISOString() })

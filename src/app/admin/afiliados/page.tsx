@@ -16,17 +16,13 @@ export default async function AfiliadosPage({
   const params = await searchParams
   const { from, to } = parsePeriodParams(params)
 
-  // Consolidación preemptiva: cualquier affiliate que figure `active` con
-  // cobertura ya vencida pasa a `cancelled` antes del SELECT. Evita que el
-  // listado muestre zombies cuando se filtra por status='active'. El UPDATE
-  // es idempotente y cuesta < 50ms (una fila de índice por `cobertura_hasta`).
-  // Mismo criterio que `ensureCoberturaStatus` pero aplicado en lote.
-  const hoy = new Date().toISOString().slice(0, 10)
-  await supabase
-    .from('affiliates')
-    .update({ status: 'cancelled', updated_at: new Date().toISOString() })
-    .eq('status', 'active')
-    .lt('cobertura_hasta', hoy)
+  // El UPDATE preemptivo que había acá (cualquier active + cobertura vencida
+  // → cancelled) tenía un falso positivo serio: afiliados cuyo `cobertura_hasta`
+  // en DB estaba desactualizado porque syncMpPaymentsForAffiliate nunca se
+  // había disparado, pero que MP sí seguía cobrando, quedaban marcados
+  // cancelled sin razón real. Lo sacamos: el listado muestra la DB como
+  // está. La consolidación individual (ensureCoberturaStatus en portal y
+  // ficha) sigue viva y es segura porque corre sobre un affiliate por vez.
 
   const LIMIT = 1000
   const [{ data, error }, { data: plansData }] = await Promise.all([
